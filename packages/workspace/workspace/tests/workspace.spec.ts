@@ -941,4 +941,13 @@ describe('registry-global session archive', () => {
     const upgraded = await harness({ pool: legacy })
     expect(upgraded.registry.archivedSessionIds).toEqual([])
   })
+
+  it('provides the default workspace for global no-workspace chat', async () => {
+    const { registry, fiber } = await harness()
+    const defaultWs = await registry.getDefaultWorkspace()
+    expect(defaultWs).toBeDefined()
+    expect(defaultWs.title).toBe('Default Workspace')
+    expect(defaultWs.path).toContain('workspace')
+    await fiber.dispose()
+  })
 })

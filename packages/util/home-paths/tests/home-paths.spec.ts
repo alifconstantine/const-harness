@@ -3,13 +3,27 @@ import { homedir, tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  CONST_HOME_DIR_NAME,
+  CONST_HOME_ENV,
+  DEFAULT_CONST_HOME_DISPLAY,
   DEFAULT_DSH_HOME_DISPLAY,
   DSH_HOME_DIR_NAME,
+  DSH_HOME_ENV,
   canonicalizeWatchPath,
+  constDefaultWorkspacePath,
+  constHomeDisplay,
+  constHomePath,
+  constModelsGgufPath,
+  constSessionArtifactsPath,
+  constSessionScratchPath,
+  constSessionSnapshotsPath,
+  defaultConstHome,
   defaultDshHome,
   dshHomeDisplay,
   dshHomePath,
+  ensureConstDirectories,
   expandHomePath,
+  resolveConstHome,
   resolveDshHome,
 } from '@deepseek-ai/dsh-home-paths'
 
@@ -17,42 +31,82 @@ afterEach(() => {
   vi.unstubAllEnvs()
 })
 
-describe('dsh path helpers', () => {
-  it('owns the shared default DSH home directory name', () => {
+describe('const and dsh path helpers', () => {
+  it('owns the shared default home directory names and displays', () => {
+    expect(CONST_HOME_DIR_NAME).toBe('.const')
+    expect(DEFAULT_CONST_HOME_DISPLAY).toBe('~/.const')
+    expect(CONST_HOME_ENV).toBe('CONST_HOME')
+    expect(defaultConstHome()).toBe(join(homedir(), '.const'))
+
     expect(DSH_HOME_DIR_NAME).toBe('.dsh')
     expect(DEFAULT_DSH_HOME_DISPLAY).toBe('~/.dsh')
-    expect(defaultDshHome()).toBe(join(homedir(), '.dsh'))
+    expect(DSH_HOME_ENV).toBe('DSH_HOME')
   })
 
   it('expands tilde paths without changing non-tilde paths', () => {
     expect(expandHomePath('~')).toBe(homedir())
-    expect(expandHomePath('~/.dsh')).toBe(join(homedir(), '.dsh'))
-    expect(expandHomePath('~\\.dsh')).toBe(join(homedir(), '.dsh'))
-    expect(expandHomePath('/tmp/.dsh')).toBe('/tmp/.dsh')
-    expect(expandHomePath('~other/.dsh')).toBe('~other/.dsh')
+    expect(expandHomePath('~/.const')).toBe(join(homedir(), '.const'))
+    expect(expandHomePath('~\\.const')).toBe(join(homedir(), '.const'))
+    expect(expandHomePath('/tmp/.const')).toBe('/tmp/.const')
+    expect(expandHomePath('~other/.const')).toBe('~other/.const')
   })
 
-  it('resolves explicit path before DSH_HOME and the default', () => {
-    const envHome = join(homedir(), 'env-dsh')
+  it('resolves explicit path before CONST_HOME, DSH_HOME, and default', () => {
+    const envConstHome = join(homedir(), 'env-const')
+    const envDshHome = join(homedir(), 'env-dsh')
+
+    expect(resolveConstHome('/tmp/explicit-const', { CONST_HOME: '~/env-const' })).toBe(resolve('/tmp/explicit-const'))
+    expect(resolveConstHome(undefined, { CONST_HOME: '~/env-const', DSH_HOME: '~/env-dsh' })).toBe(envConstHome)
+    expect(resolveConstHome(undefined, { DSH_HOME: '~/env-dsh' })).toBe(envDshHome)
+    expect(resolveConstHome(undefined, {})).toBe(defaultConstHome())
 
     expect(resolveDshHome('/tmp/explicit-dsh', { DSH_HOME: '~/env-dsh' })).toBe(resolve('/tmp/explicit-dsh'))
-    expect(resolveDshHome(undefined, { DSH_HOME: '~/env-dsh' })).toBe(envHome)
-    expect(resolveDshHome(undefined, {})).toBe(defaultDshHome())
+    expect(resolveDshHome(undefined, { DSH_HOME: '~/env-dsh' })).toBe(envDshHome)
   })
 
-  it('treats an empty or whitespace-only DSH_HOME as unset', () => {
+  it('treats an empty or whitespace-only env as unset', () => {
+    expect(resolveConstHome(undefined, { CONST_HOME: '', DSH_HOME: '' })).toBe(defaultConstHome())
+    expect(resolveConstHome(undefined, { CONST_HOME: '   ', DSH_HOME: '   ' })).toBe(defaultConstHome())
     expect(resolveDshHome(undefined, { DSH_HOME: '' })).toBe(defaultDshHome())
-    expect(resolveDshHome(undefined, { DSH_HOME: '   ' })).toBe(defaultDshHome())
   })
 
-  it('joins child segments onto the resolved DSH_HOME', () => {
-    vi.stubEnv('DSH_HOME', '~/env-dsh')
-    expect(dshHomePath()).toBe(join(homedir(), 'env-dsh'))
-    expect(dshHomePath('storages', 'cache')).toBe(join(homedir(), 'env-dsh', 'storages', 'cache'))
+  it('joins child segments onto the resolved home', () => {
+    vi.stubEnv('CONST_HOME', '~/env-const')
+    expect(constHomePath()).toBe(join(homedir(), 'env-const'))
+    expect(constHomePath('sessions', 'abc')).toBe(join(homedir(), 'env-const', 'sessions', 'abc'))
+    expect(dshHomePath('sessions', 'abc')).toBe(join(homedir(), 'env-const', 'sessions', 'abc'))
+  })
+
+  it('provides dedicated paths for workspace and session scratchpad', () => {
+    const customHome = '/tmp/my-const'
+    expect(constDefaultWorkspacePath(customHome)).toBe(resolve(customHome, 'workspace', 'default'))
+    expect(constSessionScratchPath('session-123', customHome)).toBe(resolve(customHome, 'sessions', 'session-123', 'scratch'))
+    expect(constSessionArtifactsPath('session-123', customHome)).toBe(resolve(customHome, 'sessions', 'session-123', 'artifacts'))
+    expect(constSessionSnapshotsPath('session-123', customHome)).toBe(resolve(customHome, 'sessions', 'session-123', 'snapshots'))
+    expect(constModelsGgufPath(customHome)).toBe(resolve(customHome, 'models', 'gguf'))
+  })
+
+  it('creates standard const directories when ensureConstDirectories is called', async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), 'const-dirs-test-'))
+    try {
+      await ensureConstDirectories(tempDir)
+      const expectedSubdirs = [
+        'index', 'conversations', 'sessions', 'snapshots',
+        'workspace/default', 'models/gguf', 'config/rules', 'config/certs',
+        'runtime/venv', 'runtime/browser-profiles', 'runtime/mcp', 'profiles',
+      ]
+      for (const subdir of expectedSubdirs) {
+        expect((await realpath(join(tempDir, subdir)))).toBeDefined()
+      }
+    } finally {
+      await rm(tempDir, { recursive: true, force: true })
+    }
   })
 
   it('labels a resolved home by whether it is the default root', () => {
+    expect(constHomeDisplay(resolve(defaultConstHome()))).toBe('~/.const')
     expect(dshHomeDisplay(resolve(defaultDshHome()))).toBe('~/.dsh')
+    expect(constHomeDisplay('/some/other/root')).toBe('$CONST_HOME')
     expect(dshHomeDisplay('/some/other/root')).toBe('$DSH_HOME')
   })
 

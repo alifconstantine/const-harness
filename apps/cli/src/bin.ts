@@ -29,8 +29,9 @@ const invocation = parseDshArgs(process.argv.slice(2), readVersion())
 switch (invocation.mode) {
   case 'profile': {
     const { runProfile } = await import('./profile-boot.ts')
+    const binName = process.argv[1]?.includes('const') ? 'const' : 'dsh'
     await runProfile({
-      environment: loadLayeredEnv('dsh'),
+      environment: loadLayeredEnv(binName),
       profile: invocation.profile,
       patchFiles: invocation.patches,
       args: invocation.args,

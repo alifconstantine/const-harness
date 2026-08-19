@@ -277,22 +277,29 @@ async function discoverInstructionFiles(
     files.push(file)
   }
 
-  const userGlobal = join(config.dshHome, USER_GLOBAL_FILE)
-  const userGlobalProbe = await statFile(userGlobal, fileSystem, options.signal)
-  switch (userGlobalProbe.kind) {
-    case 'present':
-      addFile({
-        absolutePath: userGlobal,
-        displayPath: userGlobalDisplayPath(config.dshHome),
-        ...userGlobalProbe.info,
-      })
-      break
-    case 'absent':
-    case 'unavailable':
-      break
-    /* v8 ignore next 2 -- StatFileProbe is closed; this arm only makes adding a kind a compile error. */
-    default:
-      assertNever(userGlobalProbe, 'StatFileProbe')
+  const globalCandidates = [
+    join('config', 'rules', 'global_rules.md'),
+    join('rules', 'global_rules.md'),
+    USER_GLOBAL_FILE,
+  ]
+  for (const candidate of globalCandidates) {
+    const userGlobal = join(config.dshHome, candidate)
+    const userGlobalProbe = await statFile(userGlobal, fileSystem, options.signal)
+    switch (userGlobalProbe.kind) {
+      case 'present':
+        addFile({
+          absolutePath: userGlobal,
+          displayPath: userGlobalDisplayPath(config.dshHome, candidate.replace(/\\/g, '/')),
+          ...userGlobalProbe.info,
+        })
+        break
+      case 'absent':
+      case 'unavailable':
+        break
+      /* v8 ignore next 2 -- StatFileProbe is closed; this arm only makes adding a kind a compile error. */
+      default:
+        assertNever(userGlobalProbe, 'StatFileProbe')
+    }
   }
 
   const cwd = resolve(options.cwd)
@@ -516,6 +523,6 @@ export async function readScopeInstruction(
   }
 }
 
-function userGlobalDisplayPath(dshHome: string): string {
-  return `${dshHomeDisplay(dshHome)}/AGENTS.md`
+function userGlobalDisplayPath(dshHome: string, subpath: string = USER_GLOBAL_FILE): string {
+  return `${dshHomeDisplay(dshHome)}/${subpath}`
 }

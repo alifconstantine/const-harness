@@ -6,9 +6,10 @@
  */
 
 import { randomUUID } from 'node:crypto'
-import { stat } from 'node:fs/promises'
+import { mkdir, stat } from 'node:fs/promises'
 import { basename } from 'node:path'
 import { Context, Service } from '@deepseek-ai/cordis'
+import { constDefaultWorkspacePath, ensureConstDirectories } from '@deepseek-ai/dsh-home-paths'
 import type { SessionHeader, SessionId } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-session-persistence'
 import type { DomainGlobal, KvTable } from '@deepseek-ai/dsh-storage-domain'
@@ -123,6 +124,7 @@ export class WorkspaceRegistry extends Service {
     this.global = domain.global
     this.state = domain.global.get()
 
+    await ensureConstDirectories()
     await this.recoverPendingMutation()
     this.validateStoredState(this.state)
     if (!this.state.initialized) {
@@ -161,6 +163,17 @@ export class WorkspaceRegistry extends Service {
       throw new Error(`cannot create a workspace at '${canonical}': path is not a directory`)
     }
     return await this.enqueueOperation(() => this.createCanonical(canonical, title))
+  }
+
+  /**
+   * Get or create the default global workspace (`~/.const/workspace/default`).
+   * Used for no-workspace chat sessions and scratchpad operations.
+   * @returns the default workspace entity.
+   */
+  async getDefaultWorkspace(): Promise<Workspace> {
+    const defaultPath = constDefaultWorkspacePath()
+    await mkdir(defaultPath, { recursive: true })
+    return this.create(defaultPath, 'Default Workspace')
   }
 
   /**
