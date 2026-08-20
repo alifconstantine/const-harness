@@ -31,6 +31,7 @@ export const zh = {
   'search.noMatches': '无匹配会话',
   'search.hasMore': '仅显示前 {n} 条结果，请缩小搜索范围。',
   'menu.addWorkspace': '添加工作区…',
+  'menu.outsideProject': 'Outside Project',
   'picker.loading': '正在加载工作区…',
   'conflict.named': '已存在名为“{name}”的工作区。',
   'folderError.title': '无法打开文件夹',
@@ -75,9 +76,9 @@ export type WorkspaceKey = keyof typeof zh
 
 /** English dictionary, checked complete against the zh key set. */
 export const en = {
-  'group.ungrouped': 'Ungrouped',
+  'group.ungrouped': 'Conversations',
   'session.new': 'New Session',
-  'section.workspaces': 'Workspaces',
+  'section.workspaces': 'Projects',
   'section.sessions': 'Sessions',
   'viewOptions.label': 'View options',
   'groupBy.label': 'Group by',
@@ -99,7 +100,8 @@ export const en = {
   'search.unavailable': 'Content search is temporarily unavailable. Showing name matches.',
   'search.noMatches': 'No matching sessions',
   'search.hasMore': 'Showing the first {n} results. Narrow your search.',
-  'menu.addWorkspace': 'Add workspace…',
+  'menu.addWorkspace': 'Add Project…',
+  'menu.outsideProject': 'Outside Project',
   'picker.loading': 'Loading workspaces…',
   'conflict.named': 'A workspace named “{name}” already exists.',
   'folderError.title': 'Couldn’t open folder',
@@ -110,7 +112,7 @@ export const en = {
   'field.workspaceName': 'Workspace name',
   'field.sessionName': 'Session name',
   'delete.workspace': 'Delete workspace',
-  'delete.desc': 'This removes “{name}” from the workspace list. The folder and session logs will be kept. Its sessions will appear under Ungrouped.',
+  'delete.desc': 'This removes “{name}” from the workspace list. The folder and session logs will be kept. Its sessions will appear under Conversations.',
   'delete.pending': 'Deleting workspace…',
   'menu.fork': 'Fork session',
   'menu.archiveSession': 'Archive session',

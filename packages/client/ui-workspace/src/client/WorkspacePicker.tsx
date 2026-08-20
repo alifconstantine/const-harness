@@ -11,7 +11,7 @@
 import type { ReactNode, RefObject } from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import {
-  Button, IconFolderClose16, IconPlusOutline16, Menu, Modal, type MenuEntry,
+  Button, IconFolderClose16, IconNewChatOutline16, IconPlusOutline16, Menu, Modal, type MenuEntry,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type {
   WorkspaceId, WorkspaceListState, WorkspaceView,
@@ -21,6 +21,7 @@ import type { DirectoryFlowOwnerProps, WorkspacePickerProps } from './contract/s
 import css from './WorkspacePicker.module.css'
 
 const ADD_WORKSPACE = '::add-workspace'
+const OUTSIDE_PROJECT = '::outside-project'
 
 /** Core flow props: the owner supplies popover control and pick semantics. */
 export interface WorkspacePickFlowProps {
@@ -38,8 +39,8 @@ export interface WorkspacePickFlowProps {
   useDirectoryFlow: SnapshotSelectorHook<boolean>
   /** Render this surface's directory-flow hole with the owner conversation (the entry's narrowed renderSlot). */
   renderDirectoryFlow: (owner: DirectoryFlowOwnerProps) => ReactNode
-  /** A real Workspace was picked or created. */
-  onPick: (workspaceId: WorkspaceId) => void
+  /** A real Workspace was picked or created, or undefined for an outside-project session. */
+  onPick: (workspaceId?: WorkspaceId) => void
   /** Close the popover (outside click / Escape / post-pick). */
   onClose: () => void
   /** Only offer the add action, hide existing workspaces. */
@@ -48,6 +49,8 @@ export interface WorkspacePickFlowProps {
   side?: 'bottom' | 'top' | 'right'
   /** Currently active workspace (trailing check in the picker list). */
   selectedId?: WorkspaceId | undefined
+  /** Wide state of the surface (false for rail mode). */
+  wide?: boolean
 }
 
 /**
@@ -68,6 +71,7 @@ export function WorkspacePickFlow({
   addOnly = false,
   side = 'bottom',
   selectedId,
+  wide = true,
 }: WorkspacePickFlowProps) {
   const workspaceSnapshot = useWorkspaces(state => state)
   const workspaces = workspaceSnapshot.items
@@ -98,9 +102,12 @@ export function WorkspacePickFlow({
   useEffect(() => {
     if (flowOpen && !flowAvailable) setFlowOpen(false)
   }, [flowOpen, flowAvailable])
-  const addEntries: MenuEntry[] = flowAvailable
-    ? [{ id: ADD_WORKSPACE, label: t('menu.addWorkspace'), icon: <IconPlusOutline16 size={16} />, disabled: flowBusy }]
-    : []
+  const addEntries: MenuEntry[] = [
+    ...(flowAvailable
+      ? [{ id: ADD_WORKSPACE, label: t('menu.addWorkspace'), icon: <IconPlusOutline16 size={16} />, disabled: flowBusy }]
+      : []),
+    { id: OUTSIDE_PROJECT, label: t('menu.outsideProject'), icon: <IconNewChatOutline16 size={16} />, disabled: flowBusy },
+  ]
   // With workspaces listed, the add action pins below the scroll region
   // (divider + always visible); otherwise it IS the menu.
   const pinAdd = !addOnly && workspaces.length > 0
@@ -149,7 +156,7 @@ export function WorkspacePickFlow({
   // loading status instead of jumping into a flow the arriving list would have
   // made unnecessary; the add-only surface lists nothing and never waits.
   const listSettled = addOnly || workspaceSnapshot.phase === 'ready'
-  const addIsTheOnlyEntry = !pinAdd && listSettled && addEntries.length === 1
+  const addIsTheOnlyEntry = (!wide && addOnly) || (!pinAdd && listSettled && addEntries.length === 1)
   // `flowBusy` gates this exactly as it disables the equivalent menu entry: a
   // pick still being adopted owns the surface until it settles.
   useEffect(() => {
@@ -177,6 +184,11 @@ export function WorkspacePickFlow({
       openDirectoryFlow()
       return
     }
+    if (id === OUTSIDE_PROJECT) {
+      onClose()
+      onPick(undefined)
+      return
+    }
     onPick(id as WorkspaceId)
   }
 
@@ -187,7 +199,7 @@ export function WorkspacePickFlow({
         anchor={null}
         items={items}
         {...pinAdd ? { footer: addEntries } : {}}
-        selectedId={selectedId}
+        selectedId={selectedId ?? OUTSIDE_PROJECT}
         onSelect={handleSelect}
         onClose={onClose}
         side={side}

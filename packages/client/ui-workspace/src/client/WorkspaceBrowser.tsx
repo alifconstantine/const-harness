@@ -458,10 +458,8 @@ function SessionTree({
                   setGroupExpanded(group.key, !group.expanded)
                 }}
                 onCreate={() => {
-                  if (group.workspaceId !== undefined) {
-                    setGroupExpanded(group.key, true)
-                    startSession(group.workspaceId)
-                  }
+                  setGroupExpanded(group.key, true)
+                  startSession(group.workspaceId)
                 }}
                 drag={workspaceDragProps}
                 actions={group.workspaceId === undefined
@@ -1076,6 +1074,7 @@ export function WorkspaceBrowser({
           useDirectoryFlow={useDirectoryFlow}
           renderDirectoryFlow={owner => renderSlot('sidebar.workspaces.directoryFlow', owner)}
           addOnly
+          wide={wide}
           side="right"
           onPick={(workspaceId) => {
             setWsPickerOpen(false)

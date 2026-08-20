@@ -86,7 +86,22 @@ export class WorkspaceRuntime implements IWorkspaces {
    * @param workspaceId - chosen Workspace (must be in the workspace list).
    * @returns the reused or newly created session id.
    */
-  async connectWorkspace(workspaceId: WorkspaceId): Promise<SessionId> {
+  async connectWorkspace(workspaceId?: WorkspaceId): Promise<SessionId> {
+    const archived = this.list.getSnapshot().archivedSessionIds
+    const sessions = this.sessions.list.getSnapshot()
+
+    if (workspaceId === undefined) {
+      const allWorkspaceSessionIds = new Set(
+        this.list.getSnapshot().items.flatMap(item => item.sessionIds),
+      )
+      for (const id of sessions.ids) {
+        const summary = sessions.byId[id]
+        if (summary !== undefined && summary.blank && !allWorkspaceSessionIds.has(summary.id)
+          && !archived.includes(summary.id)) return summary.id
+      }
+      return this.sessions.create()
+    }
+
     const workspace = this.list.getSnapshot().items.find(item => item.workspaceId === workspaceId)
     if (workspace === undefined) throw new Error(`workspaces.connectWorkspace: unknown workspace ${workspaceId}`)
     // Coalesce concurrent connects: a create's summary lands without cwd
@@ -101,8 +116,6 @@ export class WorkspaceRuntime implements IWorkspaces {
     // would open a session no grouping surface shows under this workspace.
     // An archived blank is never reused either: reuse would open a session
     // no grouping surface can show, so New Session mints a fresh one instead.
-    const archived = this.list.getSnapshot().archivedSessionIds
-    const sessions = this.sessions.list.getSnapshot()
     for (const id of sessions.ids) {
       const summary = sessions.byId[id]
       if (summary !== undefined && summary.blank && summary.cwd === workspace.path
@@ -175,15 +188,14 @@ export class WorkspaceRuntime implements IWorkspaces {
    * @param workspaceId - explicit target Workspace for scoped actions.
    */
   startSession(workspaceId?: WorkspaceId): void {
-    const workspace = this.list.getSnapshot()
-    const current = this.sessions.list.getSnapshot().current
-    const currentWorkspaceId = current === undefined
-      ? undefined
-      : workspace.items.find(item => item.sessionIds.includes(current))?.workspaceId
-    const target = workspaceId ?? currentWorkspaceId ?? workspace.recentWorkspaceId
-    if (target === undefined) {
-      this.sessions.clear()
-      return
+    let target = workspaceId
+    if (arguments.length === 0) {
+      const workspace = this.list.getSnapshot()
+      const current = this.sessions.list.getSnapshot().current
+      const currentWorkspaceId = current === undefined
+        ? undefined
+        : workspace.items.find(item => item.sessionIds.includes(current))?.workspaceId
+      target = currentWorkspaceId ?? workspace.recentWorkspaceId
     }
     void this.connectWorkspace(target).then(
       (sessionId) => { this.sessions.open(sessionId) },
