@@ -94,9 +94,9 @@ describe('web-app runtime glue', () => {
       lanAddresses: ['192.168.1.5'],
       trustedHosts: ['192.168.1.5', 'lab.internal'],
     })
-    expect(log).toHaveBeenCalledWith('dsh web: http://127.0.0.1:4567 (LAN: http://192.168.1.5:4567)')
+    expect(log).toHaveBeenCalledWith('const web: http://127.0.0.1:4567 (LAN: http://192.168.1.5:4567)')
     const assembly = await ctx.systemPrompt.assemble()
-    expect(assembly.sections.find(entry => entry.name === 'harness:source')?.text).toContain('DeepSeek Harness implementation checkout')
+    expect(assembly.sections.find(entry => entry.name === 'harness:source')?.text).toContain('Const Harness implementation checkout')
     const section = assembly.sections.find(entry => entry.name === 'app:web-surface')
     expect(section?.text).toContain('http://127.0.0.1:4567')
     // The single update contract: the receiver is always on; no-refresh
@@ -150,7 +150,7 @@ describe('web-app runtime glue', () => {
     const log = vi.spyOn(console, 'log').mockImplementation(() => {})
     apply(ctx, new Config({ printUrl: true, surfaceContext: true, trustedHosts: [] }))
     await new Promise(resolve => setTimeout(resolve, 0))
-    expect(log).toHaveBeenCalledWith('dsh web: http://127.0.0.1:4567')
+    expect(log).toHaveBeenCalledWith('const web: http://127.0.0.1:4567')
     await ctx.fiber.dispose()
   })
 
@@ -169,7 +169,7 @@ describe('web-app runtime glue', () => {
     expect(log).not.toHaveBeenCalled()
     release!()
     await new Promise(resolve => setTimeout(resolve, 0))
-    expect(log).toHaveBeenCalledWith('dsh web: http://127.0.0.1:4567')
+    expect(log).toHaveBeenCalledWith('const web: http://127.0.0.1:4567')
     await settled.fiber.dispose()
 
     // Failed path: Loader reports the sibling failure; the app prints no URL

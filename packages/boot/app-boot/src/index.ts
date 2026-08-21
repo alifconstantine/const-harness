@@ -114,7 +114,7 @@ const BOOTSTRAP_NAMES = new Set([
 ])
 
 /** Name prefixes no discovered file may set. */
-const BOOTSTRAP_PREFIXES = ['DSH_', 'XDG_', 'DYLD_', 'BASH_FUNC_']
+const BOOTSTRAP_PREFIXES = ['CONST_', 'DSH_', 'XDG_', 'DYLD_', 'BASH_FUNC_']
 
 /**
  * Whether a variable may come only from the inherited process environment
@@ -824,6 +824,6 @@ export function addHarnessSourceSection(ctx: Context, sourceRoot: string): (() =
   return systemPrompt.section({
     name: HARNESS_SOURCE_SECTION,
     order: -99,
-    text: `The DeepSeek Harness implementation checkout is at ${sourceRoot}. The checkout location and current working directory are separate values and may differ; never infer the working directory from this path. Use pwd to determine the current working directory. Use this checkout only to inspect or extend DSH itself.`,
+    text: `The Const Harness implementation checkout is at ${sourceRoot}. The checkout location and current working directory are separate values and may differ; never infer the working directory from this path. Use pwd to determine the current working directory. Use this checkout only to inspect or extend Const Harness itself.`,
   })
 }

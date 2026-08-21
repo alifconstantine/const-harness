@@ -50,5 +50,5 @@ switch (invocation.mode) {
   }
   default:
     invocation satisfies never
-    throw new Error(`dsh: unhandled invocation mode ${JSON.stringify(invocation)}`)
+    throw new Error(`const: unhandled invocation mode ${JSON.stringify(invocation)}`)
 }

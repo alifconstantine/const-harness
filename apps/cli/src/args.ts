@@ -63,12 +63,13 @@ const collect = (value: string, previous: string[] = []): string[] => [...previo
 /** The launcher's own help text; each app prints its own. */
 const HELP_EXAMPLES = `
 Examples:
-  dsh --profile web                          boot the web profile (same as: dsh web)
-  dsh --profile headless "run the tests"     answer one task, print the result, and exit
-  dsh --profile tui --patch ./extra.yml      boot a custom profile with one extra overlay
-  dsh --profile tui --resume <session>       arguments after the launcher flags reach the app
-  dsh --profile web --help                   the web app's own flags and help
-  dsh plugin --profile tui add <package>     install a plugin into the tui profile
+  const                                      start Const Harness and open Web UI (default)
+  const web                                  boot the web profile (same as: const --profile web)
+  const --profile headless "run the tests"   answer one task, print the result, and exit
+  const --profile tui --patch ./extra.yml      boot a custom profile with one extra overlay
+  const --profile tui --resume <session>       arguments after the launcher flags reach the app
+  const --profile web --help                   the web app's own flags and help
+  const plugin --profile tui add <package>     install a plugin into the tui profile
 `
 
 /**
@@ -115,28 +116,38 @@ export function parseDshArgs(argv: readonly string[], version: string): DshInvoc
   // inferred type would be circular through its own chain.
   const program: Command = new Command()
   program
-    .name('dsh')
+    .name('const')
     .version(version, '-V, --version', 'output the version number')
-    .description('dsh: boot a DeepSeek Harness profile — an ordered stack of plugin-bundle patch layers under your own overrides.')
+    .description('const: boot a Const Harness profile — an ordered stack of plugin-bundle patch layers under your own overrides.')
     .addHelpText('after', HELP_EXAMPLES)
     .exitOverride()
     // The launcher's flags come first and end at the first token it does not
     // know; everything from there on belongs to the booted app, including
-    // its -h. `dsh -h` with no profile still prints this help, below.
+    // its -h. `const -h` with no profile still prints this help, below.
     .helpOption(false)
     .allowUnknownOption()
     .passThroughOptions()
     .enablePositionalOptions()
-    .argument('[args...]', 'arguments for the booted profile\'s app (see: dsh --profile <name> --help)')
-    .option('--profile <name>', 'the profile under $DSH_HOME/profiles to boot')
+    .argument('[args...]', 'arguments for the booted profile\'s app (see: const --profile <name> --help)')
+    .option('--profile <name>', 'the profile under $CONST_HOME/profiles (or $DSH_HOME/profiles) to boot')
     .option('--patch <path>', 'extra patch-list overlay applied after the profile layer (repeatable)', collect)
     .option('--dump-config', 'print the composed profile tree and exit')
     .option('--dump-default-config', 'print the profile tree without its user layer or --patch overlays and exit')
     .action((args: string[], options: BootOptions & { profile?: string }) => {
       // With the app owning -h, the launcher's own help is what a bare
-      // `dsh -h` (no profile to hand it to) must print.
+      // `const -h` (no profile to hand it to) must print.
       if (options.profile === undefined) {
         if (args.some(argument => argument === '-h' || argument === '--help')) program.help()
+        // Smart default: bare invocation boots the web profile
+        if (
+          args.length === 0
+          && options.patch === undefined
+          && options.dumpConfig === undefined
+          && options.dumpDefaultConfig === undefined
+        ) {
+          resolved = { mode: 'profile', profile: 'web', patches: [], args: [] }
+          return
+        }
         program.error('error: --profile <name> is required')
       }
       const profile = options.profile
@@ -186,6 +197,6 @@ export function parseDshArgs(argv: readonly string[], version: string): DshInvoc
     return process.exit(error instanceof CommanderError ? error.exitCode : 1)
   }
   /* v8 ignore next -- an action resolves or Commander throws */
-  if (resolved === undefined) throw new Error('dsh: no invocation resolved')
+  if (resolved === undefined) throw new Error('const: no invocation resolved')
   return resolved
 }

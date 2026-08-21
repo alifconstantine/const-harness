@@ -22,6 +22,7 @@ afterEach(() => { vi.restoreAllMocks() })
 
 describe('parseDshArgs', () => {
   it('routes profile boots and the web alias, handing the rest to the app', () => {
+    expect(parse([])).toEqual({ mode: 'profile', profile: 'web', patches: [], args: [] })
     expect(parse(['--profile', 'tui'])).toEqual({ mode: 'profile', profile: 'tui', patches: [], args: [] })
     expect(parse(['--profile', 'tui', '--patch', 'a.yml', '--patch', 'b.yml']))
       .toEqual({ mode: 'profile', profile: 'tui', patches: ['a.yml', 'b.yml'], args: [] })
@@ -71,7 +72,6 @@ describe('parseDshArgs', () => {
   })
 
   it('rejects missing profile, removed flags, and contradictory inputs', () => {
-    expect(exitCode([])).toBe(1)
     expect(exitCode(['tui'])).toBe(1) // an app argument without --profile has no app to reach
     expect(exitCode(['--config', 'c.yml'])).toBe(1) // removed
     expect(exitCode(['-p', 'task'])).toBe(1) // removed
