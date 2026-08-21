@@ -38,7 +38,7 @@ import { DSH_LAUNCH_ENVIRONMENT_KEY, type LaunchEnvironmentSnapshot } from '@dee
 import { provideCmdline } from '@deepseek-ai/dsh-cmdline'
 import { createProcessShutdown, type ProcessShutdown } from './process-shutdown.ts'
 
-const NAME = 'dsh'
+const NAME = 'const'
 
 /**
  * The home-level user patch layer (`$DSH_HOME/cordis.patch.yml`), applied
