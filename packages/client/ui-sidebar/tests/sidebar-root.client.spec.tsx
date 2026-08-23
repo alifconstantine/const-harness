@@ -17,9 +17,16 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-// The shell never reads the global hooks itself, but they ride the standard
-// props share; stub them as never-called functions.
-const neverHook = (() => { throw new Error('shell must not read global hooks') }) as never
+// Global hook stubs providing ready session and workspace state
+const mockSessions = ((selector: (s: unknown) => unknown) => selector({
+  phase: 'ready',
+  ids: ['s1', 's2'],
+  byId: {
+    s1: { id: 's1', displayTitle: 'Evaluasi Plan Implementasi', updatedAt: Date.now() - 10000 },
+    s2: { id: 's2', displayTitle: 'Perbandingan ZCode dan DSH', updatedAt: Date.now() - 50000 },
+  },
+})) as never
+const mockWorkspaces = ((selector: (s: unknown) => unknown) => selector({ phase: 'ready', workspaces: [] })) as never
 
 function mountShell({ collapsed = false, width = 300 }: { collapsed?: boolean; width?: number } = {}) {
   const startSession = vi.fn()
@@ -31,7 +38,7 @@ function mountShell({ collapsed = false, width = 300 }: { collapsed?: boolean; w
   const root = () => (
     <SidebarRoot
       collapsed={current.collapsed} width={current.width}
-      useSessions={neverHook} useWorkspaces={neverHook}
+      useSessions={mockSessions} useWorkspaces={mockWorkspaces}
       startSession={startSession} toggleSidebar={toggleSidebar} t={t}
       renderSlot={((
         key: string,
@@ -129,5 +136,36 @@ describe('SidebarRoot shell', () => {
     const b = mountShell({ collapsed: true })
     expect(b.regionOwner().wide).toBe(false)
     expect(screen.getByRole('button', { name: 'Open sidebar' })).toBeTruthy()
+  })
+
+  it('opens command palette modal, switches tabs, searches tasks, and executes actions', () => {
+    mountShell()
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+    expect(screen.getByPlaceholderText('Search actions, tasks, or files')).toBeTruthy()
+    expect(screen.getByText('Recent tasks')).toBeTruthy()
+    expect(screen.getByText('Evaluasi Plan Implementasi')).toBeTruthy()
+
+    // Switch to Actions tab
+    fireEvent.click(screen.getByRole('tab', { name: /actions/i }))
+    expect(screen.getByText('Open workspace')).toBeTruthy()
+    expect(screen.queryByText('Evaluasi Plan Implementasi')).toBeNull()
+
+    // Switch to Tasks tab
+    fireEvent.click(screen.getByRole('tab', { name: /tasks/i }))
+    expect(screen.getByText('Evaluasi Plan Implementasi')).toBeTruthy()
+
+    // Search query
+    const input = screen.getByPlaceholderText('Search actions, tasks, or files')
+    fireEvent.change(input, { target: { value: 'Evaluasi' } })
+    expect(screen.getByText('Evaluasi')).toBeTruthy()
+
+    // Switch to Actions and execute Open workspace action
+    fireEvent.change(input, { target: { value: '' } })
+    fireEvent.click(screen.getByRole('tab', { name: /actions/i }))
+    const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
+    fireEvent.click(screen.getByText('Open workspace'))
+    expect(dispatchSpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'const:open-workspace-picker' }))
+    dispatchSpy.mockRestore()
+    expect(screen.queryByPlaceholderText('Search actions, tasks, or files')).toBeNull()
   })
 })

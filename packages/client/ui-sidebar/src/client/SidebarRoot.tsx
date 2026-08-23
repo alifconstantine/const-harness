@@ -24,6 +24,7 @@ import {
   Tooltip,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { SidebarRootComponentProps } from './contract/slots.ts'
+import { CommandPaletteModal } from './CommandPaletteModal.tsx'
 import css from './SidebarRoot.module.css'
 
 /** Wide-content unmount delay; matches the 150ms wide-content fade-out. */
@@ -45,6 +46,8 @@ const SCROLLBAR_LINGER_MS = 2000
 export function SidebarRoot({
   collapsed,
   width,
+  useSessions,
+  useWorkspaces,
   startSession,
   toggleSidebar,
   t,
@@ -59,6 +62,23 @@ export function SidebarRoot({
     return () => { window.clearTimeout(timer) }
   }, [collapsed])
   const wide = !collapsed || !settled
+
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
+  useEffect(() => {
+    const handleOpen = () => { setCommandPaletteOpen(true) }
+    window.addEventListener('const:open-command-palette', handleOpen)
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setCommandPaletteOpen(v => !v)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('const:open-command-palette', handleOpen)
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [])
 
   // Freeze the content at its expanded width while it fades out (collapsed
   // && wide): the sliding column then clips it instead of reflowing it. The
@@ -266,6 +286,16 @@ export function SidebarRoot({
           {renderSlot('sidebar.settings', { wide })}
         </div>
       </div>
+
+      <CommandPaletteModal
+        open={commandPaletteOpen}
+        onClose={() => { setCommandPaletteOpen(false) }}
+        useSessions={useSessions}
+        useWorkspaces={useWorkspaces}
+        startSession={startSession}
+        toggleSidebar={toggleSidebar}
+        t={t}
+      />
     </div>
   )
 }
