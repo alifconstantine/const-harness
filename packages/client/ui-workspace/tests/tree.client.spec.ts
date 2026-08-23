@@ -3,7 +3,7 @@ import type {
   SessionId, SessionListState, SessionSummary, WorkspaceId, WorkspaceView,
 } from '@deepseek-ai/dsh-client-runtime/client'
 import {
-  deriveFlat, deriveGroups, deriveSearchResults, workspaceLabel, relativeTime,
+  deriveConversations, deriveDesign, deriveFlat, deriveGroups, deriveSearchResults, workspaceLabel, relativeTime,
   UNGROUPED_KEY, UNGROUPED_LABEL,
 } from '../src/client/tree.ts'
 import { createWorkspaceViewStore } from '../src/client/stores.ts'
@@ -248,6 +248,38 @@ describe('deriveFlat', () => {
     const kept = summary('kept', 1)
     const gone = summary('gone', 2)
     expect(deriveFlat(list(kept, gone), archived('gone')).map(row => row.id)).toEqual([kept.id])
+  })
+})
+
+describe('deriveDesign', () => {
+  it('filters sessions whose title contains design keywords', () => {
+    const design = summary('UI Design mockup', 30)
+    const normal = summary('General chat', 20)
+    const prototype = summary('Prototype Layout test', 10)
+    const rows = deriveDesign(list(design, normal, prototype), noArchive)
+    expect(rows.map(r => r.id)).toEqual([design.id, prototype.id])
+  })
+
+  it('hides archived design sessions', () => {
+    const kept = summary('UI Design', 2)
+    const gone = summary('Old Design', 1)
+    expect(deriveDesign(list(kept, gone), archived('Old Design')).map(r => r.id)).toEqual([kept.id])
+  })
+})
+
+describe('deriveConversations', () => {
+  it('filters only loose sessions not belonging to any Host Workspace', () => {
+    const owned = summary('owned-session', 10)
+    const loose = summary('loose-session', 20)
+    const ws = workspace('project-1', ['owned-session'])
+    const rows = deriveConversations(list(owned, loose), [ws], noArchive)
+    expect(rows.map(r => r.id)).toEqual([loose.id])
+  })
+
+  it('hides archived loose sessions', () => {
+    const loose1 = summary('loose-1', 2)
+    const loose2 = summary('loose-2', 1)
+    expect(deriveConversations(list(loose1, loose2), [], archived('loose-2')).map(r => r.id)).toEqual([loose1.id])
   })
 })
 

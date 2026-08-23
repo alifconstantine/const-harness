@@ -12,7 +12,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
 import {
-  Button, IconCloseFill14, IconPersonalizationOutline16,
+  Button, IconCloseFill14, IconDesignOutline16, IconFolderClose16,
+  IconNewChatOutline16, IconPersonalizationOutline16,
   IconProjectAddOutline16, IconSearchOutline16, Menu, Modal, Tooltip,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type {
@@ -20,8 +21,9 @@ import type {
 } from '@deepseek-ai/dsh-client-runtime/client'
 import type { WorkspaceBrowserProps } from './contract/slots.ts'
 import type { SessionNode, SessionOrderBy } from './tree.ts'
-import { deriveFlat, deriveGroups, deriveSearchResults, UNGROUPED_KEY } from './tree.ts'
+import { deriveConversations, deriveDesign, deriveFlat, deriveGroups, deriveSearchResults, UNGROUPED_KEY } from './tree.ts'
 import { ProjectRowItem, SearchResultItem, SessionNodeItem } from './rows/Rows.tsx'
+import type { SessionGroupBy } from './stores.ts'
 import { FLAT_SESSION_ORDER_KEY } from './stores.ts'
 import { WorkspacePickFlow } from './WorkspacePicker.tsx'
 import css from './WorkspaceBrowser.module.css'
@@ -145,9 +147,9 @@ function nextSessionOrderAccount({
 
 /** Grouping and ordering menu; own open state so it resets with the wide chrome. */
 function ViewOptionsMenu({ groupBy, orderBy, onGroupPick, onOrderPick, t }: {
-  groupBy: 'workspace' | 'flat'
+  groupBy: SessionGroupBy
   orderBy: SessionOrderBy
-  onGroupPick: (mode: 'workspace' | 'flat') => void
+  onGroupPick: (mode: SessionGroupBy) => void
   onOrderPick: (mode: SessionOrderBy) => void
   t: WorkspaceBrowserProps['t']
 }) {
@@ -167,7 +169,7 @@ function ViewOptionsMenu({ groupBy, orderBy, onGroupPick, onOrderPick, t }: {
       ]}
       selectedIds={[groupBy, orderBy]}
       onSelect={(id) => {
-        if (id === 'workspace' || id === 'flat') onGroupPick(id)
+        if (id === 'workspace' || id === 'flat' || id === 'design' || id === 'conversation') onGroupPick(id)
         else if (id === 'manual' || id === 'updated') onOrderPick(id)
         setOpen(false)
       }}
@@ -459,7 +461,7 @@ function SessionTree({
                 }}
                 onCreate={() => {
                   setGroupExpanded(group.key, true)
-                  startSession(group.workspaceId)
+                  if (group.workspaceId !== undefined) startSession(group.workspaceId)
                 }}
                 drag={workspaceDragProps}
                 actions={group.workspaceId === undefined
@@ -540,8 +542,10 @@ function SessionTree({
   )
 }
 
-/** The flat "In one list" body: every session is one draggable top-level row. */
+/** The flat list body: every session is one draggable top-level row (used for Group, Design, Conversation modes). */
 function FlatList({
+  mode = 'flat',
+  workspaces = [],
   useSessions, open, forkSession, onSessionRename, onSessionArchive, archivedSessionIds,
   orderBy, sessionOrderByAccount, sessionUpdatedAtByAccount, syncSessionOrderAccount, setSessionOrder, t,
 }: Pick<
@@ -558,18 +562,33 @@ function FlatList({
   | 'syncSessionOrderAccount'
   | 'setSessionOrder'
   | 't'
->) {
+> & {
+  mode?: SessionGroupBy
+  workspaces?: readonly WorkspaceView[]
+}) {
   const list = useSessions(s => s)
-  const baseRows = useMemo(
-    () => deriveFlat(list, archivedSessionIds),
-    [list, archivedSessionIds],
-  )
+  const baseRows = useMemo(() => {
+    if (mode === 'design') {
+      return deriveDesign(list, archivedSessionIds)
+    }
+    if (mode === 'conversation') {
+      return deriveConversations(list, workspaces, archivedSessionIds)
+    }
+    return deriveFlat(list, archivedSessionIds)
+  }, [mode, list, workspaces, archivedSessionIds])
+
+  const accountKey = mode === 'design'
+    ? '__design_session_order__'
+    : mode === 'conversation'
+      ? '__conversation_session_order__'
+      : FLAT_SESSION_ORDER_KEY
+
   const sessionIds = useMemo(() => baseRows.map(row => row.id), [baseRows])
   const previousOrderBy = useRef(orderBy)
   useEffect(() => {
     if (list.phase !== 'ready') return
-    const previousOrder = sessionOrderByAccount[FLAT_SESSION_ORDER_KEY]
-    const previousUpdatedAt = sessionUpdatedAtByAccount[FLAT_SESSION_ORDER_KEY] ?? {}
+    const previousOrder = sessionOrderByAccount[accountKey]
+    const previousUpdatedAt = sessionUpdatedAtByAccount[accountKey] ?? {}
     const switchedToUpdated = previousOrderBy.current !== 'updated' && orderBy === 'updated'
     previousOrderBy.current = orderBy
     const next = nextSessionOrderAccount({
@@ -581,17 +600,17 @@ function FlatList({
       sortByRecency: orderBy === 'updated' && (previousOrder === undefined || switchedToUpdated),
     })
     if (next.changed) {
-      syncSessionOrderAccount(FLAT_SESSION_ORDER_KEY, next.order.map(id => id as string), next.updatedAt)
+      syncSessionOrderAccount(accountKey, next.order.map(id => id as string), next.updatedAt)
     }
-  }, [list, orderBy, sessionOrderByAccount, sessionUpdatedAtByAccount, sessionIds, syncSessionOrderAccount])
+  }, [list, orderBy, sessionOrderByAccount, sessionUpdatedAtByAccount, sessionIds, syncSessionOrderAccount, accountKey])
   const rows = useMemo(() => {
     const byId = new Map(baseRows.map(row => [row.id, row]))
-    return reconciledSessionOrder(sessionIds, sessionOrderByAccount[FLAT_SESSION_ORDER_KEY])
+    return reconciledSessionOrder(sessionIds, sessionOrderByAccount[accountKey])
       .flatMap((id) => {
         const row = byId.get(id)
         return row === undefined ? [] : [row]
       })
-  }, [baseRows, sessionOrderByAccount, sessionIds])
+  }, [baseRows, sessionOrderByAccount, sessionIds, accountKey])
   const [drag, setDrag] = useState<DragState | null>(null)
   const dropCommitted = useRef(false)
   useNativeDragAcceptance(drag !== null)
@@ -609,7 +628,7 @@ function FlatList({
     const nextOrder = rows.map(row => row.id).filter(id => id !== activeDrag.sessionId)
     const insertAt = anchor === undefined ? nextOrder.length : nextOrder.indexOf(anchor)
     nextOrder.splice(insertAt === -1 ? nextOrder.length : insertAt, 0, activeDrag.sessionId)
-    setSessionOrder(FLAT_SESSION_ORDER_KEY, nextOrder.map(id => id as string))
+    setSessionOrder(accountKey, nextOrder.map(id => id as string))
   }
   const now = Date.now()
   return (
@@ -634,7 +653,7 @@ function FlatList({
               drag={{
                 start: () => {
                   dropCommitted.current = false
-                  setDrag({ accountKey: FLAT_SESSION_ORDER_KEY, sessionId: node.id, over: null })
+                  setDrag({ accountKey, sessionId: node.id, over: null })
                 },
                 active,
                 marker: active && drag.over?.id === node.id ? drag.over.half : null,
@@ -970,12 +989,77 @@ export function WorkspaceBrowser({
     })
   }
 
+  useEffect(() => {
+    const handleFilterMode = (e: Event) => {
+      const custom = e as CustomEvent<{ mode: SessionGroupBy }>
+      if (custom.detail?.mode) {
+        actions.setGroupBy(custom.detail.mode)
+      }
+    }
+    window.addEventListener('const:filter-mode', handleFilterMode)
+    return () => {
+      window.removeEventListener('const:filter-mode', handleFilterMode)
+    }
+  }, [actions])
+
   return (
     <div className={clsx(css.root, !wide && css.rail)}>
+      {/* 4-Mode View Filter Switcher (Requirement 2 & 4: Image 1 style) */}
+      {wide && (
+        <div className={css.modeSwitcherRow} role="tablist" aria-label="Session View Filter">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={groupBy === 'flat'}
+            className={clsx(css.modeTab, groupBy === 'flat' && css.modeTabActive)}
+            onClick={() => { actions.setGroupBy('flat') }}
+          >
+            <span className={css.modeIcon}>#</span>
+            <span className={css.modeLabel}>{t('viewMode.group')}</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={groupBy === 'workspace'}
+            className={clsx(css.modeTab, groupBy === 'workspace' && css.modeTabActive)}
+            onClick={() => { actions.setGroupBy('workspace') }}
+          >
+            <IconFolderClose16 size={13} className={css.modeIcon} />
+            <span className={css.modeLabel}>{t('viewMode.project')}</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={groupBy === 'design'}
+            className={clsx(css.modeTab, groupBy === 'design' && css.modeTabActive)}
+            onClick={() => { actions.setGroupBy('design') }}
+          >
+            <IconDesignOutline16 size={13} className={css.modeIcon} />
+            <span className={css.modeLabel}>{t('viewMode.design')}</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={groupBy === 'conversation'}
+            className={clsx(css.modeTab, groupBy === 'conversation' && css.modeTabActive)}
+            onClick={() => { actions.setGroupBy('conversation') }}
+          >
+            <IconNewChatOutline16 size={13} className={css.modeIcon} />
+            <span className={css.modeLabel}>{t('viewMode.conversation')}</span>
+          </button>
+        </div>
+      )}
+
       <div className={css.sectionHeader}>
         {wide && (
           <span className={clsx(css.sectionLabel, css.wide, searchExpanded && css.sectionLabelHidden)}>
-            {groupBy === 'flat' ? t('section.sessions') : t('section.workspaces')}
+            {groupBy === 'workspace'
+              ? t('section.workspaces')
+              : groupBy === 'flat'
+                ? t('section.sessions')
+                : groupBy === 'design'
+                  ? t('viewMode.design')
+                  : t('viewMode.conversation')}
           </span>
         )}
         {wide && (
@@ -1118,21 +1202,8 @@ export function WorkspaceBrowser({
               t={t}
             />
           )
-          : groupBy === 'flat'
+          : groupBy === 'workspace'
             ? (
-              <FlatList
-                useSessions={useSessions} open={open} forkSession={forkSession}
-                onSessionRename={onSessionRename} onSessionArchive={onSessionArchive}
-                archivedSessionIds={archivedSessionIds}
-                orderBy={orderBy}
-                sessionOrderByAccount={sessionOrderByAccount}
-                sessionUpdatedAtByAccount={sessionUpdatedAtByAccount}
-                syncSessionOrderAccount={actions.syncSessionOrderAccount}
-                setSessionOrder={actions.setSessionOrder}
-                t={t}
-              />
-            )
-            : (
               <SessionTree
                 useSessions={useSessions}
                 onSessionRename={onSessionRename}
@@ -1161,6 +1232,21 @@ export function WorkspaceBrowser({
                   setDeleteTarget({ workspaceId, title })
                   setDeleteError(null)
                 }}
+              />
+            )
+            : (
+              <FlatList
+                mode={groupBy}
+                workspaces={workspaces}
+                useSessions={useSessions} open={open} forkSession={forkSession}
+                onSessionRename={onSessionRename} onSessionArchive={onSessionArchive}
+                archivedSessionIds={archivedSessionIds}
+                orderBy={orderBy}
+                sessionOrderByAccount={sessionOrderByAccount}
+                sessionUpdatedAtByAccount={sessionUpdatedAtByAccount}
+                syncSessionOrderAccount={actions.syncSessionOrderAccount}
+                setSessionOrder={actions.setSessionOrder}
+                t={t}
               />
             ))}
       </div>

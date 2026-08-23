@@ -297,6 +297,64 @@ export function deriveFlat(
   return rows.map(session => sessionNode(session, descendants))
 }
 
+/**
+ * Derive the flat design-only session list ("Design" mode): sessions related to UI/UX,
+ * design artifacts, or OpenDesign workflows.
+ */
+export function deriveDesign(
+  list: SessionListState,
+  archivedSessionIds: readonly SessionId[],
+): SessionNode[] {
+  const archived = new Set(archivedSessionIds)
+  const descendants = indexSubagentDescendants(list.byId)
+  const rows: SessionSummary[] = []
+  for (const id of list.ids) {
+    const s = list.byId[id]
+    if (s === undefined || !sessionVisible(s, list.current, archived)) continue
+    const titleLower = (s.displayTitle || '').toLowerCase()
+    if (
+      titleLower.includes('design') ||
+      titleLower.includes('ui') ||
+      titleLower.includes('ux') ||
+      titleLower.includes('mockup') ||
+      titleLower.includes('prototype') ||
+      titleLower.includes('layout') ||
+      titleLower.includes('desain')
+    ) {
+      rows.push(s)
+    }
+  }
+  rows.sort(byRecency)
+  return rows.map(session => sessionNode(session, descendants))
+}
+
+/**
+ * Derive the loose / unassigned conversation list ("Conversation" mode):
+ * sessions not belonging to any registered Host Workspace.
+ */
+export function deriveConversations(
+  list: SessionListState,
+  workspaces: readonly WorkspaceView[],
+  archivedSessionIds: readonly SessionId[],
+): SessionNode[] {
+  const archived = new Set(archivedSessionIds)
+  const descendants = indexSubagentDescendants(list.byId)
+  const accounted = new Set<SessionId>()
+  for (const workspace of workspaces) {
+    for (const id of workspace.sessionIds) {
+      accounted.add(id)
+    }
+  }
+  const rows: SessionSummary[] = []
+  for (const id of list.ids) {
+    const s = list.byId[id]
+    if (s === undefined || accounted.has(s.id) || !sessionVisible(s, list.current, archived)) continue
+    rows.push(s)
+  }
+  rows.sort(byRecency)
+  return rows.map(session => sessionNode(session, descendants))
+}
+
 /** Relative-time bucket of a session row's trailing label. */
 export type RelativeTimeUnit = 'now' | 'minutes' | 'hours' | 'days' | 'months' | 'years'
 

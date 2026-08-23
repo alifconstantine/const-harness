@@ -1131,4 +1131,38 @@ describe('WorkspaceBrowser', () => {
     const row = screen.getByText('Needle A').closest('[role="treeitem"]') as HTMLElement
     expect(row.hasAttribute('draggable')).toBe(false)
   })
+
+  it('switches view mode via the 4-mode switcher pills and window event', () => {
+    const b = mount({
+      useSessions: hook(sessionState([
+        summary('design-session', 3, { displayTitle: 'UI Design Studio' }),
+        summary('loose-chat', 2, { displayTitle: 'Casual Chat' }),
+      ])),
+      useWorkspaces: hook(workspaceState([workspace('alpha', ['design-session'])])),
+    })
+
+    // Group tab (flat)
+    fireEvent.click(screen.getByRole('tab', { name: /Group/ }))
+    expect(b.store.getSnapshot().groupBy).toBe('flat')
+
+    // Design tab
+    fireEvent.click(screen.getByRole('tab', { name: /Design/ }))
+    expect(b.store.getSnapshot().groupBy).toBe('design')
+    expect(screen.getByText('UI Design Studio')).toBeTruthy()
+    expect(screen.queryByText('Casual Chat')).toBeNull()
+
+    // Conversation tab (loose sessions outside workspace)
+    fireEvent.click(screen.getByRole('tab', { name: /Conversation/ }))
+    expect(b.store.getSnapshot().groupBy).toBe('conversation')
+    expect(screen.getByText('Casual Chat')).toBeTruthy()
+    expect(screen.queryByText('UI Design Studio')).toBeNull()
+
+    // Project tab
+    fireEvent.click(screen.getByRole('tab', { name: /Project/ }))
+    expect(b.store.getSnapshot().groupBy).toBe('workspace')
+
+    // Trigger via const:filter-mode event
+    window.dispatchEvent(new CustomEvent('const:filter-mode', { detail: { mode: 'design' } }))
+    expect(b.store.getSnapshot().groupBy).toBe('design')
+  })
 })
