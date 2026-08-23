@@ -264,26 +264,27 @@ export function SidebarRoot({
         })}
       </div>
 
-      {/* Footer actions stack above Settings in both sidebar widths. */}
+      {/* Footer actions: gear and mobile icons on bottom-left corner */}
       <div className={css.footArea}>
         <div className={css.footerActions}>
           {renderSlot('sidebar.footer.action', { wide })}
         </div>
-        <Tooltip label={t('nav.mobileRemote')} delayMs={500} disabled={wide}>
-          <button
-            type="button"
-            className={css.navItem}
-            aria-label={t('nav.mobileRemote')}
-            onClick={() => {
-              window.dispatchEvent(new CustomEvent('const:open-mobile-remote'))
-            }}
-          >
-            <IconMobileOutline16 size={wide ? 16 : 18} />
-            {wide && <span className={css.navLabel}>{t('nav.mobileRemote')}</span>}
-          </button>
-        </Tooltip>
-        <div className={css.settingsArea}>
-          {renderSlot('sidebar.settings', { wide })}
+        <div className={css.footRow}>
+          <div className={css.settingsArea}>
+            {renderSlot('sidebar.settings', { wide })}
+          </div>
+          <Tooltip label={t('nav.mobileRemote')} delayMs={500}>
+            <button
+              type="button"
+              className={css.footIconButton}
+              aria-label={t('nav.mobileRemote')}
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('const:open-mobile-remote'))
+              }}
+            >
+              <IconMobileOutline16 size={16} />
+            </button>
+          </Tooltip>
         </div>
       </div>
 

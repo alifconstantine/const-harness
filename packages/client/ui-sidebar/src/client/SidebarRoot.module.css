@@ -277,35 +277,93 @@
   padding-left: 0;
 }
 
-/* Footer seats: additive actions stack above Settings. Each occupant owns its
-   button geometry and hover chrome. */
+/* Footer seats: gear and mobile icon buttons in bottom-left corner */
 .footArea {
   flex: none;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-}
-
-.settingsArea,
-.footerActions {
-  flex: none;
-  min-width: 0;
-  width: 100%;
+  gap: 4px;
+  padding: 4px 0 2px;
 }
 
 .footerActions {
   display: flex;
+  width: 100%;
+}
+
+.footRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+}
+
+.settingsArea {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settingsArea button {
+  width: 32px !important;
+  height: 32px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 6px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: var(--dsw-alias-label-secondary) !important;
+}
+
+.settingsArea button:hover {
+  background: var(--dsw-alias-interactive-bg-hover) !important;
+  color: var(--dsw-alias-label-primary) !important;
+}
+
+.settingsArea button span {
+  display: none !important;
+}
+
+.footIconButton {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.footIconButton:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
 }
 
 .collapsed .footArea {
   align-items: center;
+  padding: 6px 0;
 }
 
-.collapsed .settingsArea,
-.collapsed .footerActions {
-  display: flex;
-  justify-content: center;
-  width: auto;
+.collapsed .footRow {
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.collapsed .settingsArea button,
+.collapsed .footIconButton {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 50% !important;
+  color: var(--dsw-alias-label-primary) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
