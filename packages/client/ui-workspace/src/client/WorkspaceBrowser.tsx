@@ -12,8 +12,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
 import {
-  Button, IconCloseFill14, IconDesignOutline16, IconFolderClose16,
-  IconNewChatOutline16, IconPersonalizationOutline16,
+  Button, IconArchiveOutline16, IconChevronDownOutline14, IconCloseFill14,
+  IconPersonalizationOutline16,
   IconProjectAddOutline16, IconSearchOutline16, Menu, Modal, Tooltip,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type {
@@ -143,6 +143,57 @@ function nextSessionOrderAccount({
   const timestampsChanged = Object.keys(updatedAt).length !== Object.keys(previousUpdatedAt).length
     || Object.entries(updatedAt).some(([id, timestamp]) => previousUpdatedAt[id] !== timestamp)
   return { order, updatedAt, changed: orderChanged || timestampsChanged }
+}
+
+/** 4-Mode Selector Dropdown (Group, Project, Design, Conversation) */
+function ModeSelectorDropdown({ groupBy, onSelect, t }: {
+  groupBy: SessionGroupBy
+  onSelect: (mode: SessionGroupBy) => void
+  t: WorkspaceBrowserProps['t']
+}) {
+  const [open, setOpen] = useState(false)
+  const currentLabel = groupBy === 'workspace'
+    ? (t('viewMode.project') || 'Project')
+    : groupBy === 'flat'
+      ? (t('viewMode.group') || 'Group')
+      : groupBy === 'design'
+        ? (t('viewMode.design') || 'Design')
+        : (t('viewMode.conversation') || 'Conversation')
+
+  return (
+    <Menu
+      open={open}
+      onClose={() => { setOpen(false) }}
+      items={[
+        { id: 'flat', label: t('viewMode.group') || 'Group' },
+        { id: 'workspace', label: t('viewMode.project') || 'Project' },
+        { id: 'design', label: t('viewMode.design') || 'Design' },
+        { id: 'conversation', label: t('viewMode.conversation') || 'Conversation' },
+      ]}
+      selectedIds={[groupBy]}
+      onSelect={(id) => {
+        if (id === 'workspace' || id === 'flat' || id === 'design' || id === 'conversation') {
+          onSelect(id)
+        }
+        setOpen(false)
+      }}
+      align="start"
+      dense
+      portal
+      anchor={(
+        <button
+          type="button"
+          className={clsx(css.modeDropdownTrigger, open && css.modeDropdownTriggerActive)}
+          aria-label={t('groupBy.label')}
+          aria-expanded={open}
+          onClick={() => { setOpen(v => !v) }}
+        >
+          <span className={css.modeDropdownLabel}>{currentLabel}</span>
+          <IconChevronDownOutline14 size={12} className={clsx(css.chevron, open && css.chevronOpen)} />
+        </button>
+      )}
+    />
+  )
 }
 
 /** Grouping and ordering menu; own open state so it resets with the wide chrome. */
@@ -989,6 +1040,9 @@ export function WorkspaceBrowser({
     })
   }
 
+  const sessionList = useSessions(state => state)
+  const [archiveModalOpen, setArchiveModalOpen] = useState(false)
+
   useEffect(() => {
     const handleFilterMode = (e: Event) => {
       const custom = e as CustomEvent<{ mode: SessionGroupBy }>
@@ -996,130 +1050,29 @@ export function WorkspaceBrowser({
         actions.setGroupBy(custom.detail.mode)
       }
     }
+    const handleOpenSearch = () => {
+      setSearchExpanded(true)
+      setTimeout(() => { searchInput.current?.focus() }, 50)
+    }
     window.addEventListener('const:filter-mode', handleFilterMode)
+    window.addEventListener('const:open-search', handleOpenSearch)
     return () => {
       window.removeEventListener('const:filter-mode', handleFilterMode)
+      window.removeEventListener('const:open-search', handleOpenSearch)
     }
   }, [actions])
 
   return (
     <div className={clsx(css.root, !wide && css.rail)}>
-      {/* 4-Mode View Filter Switcher (Requirement 2 & 4: Image 1 style) */}
-      {wide && (
-        <div className={css.modeSwitcherRow} role="tablist" aria-label="Session View Filter">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={groupBy === 'flat'}
-            className={clsx(css.modeTab, groupBy === 'flat' && css.modeTabActive)}
-            onClick={() => { actions.setGroupBy('flat') }}
-          >
-            <span className={css.modeIcon}>#</span>
-            <span className={css.modeLabel}>{t('viewMode.group')}</span>
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={groupBy === 'workspace'}
-            className={clsx(css.modeTab, groupBy === 'workspace' && css.modeTabActive)}
-            onClick={() => { actions.setGroupBy('workspace') }}
-          >
-            <IconFolderClose16 size={13} className={css.modeIcon} />
-            <span className={css.modeLabel}>{t('viewMode.project')}</span>
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={groupBy === 'design'}
-            className={clsx(css.modeTab, groupBy === 'design' && css.modeTabActive)}
-            onClick={() => { actions.setGroupBy('design') }}
-          >
-            <IconDesignOutline16 size={13} className={css.modeIcon} />
-            <span className={css.modeLabel}>{t('viewMode.design')}</span>
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={groupBy === 'conversation'}
-            className={clsx(css.modeTab, groupBy === 'conversation' && css.modeTabActive)}
-            onClick={() => { actions.setGroupBy('conversation') }}
-          >
-            <IconNewChatOutline16 size={13} className={css.modeIcon} />
-            <span className={css.modeLabel}>{t('viewMode.conversation')}</span>
-          </button>
-        </div>
-      )}
-
       <div className={css.sectionHeader}>
         {wide && (
-          <span className={clsx(css.sectionLabel, css.wide, searchExpanded && css.sectionLabelHidden)}>
-            {groupBy === 'workspace'
-              ? t('section.workspaces')
-              : groupBy === 'flat'
-                ? t('section.sessions')
-                : groupBy === 'design'
-                  ? t('viewMode.design')
-                  : t('viewMode.conversation')}
-          </span>
+          <ModeSelectorDropdown
+            groupBy={groupBy}
+            onSelect={(mode) => { actions.setGroupBy(mode) }}
+            t={t}
+          />
         )}
-        {wide && (
-          <div className={clsx(css.searchSlot, searchExpanded && css.searchSlotExpanded)}>
-            <div
-              ref={searchRoot}
-              className={clsx(css.search, searchExpanded && css.searchExpanded)}
-              onClick={() => {
-                setWsPickerOpen(false)
-                setSearchExpanded(true)
-                searchInput.current?.focus()
-              }}
-            >
-              <Tooltip label={t('search')} side="bottom" delayMs={500} disabled={searchExpanded}>
-                <button
-                  type="button"
-                  className={css.searchButton}
-                  aria-label={t('search.sessions.aria')}
-                  aria-expanded={searchExpanded}
-                  onClick={() => {
-                    setWsPickerOpen(false)
-                    setSearchExpanded(true)
-                  }}
-                >
-                  <IconSearchOutline16 size={searchExpanded ? 11 : 14} />
-                </button>
-              </Tooltip>
-              <input
-                ref={searchInput}
-                className={css.searchInput}
-                type="text"
-                placeholder={t('search.placeholder')}
-                maxLength={SEARCH_QUERY_MAX_CODE_UNITS}
-                value={query}
-                tabIndex={searchExpanded ? 0 : -1}
-                onChange={(e) => { setQuery(sanitizeSearchQuery(e.target.value)) }}
-                onKeyDown={(e) => {
-                  if (e.key !== 'Escape') return
-                  setQuery('')
-                  setSearchExpanded(false)
-                }}
-              />
-              {searchExpanded && (
-                <button
-                  type="button"
-                  className={css.clearButton}
-                  aria-label={t('search.clear')}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setQuery('')
-                    setSearchExpanded(false)
-                  }}
-                >
-                  <IconCloseFill14 />
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-        <div className={clsx(css.headerActions, wide && searchExpanded && css.headerActionsHidden)}>
+        <div className={css.headerActions}>
           {wide && (
             <ViewOptionsMenu
               groupBy={groupBy}
@@ -1129,9 +1082,18 @@ export function WorkspaceBrowser({
               t={t}
             />
           )}
-          {/* Adding is the button's one action, so a composition with no
-              picking affordance has nothing to offer here: the region hides the
-              button rather than leaving a dead one in the header. */}
+          {wide && (
+            <Tooltip label={t('archive.title') || 'Archived Sessions'} side="bottom" delayMs={500}>
+              <button
+                type="button"
+                className={css.iconButton}
+                aria-label={t('archive.title') || 'Archived Sessions'}
+                onClick={() => { setArchiveModalOpen(true) }}
+              >
+                <IconArchiveOutline16 size={15} />
+              </button>
+            </Tooltip>
+          )}
           {directoryFlowAvailable && (
             <Tooltip label={t('workspace.add')} side="bottom" delayMs={500}>
               <button
@@ -1167,6 +1129,48 @@ export function WorkspaceBrowser({
           onClose={() => { setWsPickerOpen(false) }}
         />
       </div>
+
+      {wide && searchExpanded && (
+        <div ref={searchRoot} className={clsx(css.search, css.searchExpanded)} style={{ marginBottom: 8 }}>
+          <button
+            type="button"
+            className={css.searchButton}
+            aria-label={t('search.sessions.aria')}
+            aria-expanded={searchExpanded}
+            onClick={() => { setSearchExpanded(true) }}
+          >
+            <IconSearchOutline16 size={11} />
+          </button>
+          <input
+            ref={searchInput}
+            className={css.searchInput}
+            type="text"
+            placeholder={t('search.placeholder')}
+            maxLength={SEARCH_QUERY_MAX_CODE_UNITS}
+            value={query}
+            autoFocus
+            tabIndex={0}
+            onChange={(e) => { setQuery(sanitizeSearchQuery(e.target.value)) }}
+            onKeyDown={(e) => {
+              if (e.key !== 'Escape') return
+              setQuery('')
+              setSearchExpanded(false)
+            }}
+          />
+          <button
+            type="button"
+            className={css.clearButton}
+            aria-label={t('search.clear')}
+            onClick={(e) => {
+              e.stopPropagation()
+              setQuery('')
+              setSearchExpanded(false)
+            }}
+          >
+            <IconCloseFill14 />
+          </button>
+        </div>
+      )}
 
       {/* The collapsed rail keeps search as its own 36px control. */}
       {!wide && <div className={css.search}>
@@ -1341,6 +1345,39 @@ export function WorkspaceBrowser({
       >
         {deleting && <div className={css.deleteStatus} role="status">{t('delete.pending')}</div>}
         {deleteError !== null && <div className={css.renameError} role="alert">{deleteError}</div>}
+      </Modal>
+      <Modal
+        open={archiveModalOpen}
+        onClose={() => { setArchiveModalOpen(false) }}
+        closeLabel={t('close')}
+        title={t('archive.title')}
+      >
+        {archivedSessionIds.length === 0 ? (
+          <div className={css.archivedEmpty}>
+            <span>{t('archive.empty')}</span>
+          </div>
+        ) : (
+          <div className={css.archivedModalList}>
+            {archivedSessionIds.map((id) => {
+              const session = sessionList.byId[id]
+              const title = session?.displayTitle || id
+              return (
+                <div key={id} className={css.archivedItem}>
+                  <span className={css.archivedItemTitle}>{title}</span>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setArchiveModalOpen(false)
+                      open(id)
+                    }}
+                  >
+                    {t('open')}
+                  </Button>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </Modal>
     </div>
   )
