@@ -1,19 +1,31 @@
-.dialog {
+/* Doubled class beats Modal's own .dialog regardless of stylesheet order. */
+.dialog.dialog {
   position: relative;
-  width: 600px;
-  max-width: calc(100vw - 32px);
-  max-height: 540px;
-  background: var(--dsw-alias-bg-elevated, #1c1c1e);
-  border: 1px solid var(--dsw-alias-border-l2, rgba(255, 255, 255, 0.12));
-  border-radius: 14px;
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.5);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-sizing: border-box;
+  width: min(640px, calc(100vw - 32px)) !important;
+  height: min(540px, calc(100dvh - 32px));
+  max-height: 540px !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  background: var(--dsw-alias-bg-elevated, #1c1c1e) !important;
+  border: 1px solid var(--dsw-alias-border-l2, rgba(255, 255, 255, 0.12)) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.5) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
   color: var(--dsw-alias-label-primary, #ffffff);
   font-family: inherit;
   animation: slideIn 140ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 @keyframes slideIn {
@@ -56,6 +68,25 @@
 
 .searchInput::placeholder {
   color: var(--dsw-alias-label-tertiary, rgba(255, 255, 255, 0.4));
+}
+
+.escButton {
+  flex: none;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--dsw-alias-label-tertiary, rgba(255, 255, 255, 0.45));
+  background: var(--dsw-alias-bg-surface-3, rgba(255, 255, 255, 0.07));
+  border: 1px solid var(--dsw-alias-border-l3, rgba(255, 255, 255, 0.08));
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.escButton:hover {
+  background: var(--dsw-alias-interactive-bg-hover, rgba(255, 255, 255, 0.12));
+  color: var(--dsw-alias-label-primary, #ffffff);
 }
 
 .tabsRow {

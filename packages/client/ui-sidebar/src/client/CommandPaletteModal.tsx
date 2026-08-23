@@ -313,9 +313,10 @@ export function CommandPaletteModal({
       open={open}
       onClose={onClose}
       title="Search actions, tasks, or files"
+      className={clsx(css.dialog)}
       headless
     >
-      <div className={css.dialog}>
+      <div className={css.container}>
         {/* Search header row */}
         <div className={css.searchHeader}>
           <IconSearchOutline16 size={18} className={css.searchIcon} />
@@ -329,6 +330,14 @@ export function CommandPaletteModal({
             onKeyDown={onKeyDown}
             aria-label="Search actions, tasks, or files"
           />
+          <button
+            type="button"
+            className={css.escButton}
+            onClick={onClose}
+            aria-label="Close"
+          >
+            Esc
+          </button>
         </div>
 
         {/* Filter tabs row */}
