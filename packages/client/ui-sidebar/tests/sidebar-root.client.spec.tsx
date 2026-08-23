@@ -74,13 +74,19 @@ function mountShell({ collapsed = false, width = 300 }: { collapsed?: boolean; w
 }
 
 describe('SidebarRoot shell', () => {
-  it('routes New Session (capsule + wordmark) and the column toggle', () => {
+  it('routes New Session (nav item + wordmark) and the column toggle', () => {
     const b = mountShell()
-    // Expanded, both the wordmark and the capsule start a session.
-    const starters = screen.getAllByRole('button', { name: 'New session' })
-    expect(starters).toHaveLength(2)
-    for (const button of starters) fireEvent.click(button)
+    // Expanded, both the wordmark and the New task nav item start a session.
+    fireEvent.click(screen.getByRole('button', { name: 'New session' }))
+    fireEvent.click(screen.getByRole('button', { name: 'New task' }))
     expect(b.startSession).toHaveBeenCalledTimes(2)
+
+    // Check presence of other top navigation items
+    expect(screen.getByRole('button', { name: 'Search' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Automations' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Plugin Marketplace' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Design' })).toBeTruthy()
+
     fireEvent.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
     expect(b.toggleSidebar).toHaveBeenCalledOnce()
   })

@@ -64,6 +64,7 @@
    horizontally fixed. Only a live collapse gets .railIn; a cold collapsed
    render stays static. */
 .railIn .iconButton,
+.railIn .navItem,
 .railIn .newSession,
 .railIn .regionArea {
   animation: rail-in 150ms var(--ds-ease-in-out) backwards;
@@ -169,56 +170,91 @@
   color: var(--dsw-alias-label-primary);
 }
 
-/* New Session: 38px bar, 12px radius (figma 133:7634 geometry, squared-off
-   corners); collapsed it renders as the rail's plain icon control. */
-.newSession {
+/* Top Navigation List (Image 1 style: New task, Search, Design, Automations, Plugins) */
+.topNav {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 0 10px 0;
+  box-sizing: border-box;
+}
+
+.collapsed .topNav {
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 4px;
+}
+
+.navItem {
   flex: none;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  height: 38px;
-  padding: 8px 16px;
-  margin: 0 2px 8px;
-  box-sizing: border-box;
-  border: 1px solid var(--dsw-alias-border-l2);
-  border-radius: 12px;
-  background: var(--dsw-alias-button-elevated-fill);
-  color: var(--dsw-alias-label-primary);
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 22px;
+  width: 100%;
+  height: 34px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 13px;
+  font-weight: 400;
   cursor: pointer;
+  box-sizing: border-box;
+  text-align: left;
   overflow: hidden;
+  transition: background 120ms var(--ds-ease-in-out), color 120ms var(--ds-ease-in-out);
 }
 
-.newSession:hover {
-  background: var(--dsw-alias-button-floating-hover);
+.navItem:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
 }
 
+.navItem.active {
+  background: var(--dsw-alias-interactive-bg-active, rgba(255, 255, 255, 0.08));
+  color: var(--dsw-alias-label-primary);
+  font-weight: 500;
+}
+
+.collapsed .navItem,
 .collapsed .newSession {
   align-self: flex-start;
   width: 36px;
   height: 36px;
   padding: 0;
-  margin: 0 0 12px;
-  gap: 0;
-  border-color: transparent;
-  background: transparent;
+  margin-bottom: 4px;
+  justify-content: center;
+  border-radius: 50%;
 }
 
-.collapsed .newSession:hover {
-  background: var(--dsw-alias-interactive-bg-hover);
-}
-
-.newSessionLabel {
-  max-width: 200px;
+.navLabel {
+  flex: 1;
+  min-width: 0;
+  margin-left: 10px;
   overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.collapsed .newSessionLabel {
-  max-width: 0;
+.collapsed .navLabel {
+  display: none;
+}
+
+.shortcutBadge {
+  flex: none;
+  font-size: 11px;
+  font-family: var(--ds-font-mono, monospace);
+  color: var(--dsw-alias-label-tertiary);
+  background: var(--dsw-alias-interactive-bg-subtle, rgba(255, 255, 255, 0.04));
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--dsw-alias-border-l1, rgba(255, 255, 255, 0.08));
+  margin-left: 6px;
+}
+
+.collapsed .shortcutBadge {
+  display: none;
 }
 
 /* Region seat: always mounted so the foot never moves. Its trailing margin

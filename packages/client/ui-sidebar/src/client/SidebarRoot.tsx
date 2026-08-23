@@ -19,7 +19,8 @@ import { useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
 import {
   BrandWordmark, FishLogo,
-  IconNewChatOutline16, IconPanelLeftOutline16,
+  IconAutomationsOutline16, IconDesignOutline16, IconMarketplaceOutline16,
+  IconNewChatOutline16, IconPanelLeftOutline16, IconSearchOutline16,
   Tooltip,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { SidebarRootComponentProps } from './contract/slots.ts'
@@ -156,18 +157,83 @@ export function SidebarRoot({
         </Tooltip>
       </div>
 
-      {/* Expanded, the button carries its own label — tooltip only on the rail. */}
-      <Tooltip label={t('session.new.label')} delayMs={500} disabled={wide}>
-        <button
-          type="button"
-          className={css.newSession}
-          aria-label={t('session.new.label')}
-          onClick={() => { startSession() }}
-        >
-          <IconNewChatOutline16 size={wide ? 14 : 18} />
-          {wide && <span className={clsx(css.newSessionLabel, css.wide)}>{t('session.new')}</span>}
-        </button>
-      </Tooltip>
+      {/* Top action navigation list matching requirement #1 and Image 1 */}
+      <nav className={css.topNav} aria-label="Main Navigation">
+        {/* New task / New session */}
+        <Tooltip label={t('nav.newTask')} delayMs={500} disabled={wide}>
+          <button
+            type="button"
+            className={clsx(css.navItem, css.newSession)}
+            aria-label={t('nav.newTask')}
+            onClick={() => { startSession() }}
+          >
+            <IconNewChatOutline16 size={wide ? 16 : 18} />
+            {wide && <span className={css.navLabel}>{t('nav.newTask')}</span>}
+            {wide && <span className={css.shortcutBadge}>Ctrl+N</span>}
+          </button>
+        </Tooltip>
+
+        {/* Search */}
+        <Tooltip label={t('nav.search')} delayMs={500} disabled={wide}>
+          <button
+            type="button"
+            className={css.navItem}
+            aria-label={t('nav.search')}
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('const:open-command-palette'))
+            }}
+          >
+            <IconSearchOutline16 size={wide ? 16 : 18} />
+            {wide && <span className={css.navLabel}>{t('nav.search')}</span>}
+            {wide && <span className={css.shortcutBadge}>Ctrl+K</span>}
+          </button>
+        </Tooltip>
+
+        {/* Automations */}
+        <Tooltip label={t('nav.automations')} delayMs={500} disabled={wide}>
+          <button
+            type="button"
+            className={css.navItem}
+            aria-label={t('nav.automations')}
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('const:open-automations'))
+            }}
+          >
+            <IconAutomationsOutline16 size={wide ? 16 : 18} />
+            {wide && <span className={css.navLabel}>{t('nav.automations')}</span>}
+          </button>
+        </Tooltip>
+
+        {/* Plugin Marketplace */}
+        <Tooltip label={t('nav.plugins')} delayMs={500} disabled={wide}>
+          <button
+            type="button"
+            className={css.navItem}
+            aria-label={t('nav.plugins')}
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('const:open-settings', { detail: { section: 'plugins' } }))
+            }}
+          >
+            <IconMarketplaceOutline16 size={wide ? 16 : 18} />
+            {wide && <span className={css.navLabel}>{t('nav.plugins')}</span>}
+          </button>
+        </Tooltip>
+
+        {/* Design (OpenDesign Studio) */}
+        <Tooltip label={t('nav.design')} delayMs={500} disabled={wide}>
+          <button
+            type="button"
+            className={css.navItem}
+            aria-label={t('nav.design')}
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('const:filter-mode', { detail: { mode: 'design' } }))
+            }}
+          >
+            <IconDesignOutline16 size={wide ? 16 : 18} />
+            {wide && <span className={css.navLabel}>{t('nav.design')}</span>}
+          </button>
+        </Tooltip>
+      </nav>
 
       {/* The browsing region fills the column between the controls and the
           foot in both states; its rail icon column rides the same slot. */}
