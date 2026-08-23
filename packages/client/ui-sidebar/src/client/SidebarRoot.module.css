@@ -306,25 +306,25 @@
   justify-content: center;
 }
 
-.settingsArea button {
-  width: 32px !important;
-  height: 32px !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border-radius: 6px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  color: var(--dsw-alias-label-secondary) !important;
+.settingsArea > button {
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--dsw-alias-label-secondary);
 }
 
-.settingsArea button:hover {
-  background: var(--dsw-alias-interactive-bg-hover) !important;
-  color: var(--dsw-alias-label-primary) !important;
+.settingsArea > button:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
 }
 
-.settingsArea button span {
-  display: none !important;
+.settingsArea > button > span {
+  display: none;
 }
 
 .footIconButton {
@@ -358,12 +358,12 @@
   gap: 6px;
 }
 
-.collapsed .settingsArea button,
+.collapsed .settingsArea > button,
 .collapsed .footIconButton {
-  width: 36px !important;
-  height: 36px !important;
-  border-radius: 50% !important;
-  color: var(--dsw-alias-label-primary) !important;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: var(--dsw-alias-label-primary);
 }
 
 @media (prefers-reduced-motion: reduce) {
