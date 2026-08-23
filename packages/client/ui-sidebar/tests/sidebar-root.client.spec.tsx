@@ -87,6 +87,14 @@ describe('SidebarRoot shell', () => {
     expect(screen.getByRole('button', { name: 'Plugin Marketplace' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Design' })).toBeTruthy()
 
+    // Check footer Mobile Remote button
+    const mobileBtn = screen.getByRole('button', { name: 'Mobile Remote' })
+    expect(mobileBtn).toBeTruthy()
+    const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
+    fireEvent.click(mobileBtn)
+    expect(dispatchSpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'const:open-mobile-remote' }))
+    dispatchSpy.mockRestore()
+
     fireEvent.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
     expect(b.toggleSidebar).toHaveBeenCalledOnce()
   })

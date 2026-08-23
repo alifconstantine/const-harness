@@ -11,6 +11,7 @@ export const zh = {
   'nav.design': '设计',
   'nav.automations': '自动化',
   'nav.plugins': '插件市场',
+  'nav.mobileRemote': '移动端远程',
 } satisfies Record<string, string>
 
 /** The sidebar namespace key union. */
@@ -27,4 +28,5 @@ export const en = {
   'nav.design': 'Design',
   'nav.automations': 'Automations',
   'nav.plugins': 'Plugin Marketplace',
+  'nav.mobileRemote': 'Mobile Remote',
 } satisfies Record<SidebarKey, string>

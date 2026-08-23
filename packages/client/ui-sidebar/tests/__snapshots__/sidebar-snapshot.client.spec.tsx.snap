@@ -171,6 +171,25 @@ exports[`sidebar shell snapshots > renders the collapsed rail after the crossfad
           style="display: contents;"
         />
       </div>
+      <button
+        aria-label="Mobile Remote"
+        class="navItem"
+        type="button"
+      >
+        <svg
+          data-content="23db5823"
+          fill="none"
+          height="16"
+          viewBox="0 0 16 16"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        />
+        <span
+          class="navLabel"
+        >
+          Mobile Remote
+        </span>
+      </button>
       <div
         class="settingsArea"
       >
@@ -355,6 +374,25 @@ exports[`sidebar shell snapshots > renders the expanded column (wordmark, capsul
           style="display: contents;"
         />
       </div>
+      <button
+        aria-label="Mobile Remote"
+        class="navItem"
+        type="button"
+      >
+        <svg
+          data-content="23db5823"
+          fill="none"
+          height="16"
+          viewBox="0 0 16 16"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        />
+        <span
+          class="navLabel"
+        >
+          Mobile Remote
+        </span>
+      </button>
       <div
         class="settingsArea"
       >
@@ -539,6 +577,25 @@ exports[`sidebar shell snapshots > renders the expanded column in the default lo
           style="display: contents;"
         />
       </div>
+      <button
+        aria-label="移动端远程"
+        class="navItem"
+        type="button"
+      >
+        <svg
+          data-content="23db5823"
+          fill="none"
+          height="16"
+          viewBox="0 0 16 16"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        />
+        <span
+          class="navLabel"
+        >
+          移动端远程
+        </span>
+      </button>
       <div
         class="settingsArea"
       >
