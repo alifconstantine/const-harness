@@ -151,7 +151,7 @@ export function ConversationSessionHeader({
             </div>
             <div className={css.headerUtilities}>
               {renderSlot('conversation.session.header.utilities', {})}
-              <Tooltip label="Terminal" delayMs={300}>
+              <Tooltip label="Terminal" delayMs={300} side="bottom">
                 <button
                   type="button"
                   className={clsx(css.utilityBtn, companionTab === 'terminal' && css.utilityBtnActive)}
@@ -164,7 +164,7 @@ export function ConversationSessionHeader({
                   <IconTerminalOutline16 size={15} />
                 </button>
               </Tooltip>
-              <Tooltip label="Toggle Side Panel" delayMs={300}>
+              <Tooltip label="Toggle Side Panel" delayMs={300} side="bottom">
                 <button
                   type="button"
                   className={css.utilityBtn}

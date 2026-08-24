@@ -99,6 +99,15 @@ function TaskStatusGlyph({ status }: { status: TodoItem['status'] }) {
   )
 }
 
+function IconDoubleChevronDown14({ size = 14, className }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} className={className} viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M3.5 3.5L7 7L10.5 3.5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M3.5 7.5L7 11L10.5 7.5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 interface TabMeta {
   id: CompanionTabId
   label: string
@@ -241,7 +250,7 @@ export function DetailsPanel({
           setTimeout(() => { searchInputRef.current?.focus() }, 50)
         }}
       >
-        <IconChevronDownOutline14 size={14} />
+        <IconDoubleChevronDown14 size={14} />
       </button>
 
       {searchMenuOpen && (
@@ -401,7 +410,7 @@ export function DetailsPanel({
           }}
           onClose={() => { setPlusMenuOpen(false) }}
           side="bottom"
-          align="end"
+          align="start"
         />
       </div>
 
