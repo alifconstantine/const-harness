@@ -1,21 +1,21 @@
-// Const Harness brand wordmark: Const Logo + CONST + HARNESS badge plate in one svg.
-// Native 180x24. Ink rides currentColor; badge uses refined hairline outline.
+// Const Harness brand wordmark: Const Logo + Const + Harness badge plate in one svg.
+// Native 160x24. Ink rides currentColor; badge uses elegant hairline outline.
 
 import type { IconProps } from './icons/props.ts'
 
 /**
  * Render the full brand wordmark.
- * @param props.size - height in px (default 24; width keeps the 180:24 ratio).
+ * @param props.size - height in px (default 24; width keeps the 160:24 ratio).
  * @param props.className - extra class for layout placement.
  * @returns the wordmark svg (aria-hidden decorative brand art).
  */
 export function BrandWordmark({ size = 24, className }: IconProps) {
   return (
     <svg
-      width={(size * 180) / 24}
+      width={(size * 160) / 24}
       height={size}
       className={className}
-      viewBox="0 0 180 24"
+      viewBox="0 0 160 24"
       fill="none"
       aria-hidden="true"
     >
@@ -46,35 +46,35 @@ export function BrandWordmark({ size = 24, className }: IconProps) {
         y="16.5"
         fill="currentColor"
         fontFamily="'Geist', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-        fontSize="14.5"
+        fontSize="15"
         fontWeight="400"
-        letterSpacing="0.08em"
+        letterSpacing="-0.01em"
       >
-        CONST
+        Const
       </text>
       <rect
-        x="86"
-        y="4.5"
-        width="66"
-        height="15"
-        rx="3"
+        x="74"
+        y="4"
+        width="56"
+        height="16"
+        rx="4"
         fill="currentColor"
-        fillOpacity="0.06"
+        fillOpacity="0.05"
         stroke="currentColor"
         strokeWidth="1"
-        strokeOpacity="0.3"
+        strokeOpacity="0.18"
       />
       <text
-        x="119"
-        y="15"
+        x="102"
+        y="15.2"
         textAnchor="middle"
         fill="currentColor"
         fontFamily="'Geist', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-        fontSize="8.5"
-        fontWeight="500"
-        letterSpacing="0.14em"
+        fontSize="9.5"
+        fontWeight="400"
+        letterSpacing="0.03em"
       >
-        HARNESS
+        Harness
       </text>
     </svg>
   )
