@@ -76,6 +76,8 @@ function mount(overrides: Partial<WorkspaceBrowserProps> = {}) {
     renameWorkspace: vi.fn(async () => {}),
     deleteWorkspace: vi.fn(async () => {}),
     archiveSession: vi.fn(async () => {}),
+    unarchiveSession: vi.fn(async () => {}),
+    deleteSession: vi.fn(async () => {}),
     insertWorkspaceBefore: vi.fn(async () => {}),
     insertSessionBefore: vi.fn(async () => {}),
     createWorkspace: vi.fn(async () => workspace('created', [])),
@@ -1185,5 +1187,40 @@ describe('WorkspaceBrowser', () => {
     fireEvent.click(screen.getByRole('button', { name: '打开' }))
     expect(open).toHaveBeenCalledWith(s1.id)
     expect(screen.queryByRole('dialog', { name: '归档会话' })).toBeNull()
+  })
+
+  it('triggers unarchive and delete actions from archived sessions modal', async () => {
+    const s1 = summary('archived-1', 2, { displayTitle: 'Archived Old Task' })
+    const unarchiveSession = vi.fn(async () => {})
+    const deleteSession = vi.fn(async () => {})
+    mount({
+      useSessions: hook(sessionState([s1])),
+      useWorkspaces: hook({
+        ...workspaceState([]),
+        archivedSessionIds: [s1.id],
+      }),
+      unarchiveSession,
+      deleteSession,
+    })
+
+    // Open Modal
+    fireEvent.click(screen.getByRole('button', { name: '归档会话' }))
+    expect(screen.getByRole('dialog', { name: '归档会话' })).toBeTruthy()
+
+    // Open ellipsis menu
+    fireEvent.click(screen.getByLabelText(`会话“${s1.displayTitle}”操作`))
+    expect(screen.getByRole('menuitem', { name: '取消归档' })).toBeTruthy()
+    expect(screen.getByRole('menuitem', { name: '删除会话' })).toBeTruthy()
+
+    // Click Unarchive
+    fireEvent.click(screen.getByRole('menuitem', { name: '取消归档' }))
+    expect(unarchiveSession).toHaveBeenCalledWith(s1.id)
+
+    // Open ellipsis menu again
+    fireEvent.click(screen.getByLabelText(`会话“${s1.displayTitle}”操作`))
+
+    // Click Delete
+    fireEvent.click(screen.getByRole('menuitem', { name: '删除会话' }))
+    expect(deleteSession).toHaveBeenCalledWith(s1.id)
   })
 })

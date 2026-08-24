@@ -296,6 +296,9 @@ export class WorkspaceRegistry extends Service {
       if (archivedSessionIds.length !== state.archivedSessionIds.length) {
         await this.setState({ ...state, archivedSessionIds })
       }
+      for (const entity of this.entities.values()) {
+        await entity.detachSession(sessionId)
+      }
       this.headers.delete(sessionId)
       this.sessionPaths.delete(sessionId)
       this.invalidSessionPaths.delete(sessionId)

@@ -2937,7 +2937,11 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
       async deleteSession(request) {
         const { sessionId } = request.payload
         try {
-          const header = ctx.workspaceRegistry.getHeader(sessionId)
+          let header = ctx.workspaceRegistry.getHeader(sessionId)
+          if (!header && ctx.sessionPersistence) {
+            const list = await ctx.sessionPersistence.list().catch(() => [])
+            header = list.find(h => h.id === sessionId)
+          }
           await ctx.workspaceRegistry.deleteSession(sessionId)
           if (header && ctx.sessionPersistence) {
             const loc = ctx.sessionPersistence.locate(header)
