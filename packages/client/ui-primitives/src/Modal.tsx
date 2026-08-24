@@ -33,13 +33,13 @@ export function Modal({
   open: boolean
   onClose: () => void
   title: string
-  closeLabel?: string
-  description?: string
+  closeLabel?: string | undefined
+  description?: string | undefined
   children?: ReactNode
   footer?: ReactNode
-  className?: string
-  contentClassName?: string
-  headless?: boolean
+  className?: string | undefined
+  contentClassName?: string | undefined
+  headless?: boolean | undefined
 }) {
   useEffect(() => {
     if (!open) return
