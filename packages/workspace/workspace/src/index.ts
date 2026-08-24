@@ -268,6 +268,46 @@ export class WorkspaceRegistry extends Service {
   }
 
   /**
+   * Unarchive one session durably. Removes the session from the registry-global archive set.
+   * An id not currently archived resolves without writing.
+   * @param sessionId - The session to unarchive.
+   * @returns resolution after durability.
+   */
+  unarchiveSession(sessionId: SessionId): Promise<void> {
+    return this.enqueueOperation(async () => {
+      const state = this.requireState()
+      if (!state.archivedSessionIds.includes(sessionId)) return
+      await this.setState({
+        ...state,
+        archivedSessionIds: state.archivedSessionIds.filter(id => id !== sessionId),
+      })
+    })
+  }
+
+  /**
+   * Delete one session from the registry: removes it from the archive set and cached index.
+   * @param sessionId - The session to delete.
+   * @returns resolution after durability.
+   */
+  deleteSession(sessionId: SessionId): Promise<void> {
+    return this.enqueueOperation(async () => {
+      const state = this.requireState()
+      const archivedSessionIds = state.archivedSessionIds.filter(id => id !== sessionId)
+      if (archivedSessionIds.length !== state.archivedSessionIds.length) {
+        await this.setState({ ...state, archivedSessionIds })
+      }
+      this.headers.delete(sessionId)
+      this.sessionPaths.delete(sessionId)
+      this.invalidSessionPaths.delete(sessionId)
+    })
+  }
+
+  /** Retrieve the cached session header for a known session. */
+  getHeader(id: SessionId): SessionHeader | undefined {
+    return this.headers.get(id)
+  }
+
+  /**
    * Whether a session is live, header-indexed, or present in a fresh
    * persistence listing. Only a definite miss returns false — a failing
    * `sessionPersistence.list()` propagates so storage faults never

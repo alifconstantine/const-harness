@@ -92,4 +92,14 @@ export interface IWorkspaces {
    * @param sessionId - session to archive.
    */
   archiveSession(sessionId: SessionId): Promise<void>
+  /**
+   * Unarchive a session from the registry-global set, restoring it to grouping surfaces.
+   * @param sessionId - session to unarchive.
+   */
+  unarchiveSession(sessionId: SessionId): Promise<void>
+  /**
+   * Delete a session permanently and remove from archive and storage.
+   * @param sessionId - session to delete.
+   */
+  deleteSession(sessionId: SessionId): Promise<void>
 }

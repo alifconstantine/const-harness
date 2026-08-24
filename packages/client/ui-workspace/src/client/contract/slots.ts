@@ -127,6 +127,10 @@ export type WorkspaceBrowserInjected = DirectoryPickingInjected & {
    * session clears the selection into the New Session view state.
    */
   archiveSession: (sessionId: SessionId) => Promise<void>
+  /** Unarchive a Session from the registry-global set, restoring it to grouping surfaces. */
+  unarchiveSession?: (sessionId: SessionId) => Promise<void>
+  /** Delete a Session permanently and remove from archive and storage. */
+  deleteSession?: (sessionId: SessionId) => Promise<void>
   /**
    * Reorder a session inside its Workspace account (DOM-insertBefore
    * semantics: omitted anchor appends to the end). The view refreshes from

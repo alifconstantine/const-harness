@@ -4,7 +4,7 @@
  */
 
 import { randomUUID } from 'node:crypto'
-import { mkdir, stat } from 'node:fs/promises'
+import { mkdir, stat, unlink } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import type { Context } from '@deepseek-ai/cordis'
 import { installModelSelection } from '@deepseek-ai/dsh-agent'
@@ -2915,6 +2915,38 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
             message: error.message,
             details: { sessionId },
           })
+        }
+        return ok(request, { archivedSessionIds: [...ctx.workspaceRegistry.archivedSessionIds] })
+      },
+
+      async unarchiveSession(request) {
+        const { sessionId } = request.payload
+        try {
+          await ctx.workspaceRegistry.unarchiveSession(sessionId)
+        } catch (error: unknown) {
+          if (!(error instanceof WorkspaceUnknownSessionError)) throw error
+          return err(request, {
+            code: 'session-not-found',
+            message: error.message,
+            details: { sessionId },
+          })
+        }
+        return ok(request, { archivedSessionIds: [...ctx.workspaceRegistry.archivedSessionIds] })
+      },
+
+      async deleteSession(request) {
+        const { sessionId } = request.payload
+        try {
+          const header = ctx.workspaceRegistry.getHeader(sessionId)
+          await ctx.workspaceRegistry.deleteSession(sessionId)
+          if (header && ctx.sessionPersistence) {
+            const loc = ctx.sessionPersistence.locate(header)
+            if (loc?.path) {
+              await unlink(loc.path).catch(() => {})
+            }
+          }
+        } catch {
+          // Best effort cleanup
         }
         return ok(request, { archivedSessionIds: [...ctx.workspaceRegistry.archivedSessionIds] })
       },

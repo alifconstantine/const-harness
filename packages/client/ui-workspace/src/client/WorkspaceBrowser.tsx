@@ -12,9 +12,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
 import {
-  Button, IconArchiveOutline16, IconChevronDownOutline14, IconCloseFill14,
-  IconPersonalizationOutline16,
-  IconProjectAddOutline16, IconSearchOutline16, Menu, Modal, Tooltip,
+  Button, IconArchiveOutline16, IconArchiveOutline20, IconChevronDownOutline14, IconCloseFill14,
+  IconEllipsisOutline16, IconPersonalizationOutline16,
+  IconProjectAddOutline16, IconSearchOutline16, IconTrashOutline16, Menu, Modal, Tooltip,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type {
   SessionId, SessionListState, SessionSearchResultItem, WorkspaceId, WorkspaceView,
@@ -816,6 +816,8 @@ export function WorkspaceBrowser({
   deleteWorkspace,
   insertWorkspaceBefore,
   archiveSession,
+  unarchiveSession,
+  deleteSession,
   insertSessionBefore,
   createWorkspace,
   searchSessions,
@@ -1318,6 +1320,9 @@ export function WorkspaceBrowser({
       >
         {archivedSessionIds.length === 0 ? (
           <div className={css.archivedEmpty}>
+            <span className={css.archivedEmptyIcon}>
+              <IconArchiveOutline20 size={28} />
+            </span>
             <span>{t('archive.empty')}</span>
           </div>
         ) : (
@@ -1326,23 +1331,94 @@ export function WorkspaceBrowser({
               const session = sessionList.byId[id]
               const title = session?.displayTitle || id
               return (
-                <div key={id} className={css.archivedItem}>
-                  <span className={css.archivedItemTitle}>{title}</span>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setArchiveModalOpen(false)
-                      open(id)
-                    }}
-                  >
-                    {t('open')}
-                  </Button>
-                </div>
+                <ArchivedSessionItem
+                  key={id}
+                  id={id}
+                  title={title}
+                  onOpen={() => {
+                    setArchiveModalOpen(false)
+                    open(id)
+                  }}
+                  onUnarchive={() => {
+                    void unarchiveSession?.(id)
+                  }}
+                  onDelete={() => {
+                    void deleteSession?.(id)
+                  }}
+                  t={t}
+                />
               )
             })}
           </div>
         )}
       </Modal>
+    </div>
+  )
+}
+
+/** Individual row in the Archived Sessions modal. */
+function ArchivedSessionItem({
+  id: _id,
+  title,
+  onOpen,
+  onUnarchive,
+  onDelete,
+  t,
+}: {
+  id: SessionId
+  title: string
+  onOpen: () => void
+  onUnarchive: () => void
+  onDelete: () => void
+  t: WorkspaceBrowserProps['t']
+}) {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuItems = [
+    { id: 'unarchive', label: t('archive.unarchive') || 'Unarchive session', icon: <IconArchiveOutline20 size={16} /> },
+    { id: 'delete', label: t('archive.delete') || t('delete') || 'Delete session', icon: <IconTrashOutline16 />, danger: true },
+  ]
+
+  return (
+    <div className={css.archivedItem}>
+      <div className={css.archivedItemMain}>
+        <span className={css.archivedItemIcon}>
+          <IconArchiveOutline20 size={16} />
+        </span>
+        <div className={css.archivedItemText}>
+          <span className={css.archivedItemTitle}>{title}</span>
+        </div>
+      </div>
+      <div className={css.archivedItemActions}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onOpen}
+        >
+          {t('open')}
+        </Button>
+        <Menu
+          open={menuOpen}
+          onClose={() => { setMenuOpen(false) }}
+          items={menuItems}
+          onSelect={(menuId) => {
+            setMenuOpen(false)
+            if (menuId === 'unarchive') onUnarchive()
+            else if (menuId === 'delete') onDelete()
+          }}
+          portal
+          closeOnPointerLeave
+          anchor={(
+            <button
+              type="button"
+              className={css.iconButton}
+              aria-label={t('actions.session.aria', { name: title })}
+              onClick={(e) => { e.stopPropagation(); setMenuOpen(v => !v) }}
+            >
+              <IconEllipsisOutline16 />
+            </button>
+          )}
+        />
+      </div>
     </div>
   )
 }
