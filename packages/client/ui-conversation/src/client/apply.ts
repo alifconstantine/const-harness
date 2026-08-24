@@ -262,9 +262,14 @@ export function apply(ctx: Context): void {
       'conversation.session.header.utilities': { kind: 'list', scope: 'session' },
     },
     store: chatStore,
-    inject: (): ConversationSessionHeaderInjected => ({
+    inject: (_sessionId: SessionId, actions: BoundActions<typeof chatStore>): ConversationSessionHeaderInjected => ({
       views,
       open: (id) => { sessions.open(id) },
+      toggleDetails: () => { layout.toggleDetails() },
+      openCompanionTab: (tab) => {
+        actions.setCompanionTab(tab)
+        layout.openDetails()
+      },
     }),
   }, ConversationSessionHeader)
 

@@ -23,6 +23,8 @@ export interface ChatStoreState {
   draft: string
   /** Active conversation view id ('conversation.view' entry id); null falls back to Chat. */
   view: string | null
+  /** Active companion side panel tab ('trajectory' | 'details' | 'tasks'). */
+  companionTab?: 'trajectory' | 'details' | 'tasks' | null
   /**
    * One-shot inspect handoff: chat writes the call to reveal, the trajectory
    * view consumes it and acknowledges by clearing. Read with `?? null` —

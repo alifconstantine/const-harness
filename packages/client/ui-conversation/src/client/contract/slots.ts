@@ -448,6 +448,10 @@ export interface ConversationSessionHeaderInjected {
   }
   /** Select a real Session through the runtime navigation owner. */
   open: (sessionId: SessionId) => void
+  /** Toggle the companion side panel open/closed. */
+  toggleDetails?: () => void
+  /** Open companion side panel directly at a specific tab. */
+  openCompanionTab?: (tab: 'trajectory' | 'details' | 'tasks') => void
 }
 
 /**

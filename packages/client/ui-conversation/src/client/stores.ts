@@ -10,6 +10,7 @@ type ChatActions = {
   select: (draft: ChatStoreState, target: SelectionTarget | null) => void
   setDraft: (draft: ChatStoreState, text: string) => void
   setView: (draft: ChatStoreState, view: string) => void
+  setCompanionTab: (draft: ChatStoreState, tab: 'trajectory' | 'details' | 'tasks') => void
   setInspect: (draft: ChatStoreState, target: { callId: CallId } | null) => void
 }
 
@@ -22,12 +23,16 @@ export function createChatStore(): EngineStoreHandle<ChatStoreState, ChatActions
     // Anchored to the contract shape: consumers read the store through
     // PropsStore<ChatStore>'s SnapshotSelectorHook<ChatStoreState>, so init
     // and the contract cannot drift.
-    init: (): ChatStoreState => ({ selection: null, draft: '', view: null, inspect: null }),
+    init: (): ChatStoreState => ({ selection: null, draft: '', view: null, companionTab: 'trajectory', inspect: null }),
     persist: 'dsh.conversation.chat',
     actions: {
-      select: (d, target: SelectionTarget | null) => { d.selection = target },
+      select: (d, target: SelectionTarget | null) => {
+        d.selection = target
+        if (target !== null) d.companionTab = 'details'
+      },
       setDraft: (d, text: string) => { d.draft = text },
       setView: (d, view: string) => { d.view = view },
+      setCompanionTab: (d, tab: 'trajectory' | 'details' | 'tasks') => { d.companionTab = tab },
       setInspect: (d, target: { callId: CallId } | null) => { d.inspect = target },
     },
   })

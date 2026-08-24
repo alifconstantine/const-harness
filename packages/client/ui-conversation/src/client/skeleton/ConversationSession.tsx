@@ -2,6 +2,9 @@
 
 import { useEffect, useSyncExternalStore } from 'react'
 import clsx from 'clsx'
+import {
+  IconActivityOutline16, IconPanelRightOutline16, IconTerminalOutline16, Tooltip,
+} from '@deepseek-ai/dsh-client-ui-primitives'
 import type { SessionId, SessionListState, SessionSummary } from '@deepseek-ai/dsh-client-runtime/client'
 import type {
   ConversationSessionHeaderSlotProps, ConversationSessionSlotProps,
@@ -60,11 +63,12 @@ function equalBreadcrumbs(left: readonly Breadcrumb[], right: readonly Breadcrum
  */
 export function ConversationSessionHeader({
   sessionId, useSession, useSessions, useStore, actions,
-  renderSlot, views, open, t,
+  renderSlot, views, open, toggleDetails, openCompanionTab, t,
 }: ConversationSessionHeaderProps) {
   useSyncExternalStore(views.subscribe, views.version)
   const tabs = views.list()
   const selectedId = useStore(s => s.view)
+  const companionTab = useStore(s => s.companionTab)
   const active = resolveActiveView(tabs, selectedId)
   const ancestry = useSessions(s => deriveAncestry(s, sessionId), equalBreadcrumbs)
   const composerPhase = useSession(s => s.composerPhase)
@@ -105,6 +109,44 @@ export function ConversationSessionHeader({
             </div>
             <div className={css.headerUtilities}>
               {renderSlot('conversation.session.header.utilities', {})}
+              <Tooltip label="Trajectory Activity" delayMs={300}>
+                <button
+                  type="button"
+                  className={clsx(css.utilityBtn, companionTab === 'trajectory' && css.utilityBtnActive)}
+                  aria-label="Trajectory Activity"
+                  onClick={() => {
+                    actions.setCompanionTab('trajectory')
+                    openCompanionTab?.('trajectory')
+                  }}
+                >
+                  <IconActivityOutline16 size={15} />
+                </button>
+              </Tooltip>
+              <Tooltip label="Tool Inspector" delayMs={300}>
+                <button
+                  type="button"
+                  className={clsx(css.utilityBtn, companionTab === 'details' && css.utilityBtnActive)}
+                  aria-label="Tool Inspector"
+                  onClick={() => {
+                    actions.setCompanionTab('details')
+                    openCompanionTab?.('details')
+                  }}
+                >
+                  <IconTerminalOutline16 size={15} />
+                </button>
+              </Tooltip>
+              <Tooltip label="Toggle Side Panel" delayMs={300}>
+                <button
+                  type="button"
+                  className={css.utilityBtn}
+                  aria-label="Toggle Side Panel"
+                  onClick={() => {
+                    toggleDetails?.()
+                  }}
+                >
+                  <IconPanelRightOutline16 size={15} />
+                </button>
+              </Tooltip>
             </div>
           </div>
           {tabs.length > 1 && (

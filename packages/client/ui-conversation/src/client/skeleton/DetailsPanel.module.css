@@ -1,6 +1,4 @@
-/* Details third column, minimal fill: header (name + close) over a
-   scrolling body of Input/Output code sections. Panel width/squeeze belongs
-   to layout; this fills whatever the column gives. */
+/* Details third column, multi-tab Companion Panel: Trajectory, Details, Tasks. */
 
 .root {
   display: flex;
@@ -11,58 +9,86 @@
   background: var(--dsw-alias-bg-base);
 }
 
-/* figma RightSidebar header frame (I54:42735;43:36451): pad 14/12/12/12, gap 8. */
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 14px 12px 12px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--dsw-alias-border-l2);
 }
 
-/* figma I54:42735;43:41479: 14/20 wt500. */
-.title {
-  overflow: hidden;
-  font-size: 14px;
-  line-height: 20px;
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  background: var(--dsw-alias-interactive-bg-hover);
+  border-radius: 8px;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 12px;
+  line-height: 16px;
   font-weight: 500;
+  color: var(--dsw-alias-label-tertiary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tab:hover {
   color: var(--dsw-alias-label-primary);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+}
+
+.tabActive {
+  background: var(--dsw-alias-bg-base);
+  color: var(--dsw-alias-label-primary);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 .close {
   display: grid;
   flex: none;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border: none;
-  border-radius: 999px;
+  border-radius: 6px;
   background: transparent;
   color: var(--dsw-alias-label-secondary);
   cursor: pointer;
+  transition: background 0.15s ease;
 }
 
 .close:hover {
   background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
 }
 
 .body {
   flex: 1;
   min-height: 0;
-  padding: 12px 16px;
+  padding: 12px 14px;
   overflow-y: auto;
 }
 
 .empty {
-  padding: 8px 0;
+  padding: 16px 8px;
+  text-align: center;
   font-size: 13px;
   line-height: 20px;
   color: var(--dsw-alias-label-tertiary);
 }
 
+/* Details Section */
 .section {
   margin-bottom: 16px;
 }
@@ -75,15 +101,14 @@
   color: var(--dsw-alias-label-secondary);
 }
 
-/* figma Code-block (I54:42735;43:41429): r12, pad 16, mono 13/22. */
 .code {
   margin: 0;
-  padding: 16px;
-  border-radius: 12px;
+  padding: 14px;
+  border-radius: 10px;
   background: var(--dsw-alias-markdown-code-block);
   font-family: var(--ds-font-family-code);
-  font-size: 13px;
-  line-height: 22px;
+  font-size: 12.5px;
+  line-height: 20px;
   color: var(--dsw-alias-label-primary);
   white-space: pre-wrap;
   word-break: break-word;
@@ -91,4 +116,100 @@
 
 .code[data-error] {
   color: var(--dsw-alias-state-error-primary);
+}
+
+/* Trajectory Ledger */
+.trajectorySummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  background: var(--dsw-alias-interactive-bg-hover);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.turnCard {
+  margin-bottom: 12px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.turnHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: var(--dsw-alias-interactive-bg-hover);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--dsw-alias-label-primary);
+}
+
+.turnSteps {
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stepRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--dsw-alias-bg-base);
+  border: 1px solid var(--dsw-alias-border-l2);
+  font-size: 12px;
+  color: var(--dsw-alias-label-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.stepRow:hover {
+  border-color: var(--dsw-alias-state-business-primary);
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.stepName {
+  font-family: var(--ds-font-family-code);
+  font-weight: 500;
+  color: var(--dsw-alias-label-primary);
+}
+
+/* Tasks */
+.taskList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.taskItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-bg-base);
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-primary);
+}
+
+.taskItem[data-status='completed'] {
+  color: var(--dsw-alias-label-tertiary);
+  text-decoration: line-through;
+}
+
+.taskGlyph {
+  flex: none;
+  margin-top: 1px;
 }
