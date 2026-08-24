@@ -1024,6 +1024,18 @@ export function WorkspaceBrowser({
     })
   }
 
+  const onSessionUnarchive = (sessionId: SessionId) => {
+    unarchiveSession?.(sessionId).catch((reason: unknown) => {
+      console.warn('session unarchive rejected:', reason)
+    })
+  }
+
+  const onSessionDelete = (sessionId: SessionId) => {
+    deleteSession?.(sessionId).catch((reason: unknown) => {
+      console.warn('session delete rejected:', reason)
+    })
+  }
+
   const sessionList = useSessions(state => state)
   const [archiveModalOpen, setArchiveModalOpen] = useState(false)
 
@@ -1253,7 +1265,7 @@ export function WorkspaceBrowser({
         {renameDuplicate && (
           <div className={css.renameError} role="alert">{t('conflict.named', { name: renameTrimmed })}</div>
         )}
-        {renameError !== null && <div className={css.renameError} role="alert">{renameError}</div>}
+        {renameError !== null && <div className={css.dialogError}>{renameError}</div>}
       </Modal>
 
       <Modal
@@ -1285,32 +1297,22 @@ export function WorkspaceBrowser({
             }
           }}
         />
-        {sessionRenameError !== null && <div className={css.renameError} role="alert">{sessionRenameError}</div>}
+        {sessionRenameError !== null && <div className={css.dialogError}>{sessionRenameError}</div>}
       </Modal>
       <Modal
         open={deleteTarget !== null}
         onClose={closeDelete}
         closeLabel={t('close')}
         title={t('delete.workspace')}
-        {...deleteTarget === null
-          ? {}
-          : { description: t('delete.desc', { name: deleteTarget.title }) }}
+        description={deleteTarget !== null ? t('delete.desc', { name: deleteTarget.title }) : undefined}
         footer={(
           <>
             <Button variant="outline" disabled={deleting} onClick={closeDelete}>{t('cancel')}</Button>
-            <Button
-              variant="outline"
-              className={css.deleteAction}
-              disabled={deleting}
-              onClick={confirmDelete}
-            >
-              {t('delete.workspace')}
-            </Button>
+            <Button variant="outline" className={css.deleteAction} disabled={deleting} onClick={confirmDelete}>{t('delete.workspace')}</Button>
           </>
         )}
       >
-        {deleting && <div className={css.deleteStatus} role="status">{t('delete.pending')}</div>}
-        {deleteError !== null && <div className={css.renameError} role="alert">{deleteError}</div>}
+        {deleteError !== null && <div className={css.dialogError}>{deleteError}</div>}
       </Modal>
       <Modal
         open={archiveModalOpen}
@@ -1340,12 +1342,8 @@ export function WorkspaceBrowser({
                     setArchiveModalOpen(false)
                     open(id)
                   }}
-                  onUnarchive={() => {
-                    void unarchiveSession?.(id)
-                  }}
-                  onDelete={() => {
-                    void deleteSession?.(id)
-                  }}
+                  onUnarchive={onSessionUnarchive}
+                  onDelete={onSessionDelete}
                   t={t}
                 />
               )
@@ -1359,7 +1357,7 @@ export function WorkspaceBrowser({
 
 /** Individual row in the Archived Sessions modal. */
 function ArchivedSessionItem({
-  id: _id,
+  id,
   title,
   onOpen,
   onUnarchive,
@@ -1369,8 +1367,8 @@ function ArchivedSessionItem({
   id: SessionId
   title: string
   onOpen: () => void
-  onUnarchive: () => void
-  onDelete: () => void
+  onUnarchive: (id: SessionId) => void
+  onDelete: (id: SessionId) => void
   t: WorkspaceBrowserProps['t']
 }) {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -1401,11 +1399,10 @@ function ArchivedSessionItem({
           open={menuOpen}
           onClose={() => { setMenuOpen(false) }}
           items={menuItems}
-          align="end"
           onSelect={(menuId) => {
             setMenuOpen(false)
-            if (menuId === 'unarchive') onUnarchive()
-            else if (menuId === 'delete') onDelete()
+            if (menuId === 'unarchive') onUnarchive(id)
+            else if (menuId === 'delete') onDelete(id)
           }}
           portal
           anchor={(
