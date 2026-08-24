@@ -29,37 +29,34 @@ export const inject = ['slots', 'conversationEvents', 'conversationViews', 'sess
  */
 export function apply(ctx: Context): void {
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-trajectory: dictionaries')
-  // Registration-time text (the view tab label) reads through the bound
-  // translate as a thunk, so it follows the active locale without
-  // re-registration.
-  const t = ctx.locale.bind(NS)
   const duration = createTrajectoryDurationStore()
+
   registerTrajectoryMessageDefinitions(ctx)
   registerTrajectoryRequestHeaderDefinition(ctx)
   registerTrajectoryAssistantDefinition(ctx)
   registerTrajectoryToolDefinition(ctx)
   registerTrajectoryCompactionDefinitions(ctx)
   registerTrajectoryConversationView(ctx)
-  ctx.slots.inject('conversation.view', () => ctx.slots.register({
-    name: 'conversation.view',
-    id: 'trajectory',
-    order: 10,
+  const createInjected = (sessionId: SessionId): TrajectoryViewInjected => {
+
+    const session = ctx.sessions.binding(sessionId)?.session
+    if (session === undefined) {
+      throw new Error(`ui-trajectory: session "${sessionId}" is unavailable`)
+    }
+    return {
+      hooks: { duration },
+      loadOlder: async () => {
+        const before = session.getSnapshot().views.get('trajectory')
+        await session.loadOlder()
+        return session.getSnapshot().views.get('trajectory') !== before
+      },
+      setActualDuration: (value) => { duration.set(value) },
+    }
+  }
+
+  ctx.slots.inject('conversation.details.trajectory', () => ctx.slots.register({
+    name: 'conversation.details.trajectory',
     locale: NS,
-    label: () => t('view.trajectory'),
-    inject: (sessionId: SessionId): TrajectoryViewInjected => {
-      const session = ctx.sessions.binding(sessionId)?.session
-      if (session === undefined) {
-        throw new Error(`ui-trajectory: session "${sessionId}" is unavailable`)
-      }
-      return {
-        hooks: { duration },
-        loadOlder: async () => {
-          const before = session.getSnapshot().views.get('trajectory')
-          await session.loadOlder()
-          return session.getSnapshot().views.get('trajectory') !== before
-        },
-        setActualDuration: (value) => { duration.set(value) },
-      }
-    },
+    inject: createInjected,
   }, TrajectoryView))
 }

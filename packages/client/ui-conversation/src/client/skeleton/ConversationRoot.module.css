@@ -28,21 +28,22 @@
 .header {
   position: relative;
   flex: none;
-  padding: 12px 28px 0 20px;
-  border-bottom: 1px solid transparent;
+  padding: 12px 20px;
+  box-sizing: border-box;
 }
 
 .header::after {
   content: '';
   position: absolute;
   right: 0;
-  bottom: 1px;
+  bottom: 0;
   left: 0;
   z-index: 0;
   height: 1px;
   background: var(--dsw-alias-border-l2);
   pointer-events: none;
 }
+
 
 /* Blank hero/settling: keep the strict Session header mounted without taking
    column space; the root-owned scrollport and composer remain below it. */
@@ -113,6 +114,32 @@
   cursor: default;
 }
 
+.projectBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  background: var(--dsw-alias-interactive-bg-subtle, rgba(255, 255, 255, 0.06));
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-secondary);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.projectBadgeIcon {
+  color: var(--dsw-alias-label-tertiary);
+  flex-shrink: 0;
+}
+
+.projectBadgeText {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .headerActions {
   display: flex;
   flex: none;
@@ -131,6 +158,7 @@
 .headerUtilities:empty {
   display: none;
 }
+
 
 .utilityBtn {
   display: inline-flex;

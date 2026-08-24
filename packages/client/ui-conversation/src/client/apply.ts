@@ -263,6 +263,7 @@ export function apply(ctx: Context): void {
     },
     store: chatStore,
     inject: (_sessionId: SessionId, actions: BoundActions<typeof chatStore>): ConversationSessionHeaderInjected => ({
+
       views,
       open: (id) => { sessions.open(id) },
       toggleDetails: () => { layout.toggleDetails() },
@@ -270,8 +271,11 @@ export function apply(ctx: Context): void {
         actions.setCompanionTab(tab)
         layout.openDetails()
       },
+      openPath: (path) => { void workspaces.openPath(path) },
+      downloadLog: (id) => { void ctx.get('sessionLogDownload')?.download(id) },
     }),
   }, ConversationSessionHeader)
+
 
   // The default composer body: its own single slot inside the composer
   // chain's fallback. Public machine surface arrives via the
@@ -451,11 +455,15 @@ export function apply(ctx: Context): void {
     locale: NS,
     children: {
       'conversation.details.tool': { kind: 'single', scope: 'session' },
+      'conversation.details.trajectory': { kind: 'single', scope: 'session' },
     },
     store: chatStore,
     inject: (): DetailsInjected => ({
       closeDetails: () => { layout.closeDetails() },
     }),
   }, DetailsPanel)
+
+
+
 
 }

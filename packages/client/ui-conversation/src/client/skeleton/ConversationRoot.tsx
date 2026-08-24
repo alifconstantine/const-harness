@@ -89,16 +89,14 @@ export function ConversationRoot({
   //      flash on refresh (empty cwd → placeholder);
   //   5. list ready but no owning workspace (deleted from the sidebar) →
   //      placeholder, never the deleted folder's name via cwd.
-  const isOutsideProject = sessionId !== undefined && sessionWorkspace === undefined
   const chipTitle = pendingWorkspace?.title
     ?? (sessionId === undefined
       ? undefined
       : sessionWorkspace?.title
-        ?? (isOutsideProject
-          ? t('hero.outsideProject')
-          : (workspaces.phase === 'ready' || cwd === undefined || cwd === ''
-            ? undefined
-            : workspaceLabel(cwd))))
+        ?? (workspaces.phase === 'ready' || cwd === undefined || cwd === ''
+          ? undefined
+          : workspaceLabel(cwd)))
+
 
   const heroWorkspaceRow = (
     <div className={css.heroWorkspaceRow}>

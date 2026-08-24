@@ -123,6 +123,11 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
      */
     'conversation.details.tool': { kind: 'single'; scope: 'session'; owner: DetailsToolOwnerProps }
     /**
+     * Trajectory view slot inside the companion details panel.
+     */
+    'conversation.details.trajectory': { kind: 'single'; scope: 'session'; owner: ConvViewOwnerProps }
+
+    /**
      * The composer takeover chain: entries are selector-routed replacements
      * of the default InputBar. Declared by this package's 'conversation'
      * entry; the owner dispatches the {@link ComposerChainProps} currency and
@@ -451,8 +456,13 @@ export interface ConversationSessionHeaderInjected {
   /** Toggle the companion side panel open/closed. */
   toggleDetails?: () => void
   /** Open companion side panel directly at a specific tab. */
-  openCompanionTab?: (tab: 'trajectory' | 'details' | 'tasks') => void
+  openCompanionTab?: (tab: import('./views.ts').CompanionTabId) => void
+  /** Open a directory or file in OS native explorer/file manager. */
+  openPath?: (path: string) => void
+  /** Export raw session log archive download. */
+  downloadLog?: (sessionId: SessionId) => void
 }
+
 
 /**
  * Owner share of the composer-bar slot: ConversationRoot's layout-phase
@@ -725,9 +735,12 @@ export interface DetailsInjected {
   closeDetails: () => void
 }
 
-/** Full details-slot props: selection store, Tool output seat, injected close callback, and locale. */
-export type DetailsSlotProps = PropsRuntime<'details'> & PropsRenderSlots<'conversation.details.tool'>
+/** Full details-slot props: selection store, Tool output seat, Trajectory view seat, injected close callback, and locale. */
+export type DetailsSlotProps = PropsRuntime<'details'> & PropsRenderSlots<'conversation.details.tool' | 'conversation.details.trajectory'>
   & PropsStore<ChatStore> & DetailsInjected & PropsLocale<'conversation'>
+
+
+
 
 /** Owner share common to the hero / New-Session Workspace pickers. */
 export interface EmptyWorkspaceOwnerProps {

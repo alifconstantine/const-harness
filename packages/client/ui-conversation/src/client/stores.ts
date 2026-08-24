@@ -3,14 +3,14 @@
  * The plugin creates its handle at apply time so identity follows the fiber.
  */
 import { defineStore, type EngineStoreHandle } from '@deepseek-ai/dsh-client-runtime/client'
-import type { CallId, ChatStoreState, SelectionTarget } from './contract/views.ts'
+import type { CallId, ChatStoreState, CompanionTabId, SelectionTarget } from './contract/views.ts'
 
 /** Declared action shape used to give the exported factory a stable return type. */
 type ChatActions = {
   select: (draft: ChatStoreState, target: SelectionTarget | null) => void
   setDraft: (draft: ChatStoreState, text: string) => void
   setView: (draft: ChatStoreState, view: string) => void
-  setCompanionTab: (draft: ChatStoreState, tab: 'trajectory' | 'details' | 'tasks') => void
+  setCompanionTab: (draft: ChatStoreState, tab: CompanionTabId) => void
   setInspect: (draft: ChatStoreState, target: { callId: CallId } | null) => void
 }
 
@@ -23,7 +23,7 @@ export function createChatStore(): EngineStoreHandle<ChatStoreState, ChatActions
     // Anchored to the contract shape: consumers read the store through
     // PropsStore<ChatStore>'s SnapshotSelectorHook<ChatStoreState>, so init
     // and the contract cannot drift.
-    init: (): ChatStoreState => ({ selection: null, draft: '', view: null, companionTab: 'trajectory', inspect: null }),
+    init: (): ChatStoreState => ({ selection: null, draft: '', view: null, inspect: null }),
     persist: 'dsh.conversation.chat',
     actions: {
       select: (d, target: SelectionTarget | null) => {
@@ -32,7 +32,7 @@ export function createChatStore(): EngineStoreHandle<ChatStoreState, ChatActions
       },
       setDraft: (d, text: string) => { d.draft = text },
       setView: (d, view: string) => { d.view = view },
-      setCompanionTab: (d, tab: 'trajectory' | 'details' | 'tasks') => { d.companionTab = tab },
+      setCompanionTab: (d, tab: CompanionTabId) => { d.companionTab = tab },
       setInspect: (d, target: { callId: CallId } | null) => { d.inspect = target },
     },
   })

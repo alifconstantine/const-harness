@@ -1,12 +1,6 @@
 .sessionLogButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 111px;
-  height: 32px;
-  padding: 6px 12px;
-  gap: 4px;
-  border: 1px solid var(--dsw-alias-border-l2);
+  display: none;
+
   border-radius: 18px;
   color: var(--dsw-alias-label-primary);
   background: transparent;

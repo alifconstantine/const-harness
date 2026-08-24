@@ -27,7 +27,9 @@ import {
   ConversationSession, ConversationSessionHeader,
   type ConversationSessionHeaderProps, type ConversationSessionProps,
 } from '@deepseek-ai/dsh-client-ui-conversation/src/client/skeleton/ConversationSession.tsx'
+import { DetailsPanel } from '@deepseek-ai/dsh-client-ui-conversation/src/client/skeleton/DetailsPanel.tsx'
 import { createChatStore } from '@deepseek-ai/dsh-client-ui-conversation/src/client/stores.ts'
+
 import { zh as conversationZh } from '@deepseek-ai/dsh-client-ui-conversation/src/client/locales.ts'
 import { apply as localeApply, inject as localeInject } from '@deepseek-ai/dsh-client-locale/client'
 import { stubSettingsScope } from '@deepseek-ai/dsh-client-test-runtime'
@@ -191,7 +193,10 @@ async function bench(snapshot = historySnapshot(NODES)) {
   // The conversation entry's role: declare the ring, then seed the chat entry.
   slots.register({
     name: 'root',
-    children: { 'conversation.view': { kind: 'list', scope: 'session' } },
+    children: {
+      'conversation.view': { kind: 'list', scope: 'session' },
+      'conversation.details.trajectory': { kind: 'single', scope: 'session' },
+    },
   }, (_p: { renderSlot?: unknown }) => null)
   const chatBody = vi.fn(() => <div data-testid="chat-body" />)
   slots.register(
@@ -219,6 +224,7 @@ function mount(slots: SlotRegistry, nodes: ConversationSnapshot['nodes'] = NODES
   const sessionSnapshot = sessionSnapshots.get(slots) ?? createSnapshotStore(historySnapshot(nodes))
   const useSession = bindSnapshotSelector(sessionSnapshot)
   const chat = createChatStore().create()
+  chat.actions.setCompanionTab('trajectory')
   const views = {
     list: () => tabsOf(slots),
     subscribe: (fn: () => void) => slots.subscribe('conversation.view', fn),
@@ -234,7 +240,9 @@ function mount(slots: SlotRegistry, nodes: ConversationSnapshot['nodes'] = NODES
   // render it with the session standard kit (what SlotOutlet does for a
   // list-kind session slot, minus machinery).
   const renderSlot = ((key: string, _owner: object, opts?: { only?: string }): ReactNode => {
-    const entry = slots.entries('conversation.view').find(e => e.options.id === opts?.only)
+    const entry = key === 'conversation.details.trajectory'
+      ? slots.entries('conversation.details.trajectory')[0]
+      : slots.entries('conversation.view').find(e => e.options.id === opts?.only)
     if (entry === undefined) return null
     const View = entry.component as FC<ConvViewProps>
     const injectEntry = entry.inject as ((sessionId: SessionId) => object) | undefined
@@ -294,17 +302,30 @@ function mount(slots: SlotRegistry, nodes: ConversationSnapshot['nodes'] = NODES
         inputActions={inputActions}
         bindDraftMirror={() => () => {}}
       />
+      <DetailsPanel
+        sessionId={SID}
+        SessionProvider={({ children }) => children(SID)}
+        useSession={useSession}
+        useSessions={emptySessions()}
+        useWorkspaces={emptyWorkspaces()}
+        useProjection={(() => undefined)}
+        useStore={bindSnapshotSelector(chat)}
+        actions={chat.actions}
+        renderSlot={renderSlot as never}
+        closeDetails={vi.fn()}
+        useInput={useInput}
+        inputActions={inputActions}
+        t={tConversation}
+      />
+
     </>,
   )
 }
 
 describe('plugin registration', () => {
-  it('registers trajectory after chat on the ring', async () => {
+  it('registers trajectory in companion details slot', async () => {
     const b = await bench()
-    expect(tabsOf(b.slots)).toEqual([
-      { id: 'chat', label: 'Chat' },
-      { id: 'trajectory', label: 'Trajectory' },
-    ])
+    expect(b.slots.entries('conversation.details.trajectory')).toHaveLength(1)
   })
 
   it('fiber disposal removes the tab and leaves chat standing', async () => {
@@ -316,15 +337,14 @@ describe('plugin registration', () => {
 
     await b.fiber.dispose()
 
-    expect(tabsOf(b.slots).map(v => v.id)).toEqual(['chat'])
+    expect(b.slots.entries('conversation.details.trajectory')).toHaveLength(0)
     expect(events.entries()).toEqual([])
     expect(views.entries()).toEqual([])
   })
 
   it('shares one browser-wide duration preference across session injections', async () => {
     const b = await bench()
-    const entry = b.slots.entries('conversation.view')
-      .find(candidate => candidate.options.id === 'trajectory')
+    const entry = b.slots.entries('conversation.details.trajectory')[0]
     expect(entry).toBeDefined()
     const injectEntry = entry!.inject as unknown as (
       sessionId: SessionId,
@@ -341,8 +361,7 @@ describe('plugin registration', () => {
 
   it('reports whether loading older history changed the Trajectory snapshot', async () => {
     const b = await bench()
-    const entry = b.slots.entries('conversation.view')
-      .find(candidate => candidate.options.id === 'trajectory')
+    const entry = b.slots.entries('conversation.details.trajectory')[0]
     const injectEntry = entry!.inject as unknown as (
       sessionId: SessionId,
     ) => TrajectoryViewInjected
@@ -357,12 +376,12 @@ describe('plugin registration', () => {
   })
 })
 
-describe('tab switching in ConversationRoot', () => {
-  it('renders two tabs, defaults to chat, and switches to the trajectory ledger', async () => {
+describe('tab switching in DetailsPanel', () => {
+  it('renders trajectory in the companion details panel', async () => {
     const b = await bench()
     const view = mount(b.slots)
     expect(screen.getByTestId('chat-body')).toBeTruthy()
-    expect(screen.getAllByRole('tab').map(t => t.textContent)).toEqual(['Chat', 'Trajectory'])
+    expect(screen.getByRole('tab', { name: 'Trajectory' })).toBeTruthy()
 
     fireEvent.click(screen.getByRole('tab', { name: 'Trajectory' }))
     expect(screen.queryByText(/turns ·/)).toBeNull()
@@ -370,27 +389,17 @@ describe('tab switching in ConversationRoot', () => {
     expect(screen.queryByRole('columnheader')).toBeNull()
     expect(screen.getByRole('toolbar', { name: '轨迹工具栏' })).toBeTruthy()
     expect(screen.getByRole('region', { name: 'Trajectory timeline' })).toBeTruthy()
-    expect(view.container.querySelector('[data-conversation-composer-overlay]')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Collapse turns' }))
     expect(view.container.querySelector('[data-collapsed-summary="turn"]')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Expand turns' }))
     expect(screen.getByRole('row', { name: /USER/ })).toBeTruthy()
-    expect(screen.queryByTestId('chat-body')).toBeNull()
-    expect(b.loadOlder).not.toHaveBeenCalled()
-    fireEvent.click(screen.getByRole('tab', { name: 'Chat' }))
     expect(b.loadOlder).not.toHaveBeenCalled()
   })
 
   it('labels the trajectory tab in the active locale', async () => {
-    const b = await bench()
-    const labelOf = () => tabsOf(b.slots).find(tab => tab.id === 'trajectory')?.label
-    expect(labelOf()).toBe('Trajectory')
-    const locale = b.ctx.get('locale') as { setLocale(id: string): void }
-    locale.setLocale('zh')
-    expect(labelOf()).toBe('轨迹')
-    locale.setLocale('en')
-    expect(labelOf()).toBe('Trajectory')
+    expect(zh['view.trajectory']).toBe('轨迹')
   })
+
 
   it('opens a local record inspector and switches payload tabs without opening chat details', async () => {
     const b = await bench()

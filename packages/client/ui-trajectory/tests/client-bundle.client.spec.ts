@@ -78,7 +78,7 @@ describe('tsdown client artifact', () => {
     // The conversation entry's role: the ring must be declared before riders land.
     slots.register({
       name: 'root',
-      children: { 'conversation.view': { kind: 'list', scope: 'session' } },
+      children: { 'conversation.details.trajectory': { kind: 'single', scope: 'session' } },
     }, (_p: { renderSlot?: unknown }) => null)
     // Paging is session-owned; this registration-only probe never renders the
     // entry, so the binding stays deliberately empty. The locale plugin backs
@@ -94,13 +94,14 @@ describe('tsdown client artifact', () => {
     await fiber.await()
     const events = ctx.get('conversationEvents') as ConversationEventRegistry
     const views = ctx.get('conversationViews') as ConversationViewRegistry
-    expect(slots.entries('conversation.view').map(e => e.options.id)).toEqual(['trajectory'])
+    expect(slots.entries('conversation.details.trajectory')).toHaveLength(1)
     expect(events.entries().length).toBeGreaterThan(0)
     expect(views.entries()).toHaveLength(1)
     await fiber.dispose()
-    expect(slots.entries('conversation.view')).toHaveLength(0)
+    expect(slots.entries('conversation.details.trajectory')).toHaveLength(0)
     expect(events.entries()).toEqual([])
     expect(views.entries()).toEqual([])
+
   })
 
   it.skipIf(code === undefined)('injects plugin-tagged module CSS during factory execution', async () => {

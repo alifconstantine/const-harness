@@ -12,6 +12,17 @@ export interface SelectionTarget { turnSeq: number; stepSeq?: number; callId?: C
  */
 export interface ViewTab { id: string; label: string }
 
+/** Active companion side panel tab identifier. */
+export type CompanionTabId =
+  | 'trajectory'
+  | 'details'
+  | 'tasks'
+  | 'terminal'
+  | 'review'
+  | 'browser'
+  | 'side-conversation'
+  | (string & {})
+
 /**
  * Per-session state shared by conversation, chat-view, and details slots.
  * Unknown persisted view ids fall back to the stable Chat view.
@@ -23,8 +34,8 @@ export interface ChatStoreState {
   draft: string
   /** Active conversation view id ('conversation.view' entry id); null falls back to Chat. */
   view: string | null
-  /** Active companion side panel tab ('trajectory' | 'details' | 'tasks'). */
-  companionTab?: 'trajectory' | 'details' | 'tasks' | null
+  /** Active companion side panel tab. */
+  companionTab?: CompanionTabId | null
   /**
    * One-shot inspect handoff: chat writes the call to reveal, the trajectory
    * view consumes it and acknowledges by clearing. Read with `?? null` —

@@ -3,13 +3,14 @@
 import { useEffect, useSyncExternalStore } from 'react'
 import clsx from 'clsx'
 import {
-  IconActivityOutline16, IconPanelRightOutline16, IconTerminalOutline16, Tooltip,
+  IconFolderClose16, IconPanelRightOutline16, IconTerminalOutline16, Tooltip,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { SessionId, SessionListState, SessionSummary } from '@deepseek-ai/dsh-client-runtime/client'
 import type {
   ConversationSessionHeaderSlotProps, ConversationSessionSlotProps,
 } from '../contract/slots.ts'
 import type { ViewTab } from '../contract/views.ts'
+import { SessionHeaderMenu } from './SessionHeaderMenu.tsx'
 import css from './ConversationRoot.module.css'
 
 /** Full props composed from the strict session body contract. */
@@ -24,6 +25,10 @@ interface Breadcrumb {
 }
 
 const DEFAULT_VIEW_ID = 'chat'
+
+function workspaceTitleOf(cwd: string): string {
+  return cwd.replace(/[/\\]+$/, '').split(/[/\\]/).pop() ?? ''
+}
 
 /** Resolve by id and keep stale persisted selections on the stable Chat fallback. */
 function resolveActiveView(tabs: readonly ViewTab[], selectedId: string | null): ViewTab | undefined {
@@ -48,12 +53,12 @@ function deriveAncestry(list: SessionListState, id: SessionId): readonly Breadcr
   return chain
 }
 
-function equalBreadcrumbs(left: readonly Breadcrumb[], right: readonly Breadcrumb[]): boolean {
-  return left.length === right.length
-    && left.every((item, index) => {
-      const other = right.at(index)
-      return other !== undefined && item.id === other.id && item.displayTitle === other.displayTitle
-    })
+function equalBreadcrumbs(a: readonly Breadcrumb[], b: readonly Breadcrumb[]): boolean {
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i++) {
+    if (a[i]?.id !== b[i]?.id || a[i]?.displayTitle !== b[i]?.displayTitle) return false
+  }
+  return true
 }
 
 /**
@@ -62,8 +67,8 @@ function equalBreadcrumbs(left: readonly Breadcrumb[], right: readonly Breadcrum
  * @returns the hidden blank-session header or visible title and tabs.
  */
 export function ConversationSessionHeader({
-  sessionId, useSession, useSessions, useStore, actions,
-  renderSlot, views, open, toggleDetails, openCompanionTab, t,
+  sessionId, useSession, useSessions, useWorkspaces, useStore, actions,
+  renderSlot, views, open, toggleDetails, openCompanionTab, openPath, downloadLog, t,
 }: ConversationSessionHeaderProps) {
   useSyncExternalStore(views.subscribe, views.version)
   const tabs = views.list()
@@ -71,9 +76,18 @@ export function ConversationSessionHeader({
   const companionTab = useStore(s => s.companionTab)
   const active = resolveActiveView(tabs, selectedId)
   const ancestry = useSessions(s => deriveAncestry(s, sessionId), equalBreadcrumbs)
+  const sessionSummary = useSessions(s => s.byId[sessionId])
+  const sessionCwd = useSessions(s => s.byId[sessionId]?.cwd)
+  const sessionWorkspace = useWorkspaces(w => w.items.find(item => item.sessionIds.includes(sessionId)))
   const composerPhase = useSession(s => s.composerPhase)
   const blank = useSession(s => s.blank)
   const hideChrome = blank && composerPhase === 'blank'
+
+  const isOutsideProject = sessionWorkspace === undefined
+  const projectTitle = sessionWorkspace?.title
+    ?? (isOutsideProject
+      ? (sessionCwd ? workspaceTitleOf(sessionCwd) : 'Default')
+      : '')
 
   return (
     <header
@@ -85,51 +99,66 @@ export function ConversationSessionHeader({
           <div className={css.titleRow}>
             <div className={css.titleCluster}>
               <nav className={css.crumbs} aria-label={t('session.hierarchy')}>
-                {ancestry.map((summary, index) => {
-                  const last = index === ancestry.length - 1
+                {ancestry.map((crumb, idx) => {
+
+                  const current = idx === ancestry.length - 1
                   return (
-                    <span key={summary.id} className={css.crumbSeg}>
-                      {index > 0 && <span className={css.crumbSep}>/</span>}
+                    <span key={crumb.id} className={css.crumbSeg}>
+                      {idx > 0 && <span className={css.crumbDivider}>/</span>}
                       <button
                         type="button"
-                        className={clsx(css.crumb, last && css.crumbCurrent)}
-                        disabled={last}
-                        onClick={() => { open(summary.id) }}
+                        disabled={current}
+                        className={clsx(css.crumb, current && css.crumbCurrent)}
+                        onClick={() => { if (!current) open(crumb.id) }}
                       >
-                        {summary.displayTitle}
+                        {crumb.displayTitle}
                       </button>
                     </span>
                   )
                 })}
-                {ancestry.length === 0 && <span className={css.crumbCurrent}>{sessionId}</span>}
               </nav>
+
+              {projectTitle && (
+                <div className={css.projectBadge} title={`Project: ${projectTitle}`}>
+                  <IconFolderClose16 size={13} className={css.projectBadgeIcon} />
+                  <span className={css.projectBadgeText}>{projectTitle}</span>
+                </div>
+              )}
+
+              <SessionHeaderMenu
+                sessionId={sessionId}
+                displayTitle={sessionSummary?.displayTitle ?? sessionId}
+                cwd={sessionCwd}
+                onRename={async (newTitle) => {
+                  const session = (actions as unknown as { renameSession?: (title: string) => Promise<unknown> }).renameSession
+                  if (session) await session(newTitle)
+                }}
+                onOpenTrajectory={() => {
+                  actions.setCompanionTab('trajectory')
+                  openCompanionTab?.('trajectory')
+                }}
+                onExportLog={() => {
+                  downloadLog?.(sessionId)
+                }}
+                onOpenPath={(path) => {
+                  openPath?.(path)
+                }}
+              />
+
               <div className={css.headerActions}>
                 {renderSlot('conversation.session.header.actions', {})}
               </div>
             </div>
             <div className={css.headerUtilities}>
               {renderSlot('conversation.session.header.utilities', {})}
-              <Tooltip label="Trajectory Activity" delayMs={300}>
+              <Tooltip label="Terminal" delayMs={300}>
                 <button
                   type="button"
-                  className={clsx(css.utilityBtn, companionTab === 'trajectory' && css.utilityBtnActive)}
-                  aria-label="Trajectory Activity"
+                  className={clsx(css.utilityBtn, companionTab === 'terminal' && css.utilityBtnActive)}
+                  aria-label="Terminal"
                   onClick={() => {
-                    actions.setCompanionTab('trajectory')
-                    openCompanionTab?.('trajectory')
-                  }}
-                >
-                  <IconActivityOutline16 size={15} />
-                </button>
-              </Tooltip>
-              <Tooltip label="Tool Inspector" delayMs={300}>
-                <button
-                  type="button"
-                  className={clsx(css.utilityBtn, companionTab === 'details' && css.utilityBtnActive)}
-                  aria-label="Tool Inspector"
-                  onClick={() => {
-                    actions.setCompanionTab('details')
-                    openCompanionTab?.('details')
+                    actions.setCompanionTab('terminal')
+                    openCompanionTab?.('terminal')
                   }}
                 >
                   <IconTerminalOutline16 size={15} />

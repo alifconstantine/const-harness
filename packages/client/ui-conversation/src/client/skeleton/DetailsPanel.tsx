@@ -1,10 +1,22 @@
-// DetailsPanel: Companion side panel with Trajectory, Tool Details, and Tasks views.
-// Multi-tab companion inspector in the third column.
+// DetailsPanel: Multi-tab companion inspector in the third column.
+// Supports Chooser state, dynamic tabs (Terminal, Trajectory, Details, Review, Browser, Tasks),
+// and persistent tool call inspection.
 
-import { Fragment, useId } from 'react'
+import { Fragment, useEffect, useId, useState } from 'react'
 import clsx from 'clsx'
 import {
-  CodeBlock, IconActivityOutline16, IconChecklistOutline16, IconTerminalOutline16,
+  CodeBlock,
+  IconActivityOutline16,
+  IconChecklistOutline16,
+  IconChevronDownOutline14,
+  IconCloseFill14,
+  IconFileOutline16,
+  IconGlobeOutline16,
+  IconNewChatOutline16,
+  IconPlusOutline16,
+  IconTerminalOutline16,
+  Menu,
+  type MenuEntry,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import { shallowEqual } from '@deepseek-ai/dsh-client-runtime/client'
 import type {
@@ -12,6 +24,7 @@ import type {
 } from '@deepseek-ai/dsh-client-runtime/client'
 import type { TodoItem } from '@deepseek-ai/dsh-tool-todo/client'
 import type { DetailsSlotProps } from '../contract/slots.ts'
+import type { CompanionTabId } from '../contract/views.ts'
 import { findToolCall } from '../chat/tool-node-reader.ts'
 import css from './DetailsPanel.module.css'
 
@@ -83,10 +96,16 @@ function TaskStatusGlyph({ status }: { status: TodoItem['status'] }) {
   )
 }
 
+interface TabMeta {
+  id: CompanionTabId
+  label: string
+  icon: React.ReactNode
+}
+
 export function DetailsPanel({
   useSession, useSessions, sessionId, useStore, useProjection, renderSlot, closeDetails, actions, t,
 }: DetailsPanelProps) {
-  const companionTab = useStore(s => s.companionTab) ?? 'trajectory'
+  const companionTab = useStore(s => s.companionTab)
   const selection = useStore(s => s.selection)
   const sessionCwd = useSessions(list => list.byId[sessionId]?.cwd)
   const callId = selection?.callId
@@ -98,168 +117,398 @@ export function DetailsPanel({
   const sessionSnapshot = useSession(s => s)
   const todos = useProjection('todos')
 
-  return (
-    <div className={css.root}>
-      <div className={css.header}>
-        <div className={css.tabs} role="tablist">
+  // Open tabs set in the side panel
+  const [openTabs, setOpenTabs] = useState<CompanionTabId[]>(() => {
+    return companionTab ? [companionTab] : []
+  })
+
+  const [plusMenuOpen, setPlusMenuOpen] = useState(false)
+
+  // Synchronize store tab with open tabs
+  useEffect(() => {
+    if (companionTab && !openTabs.includes(companionTab)) {
+      setOpenTabs(prev => [...prev, companionTab])
+    }
+  }, [companionTab, openTabs])
+
+  const activeTab = companionTab && openTabs.includes(companionTab)
+    ? companionTab
+    : (openTabs.length > 0 ? openTabs[0] : null)
+
+  const handleOpenTab = (tabId: CompanionTabId) => {
+    if (!openTabs.includes(tabId)) {
+      setOpenTabs(prev => [...prev, tabId])
+    }
+    actions.setCompanionTab(tabId)
+  }
+
+  const handleCloseTab = (tabId: CompanionTabId, e?: React.MouseEvent) => {
+    e?.stopPropagation()
+    const remaining = openTabs.filter(id => id !== tabId)
+    setOpenTabs(remaining)
+    if (activeTab === tabId) {
+      const nextTab = remaining.at(-1) ?? null
+      actions.setCompanionTab(nextTab as never)
+    }
+  }
+
+  const tabMetas: Record<string, TabMeta> = {
+    'side-conversation': {
+      id: 'side-conversation',
+      label: 'Side conversation',
+      icon: <IconNewChatOutline16 size={13} />,
+    },
+    trajectory: {
+      id: 'trajectory',
+      label: 'Trajectory',
+      icon: <IconActivityOutline16 size={13} />,
+    },
+    review: {
+      id: 'review',
+      label: 'Review',
+      icon: <IconFileOutline16 size={13} />,
+    },
+    terminal: {
+      id: 'terminal',
+      label: sessionCwd ? sessionCwd.split(/[/\\]/).pop() || 'Terminal' : 'Terminal',
+      icon: <IconTerminalOutline16 size={13} />,
+    },
+    browser: {
+      id: 'browser',
+      label: 'Browser',
+      icon: <IconGlobeOutline16 size={13} />,
+    },
+    details: {
+      id: 'details',
+      label: 'Details',
+      icon: <IconTerminalOutline16 size={13} />,
+    },
+    tasks: {
+      id: 'tasks',
+      label: 'Tasks',
+      icon: <IconChecklistOutline16 size={13} />,
+    },
+  }
+
+  const plusMenuItems: readonly MenuEntry[] = [
+    { id: 'side-conversation', label: 'Side conversation', icon: <IconNewChatOutline16 size={14} /> },
+    { id: 'trajectory', label: 'Trajectory', icon: <IconActivityOutline16 size={14} /> },
+    { id: 'review', label: 'Review', icon: <IconFileOutline16 size={14} /> },
+    { id: 'terminal', label: 'Terminal', icon: <IconTerminalOutline16 size={14} /> },
+    { id: 'browser', label: 'Browser', icon: <IconGlobeOutline16 size={14} /> },
+  ]
+
+  // Chooser State (Image 5) when no tabs are active
+  if (openTabs.length === 0 || activeTab === null) {
+    return (
+      <div className={css.root}>
+        <div className={css.topBar}>
           <button
             type="button"
-            role="tab"
-            aria-selected={companionTab === 'trajectory'}
-            className={clsx(css.tab, companionTab === 'trajectory' && css.tabActive)}
-            onClick={() => { actions.setCompanionTab('trajectory') }}
+            className={css.collapseBtn}
+            aria-label={t('details.close')}
+            onClick={() => { closeDetails() }}
           >
-            <IconActivityOutline16 size={13} />
-            <span>Trajectory</span>
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={companionTab === 'details'}
-            className={clsx(css.tab, companionTab === 'details' && css.tabActive)}
-            onClick={() => { actions.setCompanionTab('details') }}
-          >
-            <IconTerminalOutline16 size={13} />
-            <span>Details</span>
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={companionTab === 'tasks'}
-            className={clsx(css.tab, companionTab === 'tasks' && css.tabActive)}
-            onClick={() => { actions.setCompanionTab('tasks') }}
-          >
-            <IconChecklistOutline16 size={13} />
-            <span>Tasks</span>
-            {todos && todos.length > 0 && <span>({todos.length})</span>}
+            <IconChevronDownOutline14 size={14} />
           </button>
         </div>
 
+        <div className={css.chooserContainer}>
+          <div className={css.chooserTitle}>Open tab</div>
+          <div className={css.chooserSubtitle}>Choose a tab to open in the side pane.</div>
+
+          <div className={css.chooserGrid}>
+            <button
+              type="button"
+              className={css.chooserCard}
+              onClick={() => { handleOpenTab('side-conversation') }}
+            >
+              <span className={css.chooserCardIcon}><IconNewChatOutline16 size={16} /></span>
+              <span>Side conversation</span>
+            </button>
+
+            <button
+              type="button"
+              className={css.chooserCard}
+              onClick={() => { handleOpenTab('trajectory') }}
+            >
+              <span className={css.chooserCardIcon}><IconActivityOutline16 size={16} /></span>
+              <span>Trajectory</span>
+            </button>
+
+            <button
+              type="button"
+              className={css.chooserCard}
+              onClick={() => { handleOpenTab('review') }}
+            >
+              <span className={css.chooserCardIcon}><IconFileOutline16 size={16} /></span>
+              <span>Review</span>
+            </button>
+
+            <button
+              type="button"
+              className={css.chooserCard}
+              onClick={() => { handleOpenTab('terminal') }}
+            >
+              <span className={css.chooserCardIcon}><IconTerminalOutline16 size={16} /></span>
+              <span>Terminal</span>
+            </button>
+
+            <button
+              type="button"
+              className={css.chooserCard}
+              onClick={() => { handleOpenTab('browser') }}
+            >
+              <span className={css.chooserCardIcon}><IconGlobeOutline16 size={16} /></span>
+              <span>Browser</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className={css.root}>
+      {/* Top Tab Bar (Image 1) */}
+      <div className={css.topBar}>
         <button
           type="button"
-          className={css.close}
+          className={css.collapseBtn}
           aria-label={t('details.close')}
           onClick={() => { closeDetails() }}
         >
-          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden>
-            <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
+          <IconChevronDownOutline14 size={14} />
         </button>
+
+        <div className={css.tabList} role="tablist">
+          {openTabs.map((tabId) => {
+            const meta = tabMetas[tabId] || { id: tabId, label: tabId, icon: null }
+            const isActive = tabId === activeTab
+            return (
+              <div
+                key={tabId}
+                role="tab"
+                aria-selected={isActive}
+                className={clsx(css.tabPill, isActive && css.tabPillActive)}
+                onClick={() => { actions.setCompanionTab(tabId) }}
+              >
+                {meta.icon}
+                <span className={css.tabPillLabel}>{meta.label}</span>
+                <button
+                  type="button"
+                  className={css.tabCloseBtn}
+                  aria-label={`Close ${meta.label}`}
+                  onClick={(e) => { handleCloseTab(tabId, e) }}
+                >
+                  <IconCloseFill14 size={10} />
+                </button>
+              </div>
+            )
+          })}
+        </div>
+
+        <Menu
+          open={plusMenuOpen}
+          anchor={(
+            <button
+              type="button"
+              className={css.addTabBtn}
+              aria-label="Add Tab"
+              title="Open tab"
+              onClick={() => { setPlusMenuOpen(p => !p) }}
+            >
+              <IconPlusOutline16 size={14} />
+            </button>
+          )}
+          items={plusMenuItems}
+          onSelect={(tabId) => {
+            handleOpenTab(tabId as CompanionTabId)
+            setPlusMenuOpen(false)
+          }}
+          onClose={() => { setPlusMenuOpen(false) }}
+          side="bottom"
+          align="end"
+        />
       </div>
 
-      <div className={css.body}>
-        {/* Tab 1: Trajectory */}
-        {companionTab === 'trajectory' && (
-          <div>
-            <div className={css.trajectorySummary}>
-              <span>Status: {sessionSnapshot.running ? '⚡ Running' : 'Idle'}</span>
-              <span>{sessionSnapshot.turnTimings.size} Turns</span>
+      {/* Active Tab View Body */}
+      {activeTab === 'terminal' ? (
+        <div className={css.bodyFill}>
+          <div className={css.terminalView}>
+            <div className={css.terminalHeader}>
+              Windows PowerShell{'\n'}
+              Copyright (C) Microsoft Corporation. All rights reserved.{'\n\n'}
+              Install the latest PowerShell for new features and improvements!{' '}
+              <a
+                href="https://aka.ms/PSWindows"
+                target="_blank"
+                rel="noreferrer"
+                className={css.terminalLink}
+              >
+                https://aka.ms/PSWindows
+              </a>
             </div>
 
-            {sessionSnapshot.turnTimings.size === 0 && (
-              <div className={css.empty}>No trajectory activity yet in this session.</div>
-            )}
-
-            {Array.from(sessionSnapshot.turnTimings.entries()).map(([turnSeq, timing]) => {
-              const durationMs = timing.endTime ? timing.endTime - timing.startTime : undefined
-              const durationStr = durationMs !== undefined
-                ? durationMs > 1000 ? `${(durationMs / 1000).toFixed(1)}s` : `${durationMs}ms`
-                : 'in progress…'
-
-              const assistantNodes = sessionSnapshot.nodes.filter(
-                (n): n is AssistantMessageNode => n.kind === 'assistant' && n.turn === turnSeq,
-              )
-              const toolCalls = assistantNodes.flatMap(n =>
-                n.blocks.filter((b): b is { kind: 'tool-call'; callId: string; name: string; argsRaw: string } => b.kind === 'tool-call'),
-              )
-
-              return (
-                <div key={turnSeq} className={css.turnCard}>
-                  <div className={css.turnHeader}>
-                    <span>Turn {turnSeq}</span>
-                    <span>{durationStr}</span>
-                  </div>
-                  <div className={css.turnSteps}>
-                    {toolCalls.map(call => (
-                      <div
-                        key={call.callId}
-                        className={css.stepRow}
-                        onClick={() => {
-                          actions.select({ turnSeq, callId: call.callId, toolName: call.name })
-                          actions.setCompanionTab('details')
-                        }}
-                      >
-                        <span className={css.stepName}>⚡ {call.name}</span>
-                        <span>inspect →</span>
-                      </div>
-                    ))}
-                    {toolCalls.length === 0 && (
-                      <span className={css.empty} style={{ padding: 4 }}>Turn recorded</span>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
+            <div className={css.terminalPromptLine}>
+              <span className={css.terminalPromptText}>
+                PS {sessionCwd || 'D:\\Code\\Clone\\deepseek-harness'}&gt;
+              </span>
+              <span className={css.terminalCursor} />
+            </div>
           </div>
-        )}
-
-        {/* Tab 2: Details */}
-        {companionTab === 'details' && (
-          <div>
-            {selection === null || callId === undefined ? (
-              <div className={css.empty}>{t('details.empty')}</div>
-            ) : material === null ? (
-              <div className={css.empty}>{t('details.notInWindow')}</div>
-            ) : (
-              <>
-                <div className={css.sectionLabel} style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>
-                  Tool: {material.name}
+        </div>
+      ) : activeTab === 'review' ? (
+        <div className={css.body}>
+          <div className={css.reviewView}>
+            <div className={css.reviewHeader}>
+              <span style={{ fontWeight: 600, fontSize: 13 }}>Pending Review</span>
+              <span className={css.reviewChangesBadge}>Changes +363 -0</span>
+            </div>
+            <div className={css.empty}>No uncommitted file diffs in the current workspace.</div>
+          </div>
+        </div>
+      ) : activeTab === 'browser' ? (
+        <div className={css.bodyFill}>
+          <div className={css.browserView}>
+            <div className={css.browserAddressBar}>
+              <span style={{ color: 'var(--dsw-alias-label-tertiary)', display: 'inline-flex' }}>
+                <IconGlobeOutline16 size={14} />
+              </span>
+              <input
+                type="text"
+                className={css.browserUrlInput}
+                defaultValue="http://localhost:3000"
+                readOnly
+              />
+            </div>
+            <div className={css.browserContent}>
+              Web Browser Preview (Static preview for active workspace)
+            </div>
+          </div>
+        </div>
+      ) : activeTab === 'side-conversation' ? (
+        <div className={css.body}>
+          <div className={css.empty}>Side conversation is ready for quick questions and scratchpad notes.</div>
+        </div>
+      ) : activeTab === 'trajectory' ? (
+        <div className={css.bodyFill}>
+          {renderSlot('conversation.details.trajectory', {
+            inspect: null,
+            onInspectDone: () => {},
+          }, {
+            fallback: (
+              <div className={css.body}>
+                <div className={css.trajectorySummary}>
+                  <span>Status: {sessionSnapshot.running ? '⚡ Running' : 'Idle'}</span>
+                  <span>{sessionSnapshot.turnTimings.size} Turns</span>
                 </div>
-                {material.argsRaw !== null && (
-                  <section className={css.section}>
-                    <div className={css.sectionLabel}>{t('details.input')}</div>
-                    <CodeBlock code={pretty(material.argsRaw)} lang="json" copyLabel={t('copy')} copiedLabel={t('copied')} />
-                  </section>
+
+                {sessionSnapshot.turnTimings.size === 0 && (
+                  <div className={css.empty}>No trajectory activity yet in this session.</div>
                 )}
-                <section className={css.section}>
-                  <div className={css.sectionLabel}>{t('details.output')}</div>
-                  <Fragment key={callId}>
-                    {renderSlot('conversation.details.tool', { block: material.block, cwd: sessionCwd }, {
-                      fallback: 'kind' in material.block ? (
-                        <pre className={css.code} data-error={material.block.isError || undefined}>
-                          {rawResultText(material.block)}
-                        </pre>
-                      ) : (
-                        <div className={css.empty}>{t('details.running')}</div>
-                      ),
-                    })}
-                  </Fragment>
-                </section>
-              </>
-            )}
-          </div>
-        )}
 
-        {/* Tab 3: Tasks */}
-        {companionTab === 'tasks' && (
-          <div>
-            {(!todos || todos.length === 0) ? (
-              <div className={css.empty}>No active tasks or plan items for this session.</div>
-            ) : (
-              <ul className={css.taskList}>
-                {todos.map((item, idx) => (
-                  <li key={idx} className={css.taskItem} data-status={item.status}>
-                    <span className={css.taskGlyph}>
-                      <TaskStatusGlyph status={item.status} />
-                    </span>
-                    <span>{item.content}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
-      </div>
+                {Array.from(sessionSnapshot.turnTimings.entries()).map(([turnSeq, timing]) => {
+                  const durationMs = timing.endTime ? timing.endTime - timing.startTime : undefined
+                  const durationStr = durationMs !== undefined
+                    ? durationMs > 1000 ? `${(durationMs / 1000).toFixed(1)}s` : `${durationMs}ms`
+                    : 'in progress…'
+
+                  const assistantNodes = sessionSnapshot.nodes.filter(
+                    (n): n is AssistantMessageNode => n.kind === 'assistant' && n.turn === turnSeq,
+                  )
+                  const toolCalls = assistantNodes.flatMap(n =>
+                    n.blocks.filter((b): b is { kind: 'tool-call'; callId: string; name: string; argsRaw: string } => b.kind === 'tool-call'),
+                  )
+
+                  return (
+                    <div key={turnSeq} className={css.turnCard}>
+                      <div className={css.turnHeader}>
+                        <span>Turn {turnSeq}</span>
+                        <span>{durationStr}</span>
+                      </div>
+                      <div className={css.turnSteps}>
+                        {toolCalls.map(call => (
+                          <div
+                            key={call.callId}
+                            className={css.stepRow}
+                            onClick={() => {
+                              actions.select({ turnSeq, callId: call.callId, toolName: call.name })
+                              handleOpenTab('details')
+                            }}
+                          >
+                            <span className={css.stepName}>⚡ {call.name}</span>
+                            <span>inspect →</span>
+                          </div>
+                        ))}
+                        {toolCalls.length === 0 && (
+                          <span className={css.empty} style={{ padding: 4 }}>Turn recorded</span>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ),
+          })}
+        </div>
+
+
+      ) : activeTab === 'details' ? (
+        <div className={css.body}>
+          {selection === null || callId === undefined ? (
+            <div className={css.empty}>{t('details.empty')}</div>
+          ) : material === null ? (
+            <div>
+              <div className={css.sectionLabel}>{selection.toolName ?? t('details.title')}</div>
+              <div className={css.empty}>{t('details.notInWindow')}</div>
+            </div>
+          ) : (
+            <>
+              <div className={css.sectionLabel} style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>
+                {material.name}
+              </div>
+              {material.argsRaw !== null && (
+                <section className={css.section}>
+                  <div className={css.sectionLabel}>{t('details.input')}</div>
+                  <CodeBlock code={pretty(material.argsRaw)} lang="json" copyLabel={t('copy')} copiedLabel={t('copied')} />
+                </section>
+              )}
+              <section className={css.section}>
+                <div className={css.sectionLabel}>{t('details.output')}</div>
+                <Fragment key={callId}>
+                  {renderSlot('conversation.details.tool', { block: material.block, cwd: sessionCwd }, {
+                    fallback: 'kind' in material.block ? (
+                      <pre className={css.code} data-error={material.block.isError || undefined}>
+                        {rawResultText(material.block)}
+                      </pre>
+                    ) : (
+                      <div className={css.empty}>{t('details.running')}</div>
+                    ),
+                  })}
+                </Fragment>
+              </section>
+            </>
+          )}
+        </div>
+      ) : activeTab === 'tasks' ? (
+        <div className={css.body}>
+          {(!todos || todos.length === 0) ? (
+            <div className={css.empty}>No active tasks or plan items for this session.</div>
+          ) : (
+            <ul className={css.taskList}>
+              {todos.map((item, idx) => (
+                <li key={idx} className={css.taskItem} data-status={item.status}>
+                  <span className={css.taskGlyph}>
+                    <TaskStatusGlyph status={item.status} />
+                  </span>
+                  <span>{item.content}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ) : null}
     </div>
   )
 }
