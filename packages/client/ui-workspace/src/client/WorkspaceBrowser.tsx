@@ -1317,6 +1317,7 @@ export function WorkspaceBrowser({
         onClose={() => { setArchiveModalOpen(false) }}
         closeLabel={t('close')}
         title={t('archive.title')}
+        className={css.archivedModalDialog}
       >
         {archivedSessionIds.length === 0 ? (
           <div className={css.archivedEmpty}>
