@@ -4,11 +4,7 @@
    a 2px active bar. */
 
 .root {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-width: 0;
-  background: var(--dsw-alias-bg-base);
+  display: contents;
 
   /* Shared width axis for the whole column: one content width W
      (--dsh-chat-content-width) for the transcript, the dock cards
@@ -26,10 +22,14 @@
 }
 
 .header {
+  grid-row: 1;
+  grid-column: 2 / -1;
   position: relative;
   flex: none;
   padding: 12px 20px;
   box-sizing: border-box;
+  background: var(--dsw-alias-bg-base);
+  z-index: 10;
 }
 
 .header::after {
@@ -277,10 +277,13 @@
 }
 
 .scrollBody {
+  grid-row: 2;
+  grid-column: 2;
   display: flex;
   flex: 1;
   flex-direction: column;
   min-height: 0;
+  min-width: 0;
   overflow-y: auto;
   /* The column scrolls on ONE axis. Stating `hidden` rather than leaving the
      initial `visible` is what removes the horizontal bar: a box that scrolls in

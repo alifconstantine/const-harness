@@ -2,18 +2,21 @@
 // Supports Chooser state, dynamic tabs (Terminal, Trajectory, Details, Review, Browser, Tasks),
 // and persistent tool call inspection.
 
-import { Fragment, useEffect, useId, useState } from 'react'
+import { Fragment, useEffect, useId, useRef, useState } from 'react'
 import clsx from 'clsx'
 import {
   CodeBlock,
   IconActivityOutline16,
   IconChecklistOutline16,
+  IconCheckOutline14,
   IconChevronDownOutline14,
   IconCloseFill14,
   IconFileOutline16,
   IconGlobeOutline16,
   IconNewChatOutline16,
   IconPlusOutline16,
+  IconRefreshOutline14,
+  IconSearchOutline16,
   IconTerminalOutline16,
   Menu,
   type MenuEntry,
@@ -103,7 +106,7 @@ interface TabMeta {
 }
 
 export function DetailsPanel({
-  useSession, useSessions, sessionId, useStore, useProjection, renderSlot, closeDetails, actions, t,
+  useSession, useSessions, sessionId, useStore, useProjection, renderSlot, closeDetails: _closeDetails, actions, t,
 }: DetailsPanelProps) {
   const companionTab = useStore(s => s.companionTab)
   const selection = useStore(s => s.selection)
@@ -123,6 +126,10 @@ export function DetailsPanel({
   })
 
   const [plusMenuOpen, setPlusMenuOpen] = useState(false)
+  const [searchMenuOpen, setSearchMenuOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const searchMenuRef = useRef<HTMLDivElement>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   // Synchronize store tab with open tabs
   useEffect(() => {
@@ -130,6 +137,28 @@ export function DetailsPanel({
       setOpenTabs(prev => [...prev, companionTab])
     }
   }, [companionTab, openTabs])
+
+  // Handle outside clicks and escape key for search tab dropdown
+  useEffect(() => {
+    if (!searchMenuOpen) {
+      setSearchQuery('')
+      return
+    }
+    const handleDown = (e: MouseEvent) => {
+      if (searchMenuRef.current && !searchMenuRef.current.contains(e.target as Node)) {
+        setSearchMenuOpen(false)
+      }
+    }
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSearchMenuOpen(false)
+    }
+    document.addEventListener('mousedown', handleDown)
+    document.addEventListener('keydown', handleKey)
+    return () => {
+      document.removeEventListener('mousedown', handleDown)
+      document.removeEventListener('keydown', handleKey)
+    }
+  }, [searchMenuOpen])
 
   const activeTab = companionTab && openTabs.includes(companionTab)
     ? companionTab
@@ -152,7 +181,7 @@ export function DetailsPanel({
     }
   }
 
-  const tabMetas: Record<string, TabMeta> = {
+  const tabMetas: Record<CompanionTabId, TabMeta> = {
     'side-conversation': {
       id: 'side-conversation',
       label: 'Side conversation',
@@ -190,6 +219,8 @@ export function DetailsPanel({
     },
   }
 
+  const allAvailableTabs: readonly TabMeta[] = Object.values(tabMetas)
+
   const plusMenuItems: readonly MenuEntry[] = [
     { id: 'side-conversation', label: 'Side conversation', icon: <IconNewChatOutline16 size={14} /> },
     { id: 'trajectory', label: 'Trajectory', icon: <IconActivityOutline16 size={14} /> },
@@ -198,19 +229,68 @@ export function DetailsPanel({
     { id: 'browser', label: 'Browser', icon: <IconGlobeOutline16 size={14} /> },
   ]
 
+  const searchTabDropdown = (
+    <div className={css.searchDropdownContainer} ref={searchMenuRef}>
+      <button
+        type="button"
+        className={clsx(css.collapseBtn, searchMenuOpen && css.collapseBtnActive)}
+        aria-label="Search tabs"
+        title="Search tab"
+        onClick={() => {
+          setSearchMenuOpen(prev => !prev)
+          setTimeout(() => { searchInputRef.current?.focus() }, 50)
+        }}
+      >
+        <IconChevronDownOutline14 size={14} />
+      </button>
+
+      {searchMenuOpen && (
+        <div className={css.tabSearchMenu} role="menu">
+          <div className={css.tabSearchInputWrap}>
+            <IconSearchOutline16 size={13} className={css.tabSearchIcon} />
+            <input
+              ref={searchInputRef}
+              type="text"
+              className={css.tabSearchInput}
+              placeholder="Search tab..."
+              value={searchQuery}
+              onChange={(e) => { setSearchQuery(e.target.value) }}
+              autoFocus
+            />
+          </div>
+          <div className={css.tabSearchList}>
+            {allAvailableTabs
+              .filter(tab => tab.label.toLowerCase().includes(searchQuery.toLowerCase()))
+              .map((tab) => {
+                const isActive = activeTab === tab.id
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    className={clsx(css.tabSearchItem, isActive && css.tabSearchItemActive)}
+                    onClick={() => {
+                      handleOpenTab(tab.id)
+                      setSearchMenuOpen(false)
+                    }}
+                  >
+                    <span className={css.tabSearchItemIcon}>{tab.icon}</span>
+                    <span className={css.tabSearchItemLabel}>{tab.label}</span>
+                    {isActive && <IconCheckOutline14 size={12} className={css.tabSearchCheck} />}
+                  </button>
+                )
+              })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+
   // Chooser State (Image 5) when no tabs are active
   if (openTabs.length === 0 || activeTab === null) {
     return (
       <div className={css.root}>
         <div className={css.topBar}>
-          <button
-            type="button"
-            className={css.collapseBtn}
-            aria-label={t('details.close')}
-            onClick={() => { closeDetails() }}
-          >
-            <IconChevronDownOutline14 size={14} />
-          </button>
+          {searchTabDropdown}
         </div>
 
         <div className={css.chooserContainer}>
@@ -270,16 +350,9 @@ export function DetailsPanel({
 
   return (
     <div className={css.root}>
-      {/* Top Tab Bar (Image 1) */}
+      {/* Top Tab Bar (Image 1 & 2) */}
       <div className={css.topBar}>
-        <button
-          type="button"
-          className={css.collapseBtn}
-          aria-label={t('details.close')}
-          onClick={() => { closeDetails() }}
-        >
-          <IconChevronDownOutline14 size={14} />
-        </button>
+        {searchTabDropdown}
 
         <div className={css.tabList} role="tablist">
           {openTabs.map((tabId) => {
@@ -359,13 +432,28 @@ export function DetailsPanel({
           </div>
         </div>
       ) : activeTab === 'review' ? (
-        <div className={css.body}>
-          <div className={css.reviewView}>
-            <div className={css.reviewHeader}>
-              <span style={{ fontWeight: 600, fontSize: 13 }}>Pending Review</span>
-              <span className={css.reviewChangesBadge}>Changes +363 -0</span>
+        <div className={css.bodyFill}>
+          <div className={css.reviewToolbar}>
+            <div className={css.reviewFilterBtn}>
+              <span>Unstaged</span>
+              <IconChevronDownOutline14 size={12} />
             </div>
-            <div className={css.empty}>No uncommitted file diffs in the current workspace.</div>
+            <button
+              type="button"
+              className={css.reviewRefreshBtn}
+              onClick={() => {}}
+              aria-label="Refresh"
+            >
+              <IconRefreshOutline14 size={13} />
+              <span>Refresh</span>
+            </button>
+          </div>
+          <div className={css.reviewEmptyState}>
+            <IconFileOutline16 size={32} className={css.reviewEmptyIcon} />
+            <div className={css.reviewEmptyTitle}>This workspace is not inside a Git repository</div>
+            <div className={css.reviewEmptySubtitle}>
+              Open a Git repository directory and this pane will show changes scoped to the current workspace.
+            </div>
           </div>
         </div>
       ) : activeTab === 'browser' ? (

@@ -1,7 +1,7 @@
 .frame {
   position: relative; /* anchors the drag handles, which straddle column borders */
   display: grid;
-  grid-template-rows: 100%;
+  grid-template-rows: auto 1fr;
   height: 100%;
   overflow: hidden;
   background: var(--dsw-alias-bg-base);
@@ -23,6 +23,8 @@
 }
 
 .sidebarCol {
+  grid-row: 1 / -1;
+  grid-column: 1;
   min-width: 0;
   overflow: hidden;
   background: var(--dsw-specific-sidebar-fill);
@@ -30,14 +32,14 @@
 }
 
 .centerCol {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  display: contents;
 }
 
 .detailsCol {
+  grid-row: 2;
+  grid-column: 3;
   min-width: 0;
+  min-height: 0;
   overflow: hidden;
   border-left: 1px solid var(--dsw-alias-border-l2);
 }
@@ -58,11 +60,15 @@
   width: 8px;
   margin-left: -4px;
   cursor: col-resize;
-  z-index: 2;
+  z-index: 20;
   touch-action: none;
   /* Rides the same curve as the tracks so the pill stays on the moving
      border during collapse/expand; paused while dragging (frame rule). */
   transition: left var(--ds-transition-duration-slow) var(--ds-ease-in-out);
+}
+
+.handle[data-side='details'] {
+  top: 48px;
 }
 
 .frame[data-dragging] .handle {
