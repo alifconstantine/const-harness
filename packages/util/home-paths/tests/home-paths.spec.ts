@@ -38,8 +38,8 @@ describe('const and dsh path helpers', () => {
     expect(CONST_HOME_ENV).toBe('CONST_HOME')
     expect(defaultConstHome()).toBe(join(homedir(), '.const'))
 
-    expect(DSH_HOME_DIR_NAME).toBe('.dsh')
-    expect(DEFAULT_DSH_HOME_DISPLAY).toBe('~/.dsh')
+    expect(DSH_HOME_DIR_NAME).toBe('.const')
+    expect(DEFAULT_DSH_HOME_DISPLAY).toBe('~/.const')
     expect(DSH_HOME_ENV).toBe('DSH_HOME')
   })
 
@@ -105,9 +105,9 @@ describe('const and dsh path helpers', () => {
 
   it('labels a resolved home by whether it is the default root', () => {
     expect(constHomeDisplay(resolve(defaultConstHome()))).toBe('~/.const')
-    expect(dshHomeDisplay(resolve(defaultDshHome()))).toBe('~/.dsh')
+    expect(dshHomeDisplay(resolve(defaultDshHome()))).toBe('~/.const')
     expect(constHomeDisplay('/some/other/root')).toBe('$CONST_HOME')
-    expect(dshHomeDisplay('/some/other/root')).toBe('$DSH_HOME')
+    expect(dshHomeDisplay('/some/other/root')).toBe('$CONST_HOME')
   })
 
   it('canonicalizes a watcher ancestor while preserving a missing suffix', async () => {

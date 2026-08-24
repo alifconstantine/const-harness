@@ -18,7 +18,7 @@ export const DEFAULT_CONST_HOME_DISPLAY = `~/${CONST_HOME_DIR_NAME}`
 export const CONST_HOME_ENV = 'CONST_HOME'
 
 /** Directory name for the default DeepSeek Harness home under the OS home. */
-export const DSH_HOME_DIR_NAME = '.dsh'
+export const DSH_HOME_DIR_NAME = '.const'
 
 /** Stable user-facing display form for the default DeepSeek Harness home. */
 export const DEFAULT_DSH_HOME_DISPLAY = `~/${DSH_HOME_DIR_NAME}`
@@ -76,7 +76,7 @@ export function defaultConstHome(): string {
  * @returns the absolute default harness home path.
  */
 export function defaultDshHome(): string {
-  return join(homedir(), DSH_HOME_DIR_NAME)
+  return defaultConstHome()
 }
 
 /**
@@ -119,15 +119,7 @@ export function resolveConstHome(configured?: string, env: Record<string, string
  * @returns the normalized absolute harness home path.
  */
 export function resolveDshHome(configured?: string, env: Record<string, string | undefined> = process.env): string {
-  const fromDsh = env[DSH_HOME_ENV]
-  const fromConst = env[CONST_HOME_ENV]
-  const selectedEnv = fromDsh !== undefined && fromDsh.trim().length > 0
-    ? fromDsh
-    : fromConst !== undefined && fromConst.trim().length > 0
-      ? fromConst
-      : defaultDshHome()
-  const selected = configured ?? selectedEnv
-  return resolve(expandHomePath(selected))
+  return resolveConstHome(configured, env)
 }
 
 /**
@@ -166,7 +158,7 @@ export function constHomeDisplay(resolvedHome: string): string {
  * @returns `~/.dsh` for the default home, otherwise `$DSH_HOME`.
  */
 export function dshHomeDisplay(resolvedHome: string): string {
-  return resolvedHome === resolve(defaultDshHome()) ? DEFAULT_DSH_HOME_DISPLAY : `$${DSH_HOME_ENV}`
+  return constHomeDisplay(resolvedHome)
 }
 
 /**
