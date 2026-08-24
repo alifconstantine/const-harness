@@ -225,6 +225,23 @@
   gap: 12px;
 }
 
+.dragHandle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--dsw-alias-label-tertiary);
+  cursor: grab;
+  padding: 2px;
+}
+
+.dragHandle:hover {
+  color: var(--dsw-alias-label-primary);
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
 .projectRow:hover .rowActions,
 .sessionRow:hover .rowActions,
 .projectRow.menuOpen .rowActions,

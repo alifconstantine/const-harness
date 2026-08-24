@@ -83,7 +83,7 @@ export function ConversationSessionHeader({
   const isDefault = sessionCwd !== undefined && (sessionCwd.endsWith('/workspace/default') || sessionCwd.includes('.const/workspace/default'))
   const projectTitle = sessionWorkspace?.title
     ?? (isDefault || isOutsideProject
-      ? 'Conversations'
+      ? 'default'
       : '')
 
   return (

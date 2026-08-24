@@ -1018,3 +1018,27 @@ export const IconGlobeOutline16 = ({ size = 16, className }: IconProps) => (
     />
   </svg>
 )
+
+/** ic_ds_grip_vertical_14: 6-dot drag handle */
+export const IconGripVertical14 = ({ size = 14, className }: IconProps) => (
+  <svg width={size} height={size} className={className} viewBox="0 0 14 14" fill="currentColor">
+    <circle cx="4.5" cy="3" r="1.2" />
+    <circle cx="9.5" cy="3" r="1.2" />
+    <circle cx="4.5" cy="7" r="1.2" />
+    <circle cx="9.5" cy="7" r="1.2" />
+    <circle cx="4.5" cy="11" r="1.2" />
+    <circle cx="9.5" cy="11" r="1.2" />
+  </svg>
+)
+
+/** ic_ds_grip_vertical_16: 6-dot drag handle */
+export const IconGripVertical16 = ({ size = 16, className }: IconProps) => (
+  <svg width={size} height={size} className={className} viewBox="0 0 16 16" fill="currentColor">
+    <circle cx="5" cy="3.5" r="1.3" />
+    <circle cx="11" cy="3.5" r="1.3" />
+    <circle cx="5" cy="8" r="1.3" />
+    <circle cx="11" cy="8" r="1.3" />
+    <circle cx="5" cy="12.5" r="1.3" />
+    <circle cx="11" cy="12.5" r="1.3" />
+  </svg>
+)

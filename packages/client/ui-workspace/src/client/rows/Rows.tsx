@@ -9,7 +9,7 @@ import { useState } from 'react'
 import clsx from 'clsx'
 import {
   HoverCard, IconArchiveOutline20, IconBranchOutline16, IconEditOutline16,
-  IconEllipsisOutline16, IconFolderClose16, IconFolderOpen16, IconPlusOutline16,
+  IconEllipsisOutline16, IconFolderClose16, IconFolderOpen16, IconGripVertical14, IconPlusOutline16,
   IconTrashOutline16, IconTriangleRightFill14, Menu, StateDot,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { StateDotState } from '@deepseek-ai/dsh-client-ui-primitives'
@@ -152,6 +152,11 @@ export function ProjectRowItem({ group, onToggle, onCreate, actions, drag, t }: 
         <span className={css.title}>{label}</span>
       </span>
       <span className={css.rowActions}>
+        {drag !== undefined && (
+          <span className={css.dragHandle} title="Drag to reorder" aria-hidden="true">
+            <IconGripVertical14 />
+          </span>
+        )}
         {actions !== undefined && (
           <Menu
             open={menuOpen}

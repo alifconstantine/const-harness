@@ -507,7 +507,7 @@ function SessionTree({
                 }}
                 onCreate={() => {
                   setGroupExpanded(group.key, true)
-                  if (group.workspaceId !== undefined) startSession(group.workspaceId)
+                  startSession(group.workspaceId)
                 }}
                 drag={workspaceDragProps}
                 actions={group.workspaceId === undefined

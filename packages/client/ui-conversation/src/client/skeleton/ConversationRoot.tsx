@@ -96,7 +96,7 @@ export function ConversationRoot({
       ? undefined
       : sessionWorkspace?.title
         ?? (isOutside
-          ? 'Conversations'
+          ? 'default'
           : (workspaces.phase === 'ready' || cwd === undefined || cwd === ''
             ? undefined
             : workspaceLabel(cwd))))
