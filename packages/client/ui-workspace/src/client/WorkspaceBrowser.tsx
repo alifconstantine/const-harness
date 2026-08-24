@@ -1401,13 +1401,13 @@ function ArchivedSessionItem({
           open={menuOpen}
           onClose={() => { setMenuOpen(false) }}
           items={menuItems}
+          align="end"
           onSelect={(menuId) => {
             setMenuOpen(false)
             if (menuId === 'unarchive') onUnarchive()
             else if (menuId === 'delete') onDelete()
           }}
           portal
-          closeOnPointerLeave
           anchor={(
             <button
               type="button"
