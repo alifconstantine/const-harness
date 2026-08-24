@@ -26,10 +26,6 @@ interface Breadcrumb {
 
 const DEFAULT_VIEW_ID = 'chat'
 
-function workspaceTitleOf(cwd: string): string {
-  return cwd.replace(/[/\\]+$/, '').split(/[/\\]/).pop() ?? ''
-}
-
 /** Resolve by id and keep stale persisted selections on the stable Chat fallback. */
 function resolveActiveView(tabs: readonly ViewTab[], selectedId: string | null): ViewTab | undefined {
   const requestedId = selectedId ?? DEFAULT_VIEW_ID
@@ -86,11 +82,9 @@ export function ConversationSessionHeader({
   const isOutsideProject = sessionWorkspace === undefined
   const isDefault = sessionCwd !== undefined && (sessionCwd.endsWith('/workspace/default') || sessionCwd.includes('.const/workspace/default'))
   const projectTitle = sessionWorkspace?.title
-    ?? (isDefault
-      ? 'Default'
-      : (isOutsideProject
-        ? (sessionCwd ? workspaceTitleOf(sessionCwd) : 'Default')
-        : ''))
+    ?? (isDefault || isOutsideProject
+      ? 'Conversations'
+      : '')
 
   return (
     <header

@@ -70,7 +70,7 @@ export function WorkspacePickFlow({
   onClose,
   addOnly = false,
   side = 'bottom',
-  selectedId,
+  selectedId: _selectedId,
   wide = true,
 }: WorkspacePickFlowProps) {
   const workspaceSnapshot = useWorkspaces(state => state)
@@ -199,7 +199,6 @@ export function WorkspacePickFlow({
         anchor={null}
         items={items}
         {...pinAdd ? { footer: addEntries } : {}}
-        selectedId={selectedId ?? OUTSIDE_PROJECT}
         onSelect={handleSelect}
         onClose={onClose}
         side={side}
