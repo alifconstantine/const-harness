@@ -64,4 +64,13 @@ describe('FishLogo (ConstLogo)', () => {
     expect(container.innerHTML).toContain('currentColor')
     expect(container.querySelector('clipPath')).not.toBeNull()
   })
+
+  it('renders BrandWordmark with CONST and HARNESS text', () => {
+    const { container } = render(<primitives.BrandWordmark />)
+    const svg = container.querySelector('svg')!
+    expect(svg.getAttribute('width')).toBe('180')
+    expect(svg.getAttribute('height')).toBe('24')
+    expect(container.textContent).toContain('CONST')
+    expect(container.textContent).toContain('HARNESS')
+  })
 })

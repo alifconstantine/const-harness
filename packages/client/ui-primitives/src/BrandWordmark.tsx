@@ -1,21 +1,21 @@
 // Const Harness brand wordmark: Const Logo + CONST + HARNESS badge plate in one svg.
-// Native 190x24. Ink rides currentColor; badge text is inverted.
+// Native 180x24. Ink rides currentColor; badge uses refined hairline outline.
 
 import type { IconProps } from './icons/props.ts'
 
 /**
  * Render the full brand wordmark.
- * @param props.size - height in px (default 24; width keeps the 190:24 ratio).
+ * @param props.size - height in px (default 24; width keeps the 180:24 ratio).
  * @param props.className - extra class for layout placement.
  * @returns the wordmark svg (aria-hidden decorative brand art).
  */
 export function BrandWordmark({ size = 24, className }: IconProps) {
   return (
     <svg
-      width={(size * 190) / 24}
+      width={(size * 180) / 24}
       height={size}
       className={className}
-      viewBox="0 0 190 24"
+      viewBox="0 0 180 24"
       fill="none"
       aria-hidden="true"
     >
@@ -42,26 +42,37 @@ export function BrandWordmark({ size = 24, className }: IconProps) {
         </g>
       </g>
       <text
-        x="26"
-        y="17"
+        x="27"
+        y="16.5"
         fill="currentColor"
-        fontFamily="'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-        fontSize="15"
-        fontWeight="800"
-        letterSpacing="0.05em"
+        fontFamily="'Geist', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+        fontSize="14.5"
+        fontWeight="400"
+        letterSpacing="0.08em"
       >
         CONST
       </text>
-      <rect x="90" y="5" width="76" height="14" rx="3" fill="currentColor" />
+      <rect
+        x="86"
+        y="4.5"
+        width="66"
+        height="15"
+        rx="3"
+        fill="currentColor"
+        fillOpacity="0.06"
+        stroke="currentColor"
+        strokeWidth="1"
+        strokeOpacity="0.3"
+      />
       <text
-        x="128"
-        y="15.5"
+        x="119"
+        y="15"
         textAnchor="middle"
-        fill="var(--dsw-alias-label-primary-inverted, #fff)"
-        fontFamily="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-        fontSize="9"
-        fontWeight="800"
-        letterSpacing="0.12em"
+        fill="currentColor"
+        fontFamily="'Geist', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+        fontSize="8.5"
+        fontWeight="500"
+        letterSpacing="0.14em"
       >
         HARNESS
       </text>
