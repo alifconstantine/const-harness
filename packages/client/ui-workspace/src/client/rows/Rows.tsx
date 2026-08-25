@@ -191,7 +191,7 @@ export function ProjectRowItem({ group, onToggle, onCreate, actions, drag, t }: 
           aria-label={t('actions.newSession.aria', { name: label })}
           onClick={(e) => {
             e.stopPropagation()
-            if (row.workspaceId !== undefined) onCreate()
+            onCreate()
           }}
         >
           <IconPlusOutline16 />

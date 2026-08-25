@@ -2938,12 +2938,12 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
         const { sessionId } = request.payload
         try {
           let header = ctx.workspaceRegistry.getHeader(sessionId)
-          if (!header && ctx.sessionPersistence) {
+          if (header === undefined) {
             const list = await ctx.sessionPersistence.list().catch(() => [])
             header = list.find(h => h.id === sessionId)
           }
           await ctx.workspaceRegistry.deleteSession(sessionId)
-          if (header && ctx.sessionPersistence) {
+          if (header !== undefined) {
             const loc = ctx.sessionPersistence.locate(header)
             if (loc?.path) {
               await unlink(loc.path).catch(() => {})

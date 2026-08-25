@@ -1073,7 +1073,7 @@ export function WorkspaceBrowser({
   useEffect(() => {
     const handleFilterMode = (e: Event) => {
       const custom = e as CustomEvent<{ mode: SessionGroupBy }>
-      if (custom.detail?.mode) {
+      if (custom.detail.mode !== undefined) {
         actions.setGroupBy(custom.detail.mode)
       }
     }
