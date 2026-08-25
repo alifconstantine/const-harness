@@ -82,7 +82,7 @@ const APPROVE_LABEL = 'Approve'
 const KEEP_PLANNING_LABEL = 'Keep planning'
 
 const EXIT_DESCRIPTION
-  = 'Use only in plan mode. Present your plan for the user\'s review and, on approval, leave plan mode. '
+  = 'Present your implementation plan for the user\'s review. On approval, proceed with implementation. '
   + 'Send the COMPLETE plan as markdown, starting with a # heading that names it. '
   + 'The user may approve (carry out the plan from your next step) or keep '
   + 'planning — their feedback comes back in the tool result; revise and present again.'
@@ -321,9 +321,6 @@ export class PlanModeController extends Service {
       execute: async (args, exec) => {
         const agent = exec.agent
         if (agent === undefined) throw new Error(`${EXIT_PLAN_MODE} requires a calling agent (no session to switch)`)
-        if (!foldPlanMode(agent.session.events)) {
-          throw new Error(`${EXIT_PLAN_MODE} is only available in plan mode`)
-        }
         if (!/^#\s+\S/.test(args.plan.trim())) {
           throw new Error(`${EXIT_PLAN_MODE} requires a non-empty markdown plan starting with a # heading`)
         }
@@ -331,15 +328,18 @@ export class PlanModeController extends Service {
         if (interaction === undefined) {
           throw new Error('no user-questions channel is available to review the plan; ask the user to switch the session mode instead')
         }
+        const inPlanMode = foldPlanMode(agent.session.events)
         const answer = await interaction.ask({
           questions: [{
             id: REVIEW_ID,
             header: 'Plan review',
-            question: 'Approve this plan and leave plan mode?',
+            question: inPlanMode
+              ? 'Approve this plan and leave plan mode?'
+              : 'Approve this plan and proceed with implementation?',
             detail: args.plan,
             options: [
-              { label: APPROVE_LABEL, description: 'Leave plan mode; the plan is carried out from the next step.' },
-              { label: KEEP_PLANNING_LABEL, description: 'Stay in plan mode; feedback goes back to the model.' },
+              { label: APPROVE_LABEL, description: inPlanMode ? 'Leave plan mode; the plan is carried out from the next step.' : 'Approve the plan and carry it out from the next step.' },
+              { label: KEEP_PLANNING_LABEL, description: inPlanMode ? 'Stay in plan mode; feedback goes back to the model.' : 'Keep planning; feedback goes back to the model.' },
             ],
             // Presentation only: a capable UI renders the plan as a review
             // decision instead of a generic question, and answers with one of
@@ -355,8 +355,9 @@ export class PlanModeController extends Service {
           // never called. An abort (turn cancel, provider teardown) keeps its
           // own message — there is no user to wait for.
           if (cause instanceof UserQuestionError && cause.code === 'ASK_CANCELLED') {
-            throw new Error('The user dismissed the plan review to speak instead; '
-              + 'stay in plan mode, stop here, and wait for their message.')
+            throw new Error(inPlanMode
+              ? 'The user dismissed the plan review to speak instead; stay in plan mode, stop here, and wait for their message.'
+              : 'The user dismissed the plan review to speak instead; stop here, and wait for their message.')
           }
           throw cause
         })
@@ -369,6 +370,9 @@ export class PlanModeController extends Service {
         const item = reviewItems.length === 1 ? reviewItems[0] : undefined
         if (item?.selected.length !== 1 || item.selected[0] !== APPROVE_LABEL || item.custom !== undefined) {
           const feedback = item?.custom ?? ''
+          if (!inPlanMode) {
+            this.pendingIntents.set(agent.session, { active: true, narrate: false })
+          }
           throw new Error(feedback === ''
             ? 'The user chose to keep planning; revise the plan and present it again.'
             : `The user chose to keep planning; their feedback: ${feedback}`)
@@ -376,7 +380,9 @@ export class PlanModeController extends Service {
         // Keep plan guidance for the rest of this assistant tool batch. The
         // silent selection is appended at the next accepted in-turn pre-step,
         // before its request assembly.
-        this.pendingIntents.set(agent.session, { active: false, narrate: false })
+        if (inPlanMode) {
+          this.pendingIntents.set(agent.session, { active: false, narrate: false })
+        }
         return { approved: true }
       },
       presentCall: args => ({

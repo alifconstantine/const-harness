@@ -662,7 +662,7 @@ describe('/plan', () => {
 })
 
 describe('exit_plan_mode', () => {
-  async function setupWithReview(answer?: { selected: string[]; custom?: string }) {
+  async function setupWithReview(answer?: { selected: string[]; custom?: string }, options: { active?: boolean } = {}) {
     const ctx = await setup()
     await ctx.plugin(AgentRegistry)
     await ctx.plugin(UserQuestionService)
@@ -675,7 +675,7 @@ describe('exit_plan_mode', () => {
         },
       })
     }
-    const agent = await agentWithSession(ctx, 'agent-1', { active: true })
+    const agent = await agentWithSession(ctx, 'agent-1', { active: options.active ?? true })
     return { ctx, agent, asked }
   }
 
@@ -693,7 +693,7 @@ describe('exit_plan_mode', () => {
     const ctx = await setup()
     const schema = ctx.tools.schemas().find(entry => entry.name === EXIT_PLAN_MODE)
     const parameters = schema?.parameters as { required?: string[]; properties?: Record<string, unknown> }
-    expect(schema?.description).toMatch(/^Use only in plan mode\./)
+    expect(schema?.description).toMatch(/^Present your implementation plan/)
     expect(Object.keys(parameters.properties ?? {})).toEqual(['plan'])
     expect(parameters.required).toEqual(['plan'])
   })
@@ -705,13 +705,12 @@ describe('exit_plan_mode', () => {
     expect(result.content).toEqual([{ type: 'text', text: 'Error: exit_plan_mode requires a calling agent (no session to switch)' }])
   })
 
-  it('rejects a call outside plan mode while remaining advertised', async () => {
-    const ctx = await setup()
-    const agent = await agentWithSession(ctx)
+  it('allows plan review outside plan mode and carries out implementation on approval', async () => {
+    const { ctx, agent } = await setupWithReview({ selected: ['Approve'] }, { active: false })
     expect(ctx.tools.schemas().map(tool => tool.name)).toContain(EXIT_PLAN_MODE)
     const result = await callExit(ctx, agent)
-    expect(result.isError).toBe(true)
-    expect(result.content).toEqual([{ type: 'text', text: 'Error: exit_plan_mode is only available in plan mode' }])
+    expect(result.isError).toBe(false)
+    expect(foldPlanMode(agent.session.events)).toBe(false)
   })
 
   it('rejects an empty or heading-less plan before asking the reviewer', async () => {
