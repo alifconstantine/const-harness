@@ -12,6 +12,12 @@ import css from './ConversationRoot.module.css'
 /** Full props composed from the slot contract. */
 export type ConversationRootProps = ConversationSlotProps
 
+function isDefaultWorkspacePath(path: string | undefined): boolean {
+  if (path === undefined) return false
+  const normalized = path.replace(/\\/g, '/')
+  return normalized.endsWith('/workspace/default') || normalized.includes('.const/workspace/default')
+}
+
 export function ConversationRoot({
   sessionId, useSession, useSessions, useWorkspaces, useInput, useComposerBlock,
   renderSlot, renderSlotChain, selectWorkspace, t,
@@ -30,6 +36,7 @@ export function ConversationRoot({
 
   const [pickerOpen, setPickerOpen] = useState(false)
   const [pendingWorkspaceId, setPendingWorkspaceId] = useState<WorkspaceId | undefined>()
+  const [pendingOutside, setPendingOutside] = useState(false)
   const pickerAnchor = useRef<HTMLButtonElement>(null)
 
   // Publishes the seat's live height as --dsh-composer-height on the scroll
@@ -58,12 +65,20 @@ export function ConversationRoot({
   // Clear the pending pick once the session lands in it, or when the picked
   // workspace disappears from a ready list (deleted from the sidebar).
   useEffect(() => {
-    if (pendingWorkspaceId === undefined) return
-    if (sessionWorkspace?.workspaceId === pendingWorkspaceId
-      || (workspaces.phase === 'ready' && pendingWorkspace === undefined)) {
-      setPendingWorkspaceId(undefined)
+    if (pendingWorkspaceId !== undefined) {
+      if (sessionWorkspace?.workspaceId === pendingWorkspaceId
+        || (workspaces.phase === 'ready' && pendingWorkspace === undefined)) {
+        setPendingWorkspaceId(undefined)
+      }
     }
-  }, [pendingWorkspaceId, sessionWorkspace?.workspaceId, workspaces.phase, pendingWorkspace])
+    if (pendingOutside
+      && (isDefaultWorkspacePath(cwd) || (sessionId !== undefined && sessionWorkspace === undefined && cwd !== undefined))) {
+      setPendingOutside(false)
+    }
+  }, [
+    pendingWorkspaceId, sessionWorkspace?.workspaceId, workspaces.phase,
+    pendingWorkspace, pendingOutside, sessionId, sessionWorkspace, cwd,
+  ])
 
   // While a session is still replaying (loading + blank) the hero/docked
   // choice is unknowable — render the composer hidden instead of flashing
@@ -83,23 +98,23 @@ export function ConversationRoot({
 
   // The chip is a selector; label resolution walks the flow top-down:
   //   1. a just-picked workspace (pending) → its title;
-  //   2. cold start, no session yet → placeholder ("Choose workspace");
-  //   3. the blank session's workspace is in the list → its title;
-  //   4. list still loading → cwd folder name bridges so the title does not
+  //   2. outside project selected → Outside Project label;
+  //   3. cold start, no session yet → placeholder ("Choose workspace");
+  //   4. the blank session's workspace is in the list → its title;
+  //   5. list still loading → cwd folder name bridges so the title does not
   //      flash on refresh (empty cwd → placeholder);
-  //   5. list ready but no owning workspace (deleted from the sidebar) →
+  //   6. list ready but no owning workspace (deleted from the sidebar) →
   //      placeholder, never the deleted folder's name via cwd.
-  const isOutside = cwd !== undefined && (cwd.endsWith('/workspace/default') || cwd.includes('.const/workspace/default'))
+  const isOutside = pendingOutside || isDefaultWorkspacePath(cwd)
   const chipTitle = pendingWorkspace?.title
-    ?? (sessionId === undefined
-      ? undefined
-      : sessionWorkspace?.title
-        ?? (isOutside
-          ? 'default'
-          : (workspaces.phase === 'ready' || cwd === undefined || cwd === ''
+    ?? (isOutside
+      ? t('hero.outsideProject')
+      : (sessionId === undefined
+        ? undefined
+        : sessionWorkspace?.title
+          ?? (workspaces.phase === 'ready' || cwd === undefined || cwd === ''
             ? undefined
             : workspaceLabel(cwd))))
-
 
   const heroWorkspaceRow = (
     <div className={css.heroWorkspaceRow}>
@@ -116,9 +131,16 @@ export function ConversationRoot({
         selectedId: pendingWorkspaceId ?? sessionWorkspace?.workspaceId,
         onPick: (workspaceId) => {
           setPickerOpen(false)
-          setPendingWorkspaceId(workspaceId)
+          if (workspaceId === undefined) {
+            setPendingOutside(true)
+            setPendingWorkspaceId(undefined)
+          } else {
+            setPendingOutside(false)
+            setPendingWorkspaceId(workspaceId)
+          }
           void selectWorkspace(workspaceId).catch(() => {
             setPendingWorkspaceId(current => current === workspaceId ? undefined : current)
+            setPendingOutside(false)
           })
         },
         onClose: () => { setPickerOpen(false) },

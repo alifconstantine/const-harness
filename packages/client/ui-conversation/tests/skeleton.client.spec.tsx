@@ -478,6 +478,22 @@ describe('ConversationRoot resident composer', () => {
     expect(b.view.getByText('one')).toBeTruthy()
   })
 
+  it('hero phase: picking Outside Project updates the chip label and opens outside project session', async () => {
+    const selectWorkspace = vi.fn(async () => {})
+    const b = mount(
+      conversationSnapshot({ composerPhase: 'blank', blank: true }),
+      [
+        { ...workspace('one'), sessionIds: [SID] },
+      ],
+      selectWorkspace,
+    )
+    fireEvent.click(b.view.getByRole('button', { name: '选择工作区' }))
+    const owner = b.pickerOwner() as { onPick(id?: WorkspaceId): void }
+    await act(async () => { owner.onPick(undefined); await Promise.resolve() })
+    expect(selectWorkspace).toHaveBeenCalledWith(undefined)
+    expect(b.view.getByText('Outside Project')).toBeTruthy()
+  })
+
   it('blank session keeps the interactive picker chip (workspace switchable until the first message)', () => {
     const b = mount(conversationSnapshot({ composerPhase: 'blank', blank: true }))
     const chip = b.view.getByRole('button', { name: '选择工作区' })

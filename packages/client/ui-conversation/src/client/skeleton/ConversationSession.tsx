@@ -80,7 +80,10 @@ export function ConversationSessionHeader({
   const hideChrome = blank && composerPhase === 'blank'
 
   const isOutsideProject = sessionWorkspace === undefined
-  const isDefault = sessionCwd !== undefined && (sessionCwd.endsWith('/workspace/default') || sessionCwd.includes('.const/workspace/default'))
+  const isDefault = sessionCwd !== undefined && (
+    sessionCwd.replace(/\\/g, '/').endsWith('/workspace/default')
+    || sessionCwd.replace(/\\/g, '/').includes('.const/workspace/default')
+  )
   const projectTitle = sessionWorkspace?.title
     ?? (isDefault || isOutsideProject
       ? 'default'
