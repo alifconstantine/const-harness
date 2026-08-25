@@ -189,7 +189,10 @@ export function ProjectRowItem({ group, onToggle, onCreate, actions, drag, t }: 
           type="button"
           className={css.iconButton}
           aria-label={t('actions.newSession.aria', { name: label })}
-          onClick={(e) => { e.stopPropagation(); onCreate() }}
+          onClick={(e) => {
+            e.stopPropagation()
+            if (row.workspaceId !== undefined) onCreate()
+          }}
         >
           <IconPlusOutline16 />
         </button>

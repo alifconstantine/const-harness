@@ -803,7 +803,7 @@ function SearchResults({
  */
 export function WorkspaceBrowser({
   wide,
-  expandSidebar: _expandSidebar,
+  expandSidebar,
   useSessions,
   useWorkspaces,
   useStore,
@@ -1024,20 +1024,51 @@ export function WorkspaceBrowser({
     })
   }
 
+  // Session Delete dialog: confirmation before deleting an archived session.
+  const [sessionDeleteTarget, setSessionDeleteTarget] = useState<{ sessionId: SessionId; title: string } | null>(null)
+  const [sessionDeleting, setSessionDeleting] = useState(false)
+  const [sessionDeleteError, setSessionDeleteError] = useState<string | null>(null)
+  const closeSessionDelete = () => {
+    if (sessionDeleting) return
+    setSessionDeleteTarget(null)
+    setSessionDeleteError(null)
+  }
+  const confirmSessionDelete = () => {
+    if (sessionDeleting || sessionDeleteTarget === null) return
+    if (!deleteSession) {
+      setSessionDeleteTarget(null)
+      return
+    }
+    setSessionDeleting(true)
+    setSessionDeleteError(null)
+    deleteSession(sessionDeleteTarget.sessionId).then(() => {
+      setSessionDeleting(false)
+      setSessionDeleteTarget(null)
+    }).catch((reason: unknown) => {
+      setSessionDeleting(false)
+      setSessionDeleteError(reason instanceof Error ? reason.message : String(reason))
+    })
+  }
+
   const onSessionUnarchive = (sessionId: SessionId) => {
     unarchiveSession?.(sessionId).catch((reason: unknown) => {
       console.warn('session unarchive rejected:', reason)
     })
   }
 
-  const onSessionDelete = (sessionId: SessionId) => {
-    deleteSession?.(sessionId).catch((reason: unknown) => {
-      console.warn('session delete rejected:', reason)
-    })
-  }
-
   const sessionList = useSessions(state => state)
   const [archiveModalOpen, setArchiveModalOpen] = useState(false)
+  const [archiveQuery, setArchiveQuery] = useState('')
+
+  const filteredArchivedSessionIds = useMemo(() => {
+    const q = archiveQuery.trim().toLowerCase()
+    if (!q) return archivedSessionIds
+    return archivedSessionIds.filter((id) => {
+      const session = sessionList.byId[id]
+      const title = (session?.displayTitle || id).toLowerCase()
+      return title.includes(q) || (session?.id || id).toLowerCase().includes(q)
+    })
+  }, [archivedSessionIds, sessionList.byId, archiveQuery])
 
   useEffect(() => {
     const handleFilterMode = (e: Event) => {
@@ -1069,6 +1100,21 @@ export function WorkspaceBrowser({
           />
         )}
         <div className={css.headerActions}>
+          {!wide && (
+            <Tooltip label={t('search.sessions.aria')} side="right" delayMs={500}>
+              <button
+                type="button"
+                className={clsx(css.iconButton, css.searchButton)}
+                aria-label={t('search.sessions.aria')}
+                onClick={() => {
+                  expandSidebar()
+                  setSearchExpanded(true)
+                }}
+              >
+                <IconSearchOutline16 size={18} />
+              </button>
+            </Tooltip>
+          )}
           {wide && (
             <ViewOptionsMenu
               groupBy={groupBy}
@@ -1091,7 +1137,7 @@ export function WorkspaceBrowser({
             </Tooltip>
           )}
           {directoryFlowAvailable && (
-            <Tooltip label={t('workspace.add')} side="bottom" delayMs={500}>
+            <Tooltip label={t('workspace.add')} side={wide ? 'bottom' : 'right'} delayMs={500}>
               <button
                 ref={wsPlusRef}
                 type="button"
@@ -1265,7 +1311,7 @@ export function WorkspaceBrowser({
         {renameDuplicate && (
           <div className={css.renameError} role="alert">{t('conflict.named', { name: renameTrimmed })}</div>
         )}
-        {renameError !== null && <div className={css.dialogError}>{renameError}</div>}
+        {renameError !== null && <div className={css.dialogError} role="alert">{renameError}</div>}
       </Modal>
 
       <Modal
@@ -1297,7 +1343,7 @@ export function WorkspaceBrowser({
             }
           }}
         />
-        {sessionRenameError !== null && <div className={css.dialogError}>{sessionRenameError}</div>}
+        {sessionRenameError !== null && <div className={css.dialogError} role="alert">{sessionRenameError}</div>}
       </Modal>
       <Modal
         open={deleteTarget !== null}
@@ -1312,11 +1358,31 @@ export function WorkspaceBrowser({
           </>
         )}
       >
-        {deleteError !== null && <div className={css.dialogError}>{deleteError}</div>}
+        {deleting && <div className={css.deleteStatus} role="status">{t('delete.pending')}</div>}
+        {deleteError !== null && <div className={css.dialogError} role="alert">{deleteError}</div>}
+      </Modal>
+      <Modal
+        open={sessionDeleteTarget !== null}
+        onClose={closeSessionDelete}
+        closeLabel={t('close')}
+        title={t('delete.session')}
+        description={sessionDeleteTarget !== null ? t('delete.session.desc', { name: sessionDeleteTarget.title }) : undefined}
+        footer={(
+          <>
+            <Button variant="outline" disabled={sessionDeleting} onClick={closeSessionDelete}>{t('cancel')}</Button>
+            <Button variant="outline" className={css.deleteAction} disabled={sessionDeleting} onClick={confirmSessionDelete}>{t('delete.session')}</Button>
+          </>
+        )}
+      >
+        {sessionDeleting && <div className={css.deleteStatus} role="status">{t('delete.session.pending')}</div>}
+        {sessionDeleteError !== null && <div className={css.dialogError} role="alert">{sessionDeleteError}</div>}
       </Modal>
       <Modal
         open={archiveModalOpen}
-        onClose={() => { setArchiveModalOpen(false) }}
+        onClose={() => {
+          setArchiveModalOpen(false)
+          setArchiveQuery('')
+        }}
         closeLabel={t('close')}
         title={t('archive.title')}
         className={css.archivedModalDialog}
@@ -1329,26 +1395,60 @@ export function WorkspaceBrowser({
             <span>{t('archive.empty')}</span>
           </div>
         ) : (
-          <div className={css.archivedModalList}>
-            {archivedSessionIds.map((id) => {
-              const session = sessionList.byId[id]
-              const title = session?.displayTitle || id
-              return (
-                <ArchivedSessionItem
-                  key={id}
-                  id={id}
-                  title={title}
-                  onOpen={() => {
-                    setArchiveModalOpen(false)
-                    open(id)
-                  }}
-                  onUnarchive={onSessionUnarchive}
-                  onDelete={onSessionDelete}
-                  t={t}
-                />
-              )
-            })}
-          </div>
+          <>
+            <div className={css.archivedSearch}>
+              <span className={css.archivedSearchIcon}>
+                <IconSearchOutline16 size={14} />
+              </span>
+              <input
+                className={css.archivedSearchInput}
+                type="text"
+                placeholder={t('archive.search.placeholder') || t('search.placeholder')}
+                value={archiveQuery}
+                onChange={(e) => { setArchiveQuery(e.target.value) }}
+              />
+              {archiveQuery !== '' && (
+                <button
+                  type="button"
+                  className={css.clearButton}
+                  aria-label={t('search.clear')}
+                  onClick={() => { setArchiveQuery('') }}
+                >
+                  <IconCloseFill14 />
+                </button>
+              )}
+            </div>
+            {filteredArchivedSessionIds.length === 0 ? (
+              <div className={css.archivedEmpty}>
+                <span>{t('archive.noMatches')}</span>
+              </div>
+            ) : (
+              <div className={css.archivedModalList}>
+                {filteredArchivedSessionIds.map((id) => {
+                  const session = sessionList.byId[id]
+                  const title = session?.displayTitle || id
+                  return (
+                    <ArchivedSessionItem
+                      key={id}
+                      id={id}
+                      title={title}
+                      onOpen={() => {
+                        setArchiveModalOpen(false)
+                        setArchiveQuery('')
+                        open(id)
+                      }}
+                      onUnarchive={onSessionUnarchive}
+                      onDelete={(sessionId) => {
+                        setSessionDeleteTarget({ sessionId, title })
+                        setSessionDeleteError(null)
+                      }}
+                      t={t}
+                    />
+                  )
+                })}
+              </div>
+            )}
+          </>
         )}
       </Modal>
     </div>

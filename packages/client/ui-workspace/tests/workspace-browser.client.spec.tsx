@@ -1189,7 +1189,7 @@ describe('WorkspaceBrowser', () => {
     expect(screen.queryByRole('dialog', { name: '归档会话' })).toBeNull()
   })
 
-  it('triggers unarchive and delete actions from archived sessions modal', async () => {
+  it('triggers unarchive and delete actions with confirmation dialog from archived sessions modal', async () => {
     const s1 = summary('archived-1', 2, { displayTitle: 'Archived Old Task' })
     const unarchiveSession = vi.fn(async () => {})
     const deleteSession = vi.fn(async () => {})
@@ -1208,7 +1208,7 @@ describe('WorkspaceBrowser', () => {
     expect(screen.getByRole('dialog', { name: '归档会话' })).toBeTruthy()
 
     // Open ellipsis menu
-    fireEvent.click(screen.getByLabelText(`会话“${s1.displayTitle}”操作`))
+    fireEvent.click(screen.getByLabelText(`会话“${s1.displayTitle}”的操作`))
     expect(screen.getByRole('menuitem', { name: '取消归档' })).toBeTruthy()
     expect(screen.getByRole('menuitem', { name: '删除会话' })).toBeTruthy()
 
@@ -1217,10 +1217,94 @@ describe('WorkspaceBrowser', () => {
     expect(unarchiveSession).toHaveBeenCalledWith(s1.id)
 
     // Open ellipsis menu again
-    fireEvent.click(screen.getByLabelText(`会话“${s1.displayTitle}”操作`))
+    fireEvent.click(screen.getByLabelText(`会话“${s1.displayTitle}”的操作`))
 
-    // Click Delete
+    // Click Delete in menu - raises confirmation dialog
     fireEvent.click(screen.getByRole('menuitem', { name: '删除会话' }))
+    const confirmDialog = screen.getByRole('dialog', { name: '删除会话' })
+    expect(confirmDialog).toBeTruthy()
+    expect(confirmDialog.textContent).toContain('将把“Archived Old Task”从归档会话中永久删除')
+
+    // Click Cancel first
+    fireEvent.click(screen.getByRole('button', { name: '取消' }))
+    expect(screen.queryByRole('dialog', { name: '删除会话' })).toBeNull()
+    expect(deleteSession).not.toHaveBeenCalled()
+
+    // Open ellipsis menu and click Delete again
+    fireEvent.click(screen.getByLabelText(`会话“${s1.displayTitle}”的操作`))
+    fireEvent.click(screen.getByRole('menuitem', { name: '删除会话' }))
+
+    // Confirm deletion
+    const confirmButton = screen.getAllByRole('button', { name: '删除会话' }).find(b => b.closest('[role="dialog"]'))!
+    fireEvent.click(confirmButton)
     expect(deleteSession).toHaveBeenCalledWith(s1.id)
+  })
+
+  it('filters archived sessions with search input in archive modal and clears search', () => {
+    const s1 = summary('archived-1', 2, { displayTitle: 'Archived Alpha Task' })
+    const s2 = summary('archived-2', 1, { displayTitle: 'Archived Beta Research' })
+    mount({
+      useSessions: hook(sessionState([s1, s2])),
+      useWorkspaces: hook({
+        ...workspaceState([]),
+        archivedSessionIds: [s1.id, s2.id],
+      }),
+    })
+
+    // Open Modal
+    fireEvent.click(screen.getByRole('button', { name: '归档会话' }))
+    expect(screen.getByRole('dialog', { name: '归档会话' })).toBeTruthy()
+    expect(screen.getByText('Archived Alpha Task')).toBeTruthy()
+    expect(screen.getByText('Archived Beta Research')).toBeTruthy()
+
+    // Filter by 'Alpha'
+    const searchInput = screen.getByPlaceholderText('搜索归档会话…')
+    fireEvent.change(searchInput, { target: { value: 'Alpha' } })
+    expect(screen.getByText('Archived Alpha Task')).toBeTruthy()
+    expect(screen.queryByText('Archived Beta Research')).toBeNull()
+
+    // Filter with no matches
+    fireEvent.change(searchInput, { target: { value: 'non-matching-xyz' } })
+    expect(screen.getByText('无匹配归档会话')).toBeTruthy()
+    expect(screen.queryByText('Archived Alpha Task')).toBeNull()
+
+    // Click clear button
+    fireEvent.click(screen.getByRole('button', { name: '清除搜索' }))
+    expect(screen.getByText('Archived Alpha Task')).toBeTruthy()
+    expect(screen.getByText('Archived Beta Research')).toBeTruthy()
+  })
+
+  it('handles session delete failure and displays error alert in confirmation dialog', async () => {
+    const s1 = summary('archived-1', 2, { displayTitle: 'Archived Old Task' })
+    const deleteSession = vi.fn(async () => { throw new Error('delete forbidden') })
+    mount({
+      useSessions: hook(sessionState([s1])),
+      useWorkspaces: hook({
+        ...workspaceState([]),
+        archivedSessionIds: [s1.id],
+      }),
+      deleteSession,
+    })
+
+    // Open Modal
+    fireEvent.click(screen.getByRole('button', { name: '归档会话' }))
+
+    // Open menu & click Delete
+    fireEvent.click(screen.getByLabelText(`会话“${s1.displayTitle}”的操作`))
+    fireEvent.click(screen.getByRole('menuitem', { name: '删除会话' }))
+
+    // Confirm deletion
+    const confirmButton = screen.getAllByRole('button', { name: '删除会话' }).find(b => b.closest('[role="dialog"]'))!
+    fireEvent.click(confirmButton)
+    expect(deleteSession).toHaveBeenCalledWith(s1.id)
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert').textContent).toBe('delete forbidden')
+    })
+    expect(screen.getByRole('dialog', { name: '删除会话' })).toBeTruthy()
+
+    // Cancel dismisses dialog
+    fireEvent.click(screen.getByRole('button', { name: '取消' }))
+    expect(screen.queryByRole('dialog', { name: '删除会话' })).toBeNull()
   })
 })
