@@ -64,6 +64,7 @@ async function harness(
   extras: {
     openPath?: (path: string, signal: AbortSignal) => Promise<void>
     canOpenPath?: () => boolean
+    sessionPersistence?: { list: () => Promise<unknown[]>; delete?: (id: SessionId) => Promise<void> }
   } = {},
 ) {
   const ctx = new Context()
@@ -75,7 +76,10 @@ async function harness(
   const storageDomain = new DomainFacility(ctx, { backend: 'memory', routes: {} })
   ctx.storage.mount('domain', storageDomain)
   ctx.provide('storageDomain', storageDomain)
-  ctx.provide('sessionPersistence', { list: () => Promise.resolve([]) } as never)
+  ctx.provide('sessionPersistence', (extras.sessionPersistence ?? {
+    list: () => Promise.resolve([]),
+    delete: () => Promise.resolve(),
+  }) as never)
   await ctx.plugin(WorkspaceRegistry)
 
   const factory: AgentFactory = {
@@ -616,5 +620,25 @@ describe('Host Workspace increments', () => {
     })
 
     abort.abort()
+  })
+
+  it('deletes a persisted session, calls sessionPersistence.delete, and removes it from workspace records', async () => {
+    const deleteSpy = vi.fn(() => Promise.resolve())
+    const { api, root } = await harness(undefined, undefined, {
+      sessionPersistence: {
+        list: () => Promise.resolve([]),
+        delete: deleteSpy,
+      },
+    })
+    const workspace = expectOk(await api.workspace.create(request({ path: stageDir(root, 'delete-persisted-home') }))).workspace
+    const sessionId = SessionId('session-persisted-to-delete')
+    expectOk(await api.sessions.create(request({ workspaceId: workspace.workspaceId, sessionId })))
+
+    const deleteRes = expectOk(await api.workspace.deleteSession(request({ sessionId })))
+    expect(deleteRes.archivedSessionIds).toEqual([])
+    expect(deleteSpy).toHaveBeenCalledWith(sessionId)
+
+    const listed = expectOk(await api.workspace.list(request({})))
+    expect(listed.items.find(w => w.workspaceId === workspace.workspaceId)?.sessionIds).toEqual([])
   })
 })

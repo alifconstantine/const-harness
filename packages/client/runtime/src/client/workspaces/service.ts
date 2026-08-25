@@ -197,6 +197,10 @@ export class WorkspaceRuntime implements IWorkspaces {
         : workspace.items.find(item => item.sessionIds.includes(current))?.workspaceId
       target = currentWorkspaceId ?? workspace.recentWorkspaceId
     }
+    if (target === undefined) {
+      this.sessions.clear()
+      return
+    }
     void this.connectWorkspace(target).then(
       (sessionId) => { this.sessions.open(sessionId) },
       (reason: unknown) => { console.warn('new session failed:', reason) },

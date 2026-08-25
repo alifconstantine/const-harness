@@ -305,7 +305,11 @@ export class WorkspaceRegistry extends Service {
     })
   }
 
-  /** Retrieve the cached session header for a known session. */
+  /**
+   * Retrieve the cached session header for a known session.
+   * @param id - session identifier.
+   * @returns the cached session header, or undefined when unknown.
+   */
   getHeader(id: SessionId): SessionHeader | undefined {
     return this.headers.get(id)
   }

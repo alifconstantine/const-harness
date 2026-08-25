@@ -250,7 +250,20 @@ export class WorkspaceManager {
    */
   async deleteSession(sessionId: SessionId): Promise<RpcResult<{ archivedSessionIds: SessionId[] }>> {
     const { result } = await this.api.workspace.deleteSession({ sessionId })
-    if (result.ok) this.installArchived(result.value.archivedSessionIds)
+    if (result.ok) {
+      this.installArchived(result.value.archivedSessionIds)
+      for (const item of this.items) {
+        const view = item.getSnapshot().view
+        if (view !== undefined && view.sessionIds.includes(sessionId)) {
+          item.adopt({
+            ...view,
+            sessionIds: view.sessionIds.filter(id => id !== sessionId),
+          })
+        }
+      }
+      this.itemViewsSource = null
+      this.notifier.markDirty()
+    }
     return result
   }
 

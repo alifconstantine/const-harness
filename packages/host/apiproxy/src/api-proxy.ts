@@ -4,8 +4,8 @@
  */
 
 import { randomUUID } from 'node:crypto'
-import { mkdir, readdir, rm, stat, unlink } from 'node:fs/promises'
-import { dirname, join } from 'node:path'
+import { mkdir, stat } from 'node:fs/promises'
+import { dirname } from 'node:path'
 import type { Context } from '@deepseek-ai/cordis'
 import { installModelSelection } from '@deepseek-ai/dsh-agent'
 import type { Agent, ModelSelection, ModelSelectionRef, AgentOptions, AgentStatus } from '@deepseek-ai/dsh-agent'
@@ -2948,13 +2948,6 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
 
       async deleteSession(request) {
         const { sessionId } = request.payload
-        let header = ctx.workspaceRegistry.getHeader(sessionId)
-        if (!header && ctx.sessionPersistence) {
-          try {
-            const list = await ctx.sessionPersistence.list()
-            header = list.find(h => h.id === sessionId)
-          } catch {}
-        }
 
         // 1. Dispose live agent/session if running or in memory
         try {
@@ -2965,41 +2958,19 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
           }
         } catch {}
 
+        sessionCreations.delete(sessionId)
+        presetSwitches.delete(sessionId)
+
         // 2. Broadcast host/session-removed to all connected clients
         try {
           broadcastHostFrame({ type: 'host/session-removed', sessionId })
         } catch {}
 
-        // 3. Remove physical files on disk
-        if (header && typeof ctx.sessionPersistence?.locate === 'function') {
+        // 3. Permanently delete from session persistence
+        const persistence = ctx.get('sessionPersistence')
+        if (persistence !== undefined) {
           try {
-            const loc = ctx.sessionPersistence.locate(header)
-            if (loc?.path) {
-              const sessionDirPath = dirname(loc.path)
-              await rm(sessionDirPath, { recursive: true, force: true }).catch(() => {})
-              await unlink(loc.path).catch(() => {})
-            }
-          } catch {}
-        }
-
-        const persistenceAny = ctx.get('sessionPersistence') as {
-          root?: string
-          db?: { prepare: (sql: string) => { run: (...args: unknown[]) => unknown } }
-        } | undefined
-        if (persistenceAny?.root) {
-          try {
-            const root = persistenceAny.root
-            const entries = await readdir(root).catch(() => [] as string[])
-            for (const entry of entries) {
-              const candidateDir = join(root, entry, sessionId)
-              await rm(candidateDir, { recursive: true, force: true }).catch(() => {})
-            }
-          } catch {}
-        }
-        if (persistenceAny?.db) {
-          try {
-            persistenceAny.db.prepare('DELETE FROM events WHERE session_id = ?').run(sessionId)
-            persistenceAny.db.prepare('DELETE FROM sessions WHERE id = ?').run(sessionId)
+            await persistence.delete(sessionId)
           } catch {}
         }
 

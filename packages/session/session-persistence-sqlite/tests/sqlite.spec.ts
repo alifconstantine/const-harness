@@ -946,4 +946,22 @@ describe('surface field round-trip', () => {
     expect((loaded.events[1]! as SurfaceEvent).sourceEventSeqs).toBeUndefined()
     await fiber.dispose()
   })
+
+  it('permanently deletes session and event rows from sqlite database', async () => {
+    const ctx = new Context()
+    await ctx.plugin(SessionStore)
+    const fiber = await ctx.plugin(SqliteSessionPersistence, { path: ':memory:' })
+    const m = meta('to-delete-sqlite')
+    await ctx.sessionPersistence.create(m)
+    await ctx.sessionPersistence.append(m.id, oneTurnLog())
+
+    expect((await ctx.sessionPersistence.list()).map(h => h.id)).toContain(m.id)
+
+    // Delete session
+    await ctx.sessionPersistence.delete(m.id)
+
+    expect((await ctx.sessionPersistence.list()).map(h => h.id)).not.toContain(m.id)
+    await expect(ctx.sessionPersistence.load(m.id)).rejects.toThrow()
+    await fiber.dispose()
+  })
 })

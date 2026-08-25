@@ -1074,6 +1074,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         parameters: [{ name: 'signal', description: 'optional cancellation for backend snapshot-listing work.' }],
         returns: 'one header and opaque revision per materialized session without loading full logs.',
       },
+      {
+        signature: 'abstract delete(id: SessionId): Promise<void>',
+        description: 'Permanently delete a persisted session: drains and terminates any live writes, purges in-memory coordinator state and caches, and removes all durable storage artifacts for this session.',
+        parameters: [{ name: 'id', description: 'the session id to delete.' }],
+        returns: 'a promise resolving once all memory state, cache entries, and storage artifacts are deleted.',
+      },
     ],
   },
   {
@@ -2116,6 +2122,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'the existing or newly durable workspace.',
       },
       {
+        signature: 'async getDefaultWorkspace(): Promise<Workspace>',
+        description: 'Get or create the default global workspace (`~/.const/workspace/default`). Used for no-workspace chat sessions and scratchpad operations.',
+        parameters: [],
+        returns: 'the default workspace entity.',
+      },
+      {
         signature: 'get(id: WorkspaceId): Workspace | undefined',
         description: 'Look up a workspace by id.',
         parameters: [{ name: 'id', description: 'Workspace id.' }],
@@ -2144,6 +2156,24 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         description: 'Archive one session durably. The session must exist (live or in session persistence); its workspace accounting — or lack of one — is irrelevant. An already archived id resolves without writing.',
         parameters: [{ name: 'sessionId', description: 'The session to archive.' }],
         returns: 'resolution after durability.',
+      },
+      {
+        signature: 'unarchiveSession(sessionId: SessionId): Promise<void>',
+        description: 'Unarchive one session durably. Removes the session from the registry-global archive set. An id not currently archived resolves without writing.',
+        parameters: [{ name: 'sessionId', description: 'The session to unarchive.' }],
+        returns: 'resolution after durability.',
+      },
+      {
+        signature: 'deleteSession(sessionId: SessionId): Promise<void>',
+        description: 'Delete one session from the registry: removes it from the archive set and cached index.',
+        parameters: [{ name: 'sessionId', description: 'The session to delete.' }],
+        returns: 'resolution after durability.',
+      },
+      {
+        signature: 'getHeader(id: SessionId): SessionHeader | undefined',
+        description: 'Retrieve the cached session header for a known session.',
+        parameters: [{ name: 'id', description: 'session identifier.' }],
+        returns: 'the cached session header, or undefined when unknown.',
       },
       {
         signature: 'async resolveByPath(path: string): Promise<Workspace | undefined>',

@@ -207,6 +207,12 @@ export interface PersistenceBackend<TornMarker = unknown> {
   locate?(meta: SessionHeader): SessionLocation | undefined
 
   /**
+   * Permanently delete all durable storage records and files for one session.
+   * @param id - the session id to delete.
+   */
+  deleteStored?(id: SessionId): Promise<void>
+
+  /**
    * Optional lifecycle teardown (e.g. close a database handle). Awaited by the
    * coordinator's dispose effect AFTER the quiescence drain. A stateless file
    * backend omits it.
@@ -625,6 +631,31 @@ export class PersistenceCoordinator<TornMarker = unknown> {
   }
 
   // --- Public API (the backend's service methods delegate here) ---
+
+  /**
+   * Permanently delete a session: waits for any live flush/retirement,
+   * purges coordinator memory state and preparation caches, and removes all backend records.
+   * @param id - session id to delete.
+   * @returns a promise resolving once memory state and backend storage are cleared.
+   */
+  async delete(id: SessionId): Promise<void> {
+    const retirement = this.retirements.get(id)
+    if (retirement !== undefined) {
+      await retirement.catch(() => {})
+    }
+    await this.serialize(id, async () => {
+      for (const [session, live] of this.live.entries()) {
+        if (session.id === id) {
+          live.writes.cancelAutomaticWait()
+          this.live.delete(session)
+        }
+      }
+      this.preparations.invalidate(id)
+      this.states.delete(id)
+      await this.backend.deleteStored?.(id)
+    })
+    this.chains.delete(id)
+  }
 
   /**
    * Register detached session metadata for lazy creation on the first append.

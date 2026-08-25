@@ -185,6 +185,27 @@ describe('WorkspaceManager', () => {
     await refresh
     expect(manager.getSnapshot().items).toEqual([])
   })
+
+  it('prunes deleted session id from local workspace snapshot upon successful deleteSession', async () => {
+    const api = new FakeApiClient()
+    api.onWorkspaceList = () => Promise.resolve(ok({
+      items: [workspace('w1', [sid('s1'), sid('s2')]), workspace('w2', [sid('s3')])] as never[],
+      archivedSessionIds: [sid('s-old-archived')],
+    }) as never)
+    const manager = new WorkspaceManager(api)
+    await manager.refresh()
+
+    expect(manager.getSnapshot().items[0]?.sessionIds).toEqual(['s1', 's2'])
+
+    api.onWorkspaceDeleteSession = () => Promise.resolve(ok({
+      archivedSessionIds: [],
+    }))
+
+    const res = await manager.deleteSession(sid('s1'))
+    expect(res.ok).toBe(true)
+    expect(manager.getSnapshot().items[0]?.sessionIds).toEqual(['s2'])
+    expect(manager.getSnapshot().archivedSessionIds).toEqual([])
+  })
 })
 
 describe('WorkspaceRuntime', () => {

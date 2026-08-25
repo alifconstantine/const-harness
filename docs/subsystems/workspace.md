@@ -170,6 +170,13 @@ Durable workspace registry. Startup waits for `sessionPersistence`, builds one c
 async create(path: string, title?: string): Promise<Workspace>
 
 /**
+ * Get or create the default global workspace (`~/.const/workspace/default`).
+ * Used for no-workspace chat sessions and scratchpad operations.
+ * @returns the default workspace entity.
+ */
+async getDefaultWorkspace(): Promise<Workspace>
+
+/**
  * Look up a workspace by id.
  * @param id - Workspace id.
  * @returns the workspace, or `undefined` when unknown.
@@ -213,6 +220,28 @@ insertBefore(id: WorkspaceId, beforeId?: WorkspaceId): Promise<readonly Workspac
 archiveSession(sessionId: SessionId): Promise<void>
 
 /**
+ * Unarchive one session durably. Removes the session from the registry-global archive set.
+ * An id not currently archived resolves without writing.
+ * @param sessionId - The session to unarchive.
+ * @returns resolution after durability.
+ */
+unarchiveSession(sessionId: SessionId): Promise<void>
+
+/**
+ * Delete one session from the registry: removes it from the archive set and cached index.
+ * @param sessionId - The session to delete.
+ * @returns resolution after durability.
+ */
+deleteSession(sessionId: SessionId): Promise<void>
+
+/**
+ * Retrieve the cached session header for a known session.
+ * @param id - session identifier.
+ * @returns the cached session header, or undefined when unknown.
+ */
+getHeader(id: SessionId): SessionHeader | undefined
+
+/**
  * Resolve by canonical directory path without creating or mutating a
  * workspace. A missing path rejects during `realpath`; an existing unowned
  * directory returns `undefined`.
@@ -222,7 +251,7 @@ archiveSession(sessionId: SessionId): Promise<void>
 async resolveByPath(path: string): Promise<Workspace | undefined>
 ```
 
-Types: [SessionId](core.md)
+Types: [SessionHeader](persistence.md) · [SessionId](core.md)
 
-Source: [`packages/workspace/workspace/src/index.ts:92`](../../packages/workspace/workspace/src/index.ts)
+Source: [`packages/workspace/workspace/src/index.ts:93`](../../packages/workspace/workspace/src/index.ts)
 <!-- END GENERATED cordis-surface -->

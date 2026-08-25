@@ -198,10 +198,21 @@ export class SqliteSessionPersistence extends SessionPersistence implements Pers
     return this.coordinator.readFrom(id, fromSeq, signal)
   }
 
+  delete(id: SessionId): Promise<void> {
+    return this.coordinator.delete(id)
+  }
+
   // One method serves both public `list` and the backend hook; delegating it to
   // the coordinator would call this hook recursively.
 
   // --- PersistenceBackend hooks (the SQLite storage primitives) ---
+
+  /** Delete all session and event records for one session id. */
+  async deleteStored(id: SessionId): Promise<void> {
+    await this.ready
+    this.db.prepare('DELETE FROM events WHERE session_id = ?').run(id)
+    this.db.prepare('DELETE FROM sessions WHERE id = ?').run(id)
+  }
 
   /** Read a stored prefix by id (ids are globally unique — no scope to scan). */
   loadStored(id: SessionId, signal?: AbortSignal): Promise<StoredPrefix<number> | undefined> {

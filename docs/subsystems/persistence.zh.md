@@ -377,6 +377,15 @@ abstract list(signal?: AbortSignal): Promise<SessionHeader[]>
  * @returns one header and opaque revision per materialized session without loading full logs.
  */
 abstract listSnapshots(signal?: AbortSignal): Promise<SessionPersistenceSnapshot[]>
+
+/**
+ * Permanently delete a persisted session: drains and terminates any live
+ * writes, purges in-memory coordinator state and caches, and removes all
+ * durable storage artifacts for this session.
+ * @param id - the session id to delete.
+ * @returns a promise resolving once all memory state, cache entries, and storage artifacts are deleted.
+ */
+abstract delete(id: SessionId): Promise<void>
 ```
 
 Types: [SessionEvent](session.md) · [SessionId](core.md)

@@ -54,6 +54,7 @@ interface MemoryConfig { store?: MemoryStore }
 /** Test-only view of the coordinator containers whose retirement is the contract under test. */
 interface CoordinatorInternals {
   states: Map<unknown, unknown>
+  preparations: { has: (id: unknown) => boolean }
   live: Map<unknown, {
     writes: { pending: unknown[]; active: Promise<void> | undefined; hasWork: boolean }
   }>
@@ -118,7 +119,15 @@ class MemoryPersistence extends SessionPersistence implements PersistenceBackend
     return this.coordinator.readFrom(id, fromSeq, signal)
   }
 
+  delete(id: SessionId): Promise<void> {
+    return this.coordinator.delete(id)
+  }
+
   // --- PersistenceBackend hooks (the Map storage primitives) ---
+
+  async deleteStored(id: SessionId): Promise<void> {
+    this.store.delete(id)
+  }
 
   // A Map-backed store has no torn tails, so `tornMarker` is never set.
   async loadStored(id: SessionId): Promise<StoredPrefix<never> | undefined> {
@@ -1931,6 +1940,38 @@ describe('SessionPersistence service registration', () => {
           chains: coordinator.chains.size,
         }).toEqual({ states: 0, live: 0, chains: 0 })
       })
+    } finally {
+      await fiber.dispose()
+    }
+  })
+
+  it('permanently deletes a session from memory, preparation cache, and backend storage', async () => {
+    const ctx = new Context()
+    await ctx.plugin(SessionStore)
+    const fiber = await ctx.plugin(MemoryPersistence)
+    const { coordinator } = ctx.sessionPersistence as unknown as { coordinator: CoordinatorInternals }
+
+    try {
+      const id = SessionId('to-delete-session')
+      const m = meta(id, '/test')
+      await ctx.sessionPersistence.create(m)
+      await ctx.sessionPersistence.append(id, [
+        { type: 'turn/start', seq: 0, time: 1000, data: { turn: 1 } },
+        { type: 'turn/end', seq: 1, time: 1001, data: { turn: 1, reason: { kind: 'completed' } } },
+      ])
+
+      // Verify it exists in inspection and list
+      const inspection = await ctx.sessionPersistence.inspect(id)
+      expect(inspection.events).toHaveLength(2)
+
+      // Delete the session
+      await ctx.sessionPersistence.delete(id)
+
+      // Verify it's evicted from coordinator states, preparations, and backend store
+      expect(coordinator.states.has(id)).toBe(false)
+      expect(coordinator.preparations.has(id)).toBe(false)
+      expect((await ctx.sessionPersistence.list()).map(h => h.id)).not.toContain(id)
+      await expect(ctx.sessionPersistence.load(id)).rejects.toThrow()
     } finally {
       await fiber.dispose()
     }

@@ -103,6 +103,11 @@ class TestPersistence extends SessionPersistence {
     return { meta: whole.meta, events: whole.events.filter(event => event.seq >= fromSeq) }
   }
 
+  delete(id: SessionIdType): Promise<void> {
+    TestPersistence.entries.delete(id)
+    return Promise.resolve()
+  }
+
   list(signal?: AbortSignal): Promise<SessionHeader[]> {
     TestPersistence.listCalls += 1
     TestPersistence.listSignals.push(signal)

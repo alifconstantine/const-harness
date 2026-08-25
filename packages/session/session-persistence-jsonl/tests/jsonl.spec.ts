@@ -1618,4 +1618,26 @@ describe('JsonlSessionPersistence: edge cases', () => {
     expect(session.events.length).toBe(0)
   })
 
+  it('permanently deletes on-disk session directories across project folders', async () => {
+    const m = meta('session-to-delete-jsonl')
+    await ctx.sessionPersistence.create(m)
+    const ev = [{ type: 'user/message', seq: 0, time: 1, data: createUserMessage({
+      content: [{ type: 'text', text: 'hello' }], source: { kind: 'user' },
+    }) }] as unknown as SessionEvent[]
+    await ctx.sessionPersistence.append(m.id, ev)
+
+    // Locate the file and verify it exists on disk
+    const loc = ctx.sessionPersistence.locate(m)
+    expect(loc).toBeDefined()
+    const targetDir = dirname(loc!.path)
+    expect((await readdir(targetDir)).length).toBeGreaterThan(0)
+    expect((await ctx.sessionPersistence.list()).map(h => h.id)).toContain(m.id)
+
+    // Delete the session
+    await ctx.sessionPersistence.delete(m.id)
+
+    // Verify directory is deleted from disk and session is gone from list
+    expect(await stat(targetDir).catch(() => null)).toBeNull()
+    expect((await ctx.sessionPersistence.list()).map(h => h.id)).not.toContain(m.id)
+  })
 })

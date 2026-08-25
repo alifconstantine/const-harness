@@ -199,11 +199,27 @@ export class JsonlSessionPersistence extends SessionPersistence implements Persi
     return this.coordinator.readFrom(id, fromSeq, signal)
   }
 
+  delete(id: SessionId): Promise<void> {
+    return this.coordinator.delete(id)
+  }
+
   // One method serves both public `list` and the backend hook; delegating it to
   // the coordinator would call this hook recursively.
 
   /* jscpd:ignore-end */
   // --- PersistenceBackend hooks (the file-bytes storage primitives) ---
+
+  /** Permanently remove this session's storage directory from all project folders. */
+  async deleteStored(id: SessionId): Promise<void> {
+    const encoded = encodeSegment(id)
+    const projects = await this.listProjectDirs().catch(() => [] as string[])
+    for (const project of projects) {
+      const dir = join(project, encoded)
+      await rm(dir, { recursive: true, force: true }).catch(() => {})
+    }
+    const rootSessionDir = join(this.root, encoded)
+    await rm(rootSessionDir, { recursive: true, force: true }).catch(() => {})
+  }
 
   /** Read a stored prefix by id across all project directories when cwd is unknown. */
   async loadStored(id: SessionId, signal?: AbortSignal): Promise<StoredPrefix<JsonlTornMarker> | undefined> {
