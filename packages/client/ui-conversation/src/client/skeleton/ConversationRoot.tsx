@@ -103,18 +103,18 @@ export function ConversationRoot({
   //   4. the blank session's workspace is in the list → its title;
   //   5. list still loading → cwd folder name bridges so the title does not
   //      flash on refresh (empty cwd → placeholder);
-  //   6. list ready but no owning workspace (deleted from the sidebar) →
-  //      placeholder, never the deleted folder's name via cwd.
-  const isOutside = pendingOutside || isDefaultWorkspacePath(cwd)
+  const isOutside = pendingOutside
+    || (sessionId !== undefined && sessionWorkspace === undefined)
+    || isDefaultWorkspacePath(cwd)
   const chipTitle = pendingWorkspace?.title
+    ?? sessionWorkspace?.title
     ?? (isOutside
       ? t('hero.outsideProject')
       : (sessionId === undefined
         ? undefined
-        : sessionWorkspace?.title
-          ?? (workspaces.phase === 'ready' || cwd === undefined || cwd === ''
-            ? undefined
-            : workspaceLabel(cwd))))
+        : (workspaces.phase === 'ready' || cwd === undefined || cwd === ''
+          ? undefined
+          : workspaceLabel(cwd))))
 
   const heroWorkspaceRow = (
     <div className={css.heroWorkspaceRow}>
