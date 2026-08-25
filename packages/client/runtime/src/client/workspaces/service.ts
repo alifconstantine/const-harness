@@ -188,6 +188,13 @@ export class WorkspaceRuntime implements IWorkspaces {
    * @param workspaceId - explicit target Workspace for scoped actions.
    */
   startSession(workspaceId?: WorkspaceId): void {
+    if (arguments.length > 0 && workspaceId === undefined) {
+      void this.connectWorkspace(undefined).then(
+        (sessionId) => { this.sessions.open(sessionId) },
+        (reason: unknown) => { console.warn('new session failed:', reason) },
+      )
+      return
+    }
     let target = workspaceId
     if (arguments.length === 0) {
       const workspace = this.list.getSnapshot()

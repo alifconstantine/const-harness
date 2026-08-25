@@ -454,6 +454,10 @@ describe('WorkspaceRuntime', () => {
     await Promise.resolve()
     expect(connect).toHaveBeenLastCalledWith(wid('recent-home'))
 
+    workspaces.startSession(undefined)
+    await Promise.resolve()
+    expect(connect).toHaveBeenLastCalledWith(undefined)
+
     const emptyCtx = new Context()
     const emptyApi = new FakeApiClient()
     const emptySessions = new SessionRuntime(emptyCtx, emptyApi, fakeRemote())
