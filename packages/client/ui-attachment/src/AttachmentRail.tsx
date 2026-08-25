@@ -5,8 +5,47 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import clsx from 'clsx'
 import {
   IconChevronLeftOutline14, IconChevronRightOutline14, IconCloseFill14,
+  IconCodeOutline16, IconFileOutline16, IconPlayOutline16,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import css from './AttachmentRail.module.css'
+
+const VIDEO_EXTENSIONS = new Set(['MP4', 'WEBM', 'MKV', 'MOV', 'AVI', 'WMV', 'M4V'])
+const FILE_EXTENSIONS = new Set(['PDF', 'DOC', 'DOCX', 'TXT', 'MD', 'JSON', 'CSV', 'ZIP', 'TAR', 'GZ', 'TS', 'JS', 'PY', 'RS', 'GO', 'CPP', 'C', 'CSS', 'HTML', 'SH', 'YML', 'YAML'])
+
+/** Infers attachment category from explicit kind, MIME type, or filename. */
+export function detectAttachmentKind(
+  kind?: 'image' | 'video' | 'file',
+  mimeType?: string,
+  fileName?: string,
+): 'image' | 'video' | 'file' {
+  if (kind) return kind
+  if (mimeType) {
+    if (mimeType.startsWith('video/')) return 'video'
+    if (mimeType.startsWith('image/')) return 'image'
+    return 'file'
+  }
+  if (fileName) {
+    const ext = getFileExtension(fileName)
+    if (VIDEO_EXTENSIONS.has(ext)) return 'video'
+    if (FILE_EXTENSIONS.has(ext)) return 'file'
+  }
+  return 'image'
+}
+
+/** Formats byte sizes into human-readable strings (KB / MB). */
+function formatFileSize(bytes?: number): string {
+  if (bytes === undefined || bytes === 0) return ''
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+/** Extracts a short file extension (e.g. PDF, MP4, TS). */
+function getFileExtension(name?: string): string {
+  if (!name) return ''
+  const dot = name.lastIndexOf('.')
+  return dot !== -1 ? name.slice(dot + 1).toUpperCase().slice(0, 5) : ''
+}
 
 /** One rail thumbnail; strings arrive resolved (zero-cordis atom). */
 export interface AttachmentRailItem {
@@ -18,6 +57,14 @@ export interface AttachmentRailItem {
   alt: string
   /** Accessible label of the item's remove control. */
   removeLabel: string
+  /** Attachment category: image, video, or generic file. */
+  kind?: 'image' | 'video' | 'file'
+  /** Original file name if available. */
+  fileName?: string
+  /** File size in bytes if available. */
+  fileSize?: number
+  /** File MIME type if available. */
+  mimeType?: string
 }
 
 /** Rail-level strings the owner resolves from its own locale namespace. */
@@ -164,26 +211,71 @@ export function AttachmentRail<T extends AttachmentRailItem>({ items, labels, on
         aria-label={labels.group}
         onScroll={updateEdges}
       >
-        {items.map(item => (
-          <div key={item.id} className={css.item}>
-            <button
-              type="button"
-              className={css.thumbnail}
-              title={labels.open}
-              onClick={() => { onOpen(item) }}
-            >
-              <img src={item.previewUrl} alt={item.alt} />
-            </button>
-            <button
-              type="button"
-              className={css.remove}
-              aria-label={item.removeLabel}
-              onClick={() => { onRemove(item) }}
-            >
-              <IconCloseFill14 size={12} />
-            </button>
-          </div>
-        ))}
+        {items.map((item) => {
+          const kind = detectAttachmentKind(item.kind, item.mimeType, item.fileName || item.alt)
+          const isVideo = kind === 'video'
+          const isFile = kind === 'file'
+          const ext = getFileExtension(item.fileName || item.alt)
+          const isCode = ['TS', 'JS', 'PY', 'RS', 'GO', 'CPP', 'C', 'JSON', 'CSS', 'HTML', 'SH', 'MD', 'YML', 'YAML'].includes(ext)
+          const sizeText = formatFileSize(item.fileSize)
+
+          return (
+            <div key={item.id} className={clsx(css.item, isFile && css.itemFile)}>
+              {isFile ? (
+                <button
+                  type="button"
+                  className={clsx(css.thumbnail, css.fileCard)}
+                  title={labels.open}
+                  onClick={() => { onOpen(item) }}
+                >
+                  <div className={css.fileIconWrapper}>
+                    {isCode ? <IconCodeOutline16 size={18} /> : <IconFileOutline16 size={18} />}
+                  </div>
+                  <div className={css.fileDetails}>
+                    <span className={css.fileName} title={item.fileName || item.alt}>
+                      {item.fileName || item.alt}
+                    </span>
+                    <div className={css.fileMeta}>
+                      {ext && <span className={css.fileExtBadge}>{ext}</span>}
+                      {sizeText && <span className={css.fileSizeText}>{sizeText}</span>}
+                    </div>
+                  </div>
+                </button>
+              ) : isVideo ? (
+                <button
+                  type="button"
+                  className={clsx(css.thumbnail, css.videoThumbnail)}
+                  title={labels.open}
+                  onClick={() => { onOpen(item) }}
+                >
+                  <video src={item.previewUrl} className={css.mediaItem} muted preload="metadata" />
+                  <div className={css.videoOverlay}>
+                    <div className={css.playBadge}>
+                      <IconPlayOutline16 size={12} />
+                    </div>
+                  </div>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className={css.thumbnail}
+                  title={labels.open}
+                  onClick={() => { onOpen(item) }}
+                >
+                  <img src={item.previewUrl} alt={item.alt} className={css.mediaItem} />
+                </button>
+              )}
+              <button
+                type="button"
+                className={css.remove}
+                aria-label={item.removeLabel}
+                onClick={() => { onRemove(item) }}
+              >
+                <IconCloseFill14 size={12} />
+              </button>
+            </div>
+          )
+        })}
       </div>
       {edges.right && (
         <button

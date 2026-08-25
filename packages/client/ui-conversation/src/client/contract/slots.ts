@@ -22,9 +22,9 @@ import type { ComposerSubmitGesture, InputSubmitMode } from './composer-submissi
 import type { ChatNode, ChatNodeKind } from './chat-nodes.ts'
 import type { CallId, SelectionTarget, ViewTab } from './views.ts'
 
-/** Browser-owned image that has not crossed the durable host boundary. */
+/** Browser-owned attachment (image, video, or generic file) that has not crossed the durable host boundary. */
 export interface ComposerAttachment {
-  kind: 'image'
+  kind?: 'image' | 'video' | 'file'
   id: DraftAttachmentId
   file: File
   previewUrl: string

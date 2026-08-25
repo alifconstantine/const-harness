@@ -69,6 +69,40 @@ describe('AttachmentRail', () => {
     expect(onRemove).toHaveBeenCalledWith(items[1])
   })
 
+  it('renders video and generic file cards with appropriate badges and metadata', () => {
+    const onOpen = vi.fn()
+    const onRemove = vi.fn()
+    const videoItem: AttachmentRailItem = {
+      id: 'v1',
+      previewUrl: 'blob:v1',
+      alt: 'video.mp4',
+      removeLabel: '移除视频 video.mp4',
+      kind: 'video',
+      fileName: 'video.mp4',
+      fileSize: 1048576,
+      mimeType: 'video/mp4',
+    }
+    const fileItem: AttachmentRailItem = {
+      id: 'f1',
+      previewUrl: 'blob:f1',
+      alt: 'data.json',
+      removeLabel: '移除文件 data.json',
+      kind: 'file',
+      fileName: 'data.json',
+      fileSize: 2048,
+      mimeType: 'application/json',
+    }
+    const view = render(<AttachmentRail items={[videoItem, fileItem]} labels={labels} onOpen={onOpen} onRemove={onRemove} />)
+    expect(view.container.querySelector('video')).toBeTruthy()
+    expect(view.getByText('data.json')).toBeTruthy()
+    expect(view.getByText('JSON')).toBeTruthy()
+    expect(view.getByText('2.0 KB')).toBeTruthy()
+    fireEvent.click(view.getByText('data.json'))
+    expect(onOpen).toHaveBeenCalledWith(fileItem)
+    fireEvent.click(view.getByRole('button', { name: '移除视频 video.mp4' }))
+    expect(onRemove).toHaveBeenCalledWith(videoItem)
+  })
+
   it('shows edge arrows from scroll geometry and pages a viewport at a time', () => {
     const view = render(
       <AttachmentRail items={[item('a'), item('b'), item('c')]} labels={labels} onOpen={vi.fn()} onRemove={vi.fn()} />,

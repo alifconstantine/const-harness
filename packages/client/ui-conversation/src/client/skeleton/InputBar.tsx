@@ -10,7 +10,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent, KeyboardEvent, MouseEvent, ReactNode } from 'react'
 import clsx from 'clsx'
 import {
-  IconPlusOutline16, IconWarningOutline16, Toast, Tooltip,
+  IconPaperclipOutline16, IconWarningOutline16, Toast, Tooltip,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import { AttachmentRail, DropOverlay, ImageLightbox } from '@deepseek-ai/dsh-client-ui-attachment'
 import type { AttachmentRailItem } from '@deepseek-ai/dsh-client-ui-attachment'
@@ -45,7 +45,7 @@ export type InputBarProps = ComposerBarProps
 
 export function InputBar({
   useSession, useInput, inputActions, keyboard, addImages, removeImage, draftImages,
-  resolveSubmitMode, toggleCommandMenu, stop, command, t,
+  resolveSubmitMode, toggleCommandMenu: _toggleCommandMenu, stop, command, t,
   renderSlot, useNotices, useLexicon, useMenuLauncher,
   useProjection, sessionId, variant, disabled: inert = false, blocked,
   workspacePickerOpen = false, onRequestWorkspace,
@@ -103,6 +103,7 @@ export function InputBar({
   }, [promptError, showToast, t, imageLimits])
   const inputRef = useRef<HTMLTextAreaElement | null>(null)
   const cardRef = useRef<HTMLDivElement | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
   const dragDepthRef = useRef(0)
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const mirrorRef = useRef<HTMLDivElement | null>(null)
@@ -509,13 +510,28 @@ export function InputBar({
 
   // Rail thumbnails with their strings resolved here: the attachment atoms are
   // zero-cordis and read no locale.
-  const railItems = useMemo<ComposerRailItem[]>(() => attachments.map(attachment => ({
-    id: attachment.id,
-    previewUrl: attachment.previewUrl,
-    alt: attachment.file.name || t('image.pending'),
-    removeLabel: t('image.remove', { name: attachment.file.name }),
-    attachment,
-  })), [attachments, t])
+  const railItems = useMemo<ComposerRailItem[]>(() => attachments.map((attachment) => {
+    const isVideo = attachment.file.type.startsWith('video/')
+    const isImage = attachment.file.type.startsWith('image/')
+    const kind = isVideo ? 'video' : isImage ? 'image' : 'file'
+    const removeLabel = isVideo
+      ? t('video.remove', { name: attachment.file.name })
+      : !isImage
+        ? t('file.remove', { name: attachment.file.name })
+        : t('image.remove', { name: attachment.file.name })
+
+    return {
+      id: attachment.id,
+      previewUrl: attachment.previewUrl,
+      alt: attachment.file.name || t('image.pending'),
+      removeLabel,
+      kind,
+      fileName: attachment.file.name,
+      fileSize: attachment.file.size,
+      mimeType: attachment.file.type,
+      attachment,
+    }
+  }), [attachments, t])
 
   const onSelect = (e: React.SyntheticEvent<HTMLTextAreaElement>): void => {
     // Any caret/selection gesture ends a live paste attempt (the machine
@@ -531,11 +547,6 @@ export function InputBar({
   const keepFocus = (e: MouseEvent<HTMLButtonElement>): void => {
     e.preventDefault()
     inputRef.current?.focus({ preventScroll: true })
-  }
-
-  const onToggleCommandMenu = (): void => {
-    const el = inputRef.current
-    if (el !== null) toggleCommandMenu?.(selectionOf(el))
   }
 
   // Ordinary sessions retain their primary Send/Stop toggle. A continuable
@@ -731,18 +742,31 @@ export function InputBar({
         </div>
         <div className={css.row}>
           <div className={css.tools}>
-            <Tooltip label={t('input.commands')} side="top" delayMs={500}>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept="image/*,video/*,.pdf,.doc,.docx,.txt,.md,.json,.csv,.zip,application/*,text/*"
+              className={css.hiddenFileInput}
+              tabIndex={-1}
+              aria-hidden="true"
+              onChange={(e) => {
+                if (e.target.files && e.target.files.length > 0) {
+                  intakeImages(Array.from(e.target.files))
+                }
+                e.target.value = ''
+              }}
+            />
+            <Tooltip label={t('input.attachFiles')} side="top" delayMs={500}>
               <button
                 type="button"
                 className={css.add}
-                aria-label={t('input.commands')}
-                aria-haspopup="listbox"
-                aria-expanded={commandMenuOpen}
-                disabled={locked || toggleCommandMenu === undefined}
+                aria-label={t('input.attachFiles')}
+                disabled={locked || addImages === undefined}
                 onMouseDown={keepFocus}
-                onClick={onToggleCommandMenu}
+                onClick={() => { fileInputRef.current?.click() }}
               >
-                <IconPlusOutline16 size={14} />
+                <IconPaperclipOutline16 size={16} />
               </button>
             </Tooltip>
             <div className={css.modes}>
@@ -798,6 +822,9 @@ export function InputBar({
         <ImageLightbox
           src={preview.previewUrl}
           alt={preview.file.name || t('image.original')}
+          kind={preview.file.type.startsWith('video/') ? 'video' : preview.file.type.startsWith('image/') ? 'image' : 'file'}
+          fileSize={preview.file.size}
+          mimeType={preview.file.type}
           labels={lightboxLabels(t)}
           onClose={closePreview}
         />
