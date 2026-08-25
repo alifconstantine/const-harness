@@ -137,14 +137,12 @@ describe('WorkspacePicker', () => {
     expect(screen.queryByTestId('directory-flow')).toBeNull()
   })
 
-  it('raises the flow straight from the anchor gesture when adding is the only entry', () => {
-    // Nothing to list and one action left: a one-row menu would offer no
-    // choice, so the owner's open request lands in the flow itself.
-    const b = mount([])
-    expect(screen.queryByRole('menu')).toBeNull()
-    expect(screen.queryByRole('menuitem', { name: '添加工作区…' })).toBeNull()
-    expect(b.onClose).toHaveBeenCalled()
-    expect(screen.getByTestId('directory-flow')).toBeTruthy()
+  it('renders add workspace and outside project options when workspace list is empty', () => {
+    // Nothing to list: the menu offers both Add Workspace and Outside Project options.
+    mount([])
+    expect(screen.getByRole('menu')).toBeTruthy()
+    expect(screen.getByRole('menuitem', { name: '添加工作区…' })).toBeTruthy()
+    expect(screen.getByRole('menuitem', { name: 'Outside Project' })).toBeTruthy()
   })
 
   it('treats flow cancellation as a silent no-op', () => {
