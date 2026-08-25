@@ -48,4 +48,33 @@ describe('ImageLightbox', () => {
     fireEvent.mouseDown(mask)
     expect(onClose).toHaveBeenCalledTimes(1)
   })
+
+  it('renders video player when kind is video', () => {
+    const onClose = vi.fn()
+    const view = render(<ImageLightbox src="blob:video" alt="clip.mp4" kind="video" labels={labels} onClose={onClose} />)
+    const video = document.querySelector('video')
+    expect(video).toBeTruthy()
+    expect(video?.getAttribute('src')).toBe('blob:video')
+    expect(view.getByText('clip.mp4')).toBeTruthy()
+  })
+
+  it('renders file card and download button when kind is file', () => {
+    const onClose = vi.fn()
+    const view = render(
+      <ImageLightbox
+        src="blob:doc"
+        alt="document.pdf"
+        kind="file"
+        fileSize={524288}
+        mimeType="application/pdf"
+        labels={labels}
+        onClose={onClose}
+      />,
+    )
+    expect(view.getByText('document.pdf')).toBeTruthy()
+    expect(view.getByText('PDF')).toBeTruthy()
+    expect(view.getByText('512.0 KB')).toBeTruthy()
+    expect(view.getByText('application/pdf')).toBeTruthy()
+    expect(view.getByTitle('Download file')).toBeTruthy()
+  })
 })

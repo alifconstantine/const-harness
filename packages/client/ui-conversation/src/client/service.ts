@@ -60,8 +60,11 @@ export interface IConversation {
 
 /** Create one browser-only draft descriptor; only its id enters input state. */
 function browserDraftAttachment(file: File): ComposerAttachment {
+  const isVideo = file.type.startsWith('video/')
+  const isImage = file.type.startsWith('image/')
+  const kind = isVideo ? 'video' : isImage ? 'image' : 'file'
   return {
-    kind: 'image',
+    kind,
     id: crypto.randomUUID() as DraftAttachmentId,
     previewUrl: URL.createObjectURL(file),
     file,

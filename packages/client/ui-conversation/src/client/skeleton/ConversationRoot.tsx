@@ -89,8 +89,7 @@ export function ConversationRoot({
   //      flash on refresh (empty cwd → placeholder);
   //   5. list ready but no owning workspace (deleted from the sidebar) →
   //      placeholder, never the deleted folder's name via cwd.
-  const isOutside = (sessionId !== undefined && sessionWorkspace === undefined)
-    || (cwd !== undefined && (cwd.endsWith('/workspace/default') || cwd.includes('.const/workspace/default')))
+  const isOutside = cwd !== undefined && (cwd.endsWith('/workspace/default') || cwd.includes('.const/workspace/default'))
   const chipTitle = pendingWorkspace?.title
     ?? (sessionId === undefined
       ? undefined
