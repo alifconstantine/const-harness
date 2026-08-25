@@ -1223,7 +1223,7 @@ describe('WorkspaceBrowser', () => {
     fireEvent.click(screen.getByRole('menuitem', { name: '删除会话' }))
     const confirmDialog = screen.getByRole('dialog', { name: '删除会话' })
     expect(confirmDialog).toBeTruthy()
-    expect(confirmDialog.textContent).toContain('将把“Archived Old Task”从归档会话中永久删除')
+    expect(confirmDialog.textContent).toContain('将把“Archived Old Task”永久删除')
 
     // Click Cancel first
     fireEvent.click(screen.getByRole('button', { name: '取消' }))
@@ -1238,6 +1238,42 @@ describe('WorkspaceBrowser', () => {
     const confirmButton = screen.getAllByRole('button', { name: '删除会话' }).find(b => b.closest('[role="dialog"]'))!
     fireEvent.click(confirmButton)
     expect(deleteSession).toHaveBeenCalledWith(s1.id)
+  })
+
+  it('deletes an active session from sidebar 3-dots menu and calls clear if current', async () => {
+    const s1 = summary('active-1', 2, { displayTitle: 'Active Alpha Task' })
+    const deleteSession = vi.fn(async () => {})
+    const clear = vi.fn()
+    mount({
+      useSessions: hook({
+        ...sessionState([s1]),
+        current: s1.id,
+      }),
+      useWorkspaces: hook(workspaceState([])),
+      deleteSession,
+      clear,
+    })
+
+    // Open 3-dots menu on the sidebar session row
+    fireEvent.click(screen.getByLabelText(`会话“${s1.displayTitle}”的操作`))
+    expect(screen.getByRole('menuitem', { name: '重命名' })).toBeTruthy()
+    expect(screen.getByRole('menuitem', { name: '分叉会话' })).toBeTruthy()
+    expect(screen.getByRole('menuitem', { name: '归档会话' })).toBeTruthy()
+    expect(screen.getByRole('menuitem', { name: '删除会话' })).toBeTruthy()
+
+    // Click Delete in menu - raises confirmation dialog
+    fireEvent.click(screen.getByRole('menuitem', { name: '删除会话' }))
+    const confirmDialog = screen.getByRole('dialog', { name: '删除会话' })
+    expect(confirmDialog).toBeTruthy()
+    expect(confirmDialog.textContent).toContain('将把“Active Alpha Task”永久删除')
+
+    // Confirm deletion
+    const confirmButton = screen.getAllByRole('button', { name: '删除会话' }).find(b => b.closest('[role="dialog"]'))!
+    fireEvent.click(confirmButton)
+    expect(deleteSession).toHaveBeenCalledWith(s1.id)
+    await waitFor(() => {
+      expect(clear).toHaveBeenCalled()
+    })
   })
 
   it('filters archived sessions with search input in archive modal and clears search', () => {

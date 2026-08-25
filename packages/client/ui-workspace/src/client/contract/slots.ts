@@ -98,6 +98,8 @@ export type WorkspaceBrowserInjected = DirectoryPickingInjected & {
   startSession: (workspaceId?: WorkspaceId) => void
   /** Open a real Session. */
   open: (sessionId: SessionId) => void
+  /** Clear the current selection into the New Session view state. */
+  clear?: () => void
   /**
    * Search current visible conversation messages. The Host fixes the result
    * bound; `hasMore` means the query needs narrowing.

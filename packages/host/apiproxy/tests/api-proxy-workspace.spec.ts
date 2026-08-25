@@ -567,4 +567,54 @@ describe('Host Workspace increments', () => {
     })
     abort.abort()
   })
+
+  it('deletes an archived session, removes it from workspace and archive list, and streams host/session-removed', async () => {
+    const { api, root } = await harness()
+    const workspace = expectOk(await api.workspace.create(request({ path: stageDir(root, 'delete-archive-home') }))).workspace
+    const sessionId = SessionId('session-to-archive-and-delete')
+    expectOk(await api.sessions.create(request({ workspaceId: workspace.workspaceId, sessionId })))
+    expectOk(await api.workspace.archiveSession(request({ sessionId })))
+    expect(expectOk(await api.workspace.list(request({}))).archivedSessionIds).toEqual([sessionId])
+
+    const abort = new AbortController()
+    const stream: AsyncIterator<RpcRequest<HostFrame>> =
+      api.events.host(request({}), abort.signal)[Symbol.asyncIterator]()
+    const removedFrame = nextHostFrame(stream)
+
+    const deleteRes = expectOk(await api.workspace.deleteSession(request({ sessionId })))
+    expect(deleteRes.archivedSessionIds).toEqual([])
+
+    expect(await removedFrame).toMatchObject({
+      payload: { type: 'host/session-removed', sessionId },
+    })
+
+    // Confirm registry state
+    const listed = expectOk(await api.workspace.list(request({})))
+    expect(listed.archivedSessionIds).toEqual([])
+    expect(listed.items[0]?.sessionIds).toEqual([])
+
+    abort.abort()
+  })
+
+  it('deletes a live active session, disposes agent handle, and streams host/session-removed', async () => {
+    const { api, root, ctx } = await harness()
+    const workspace = expectOk(await api.workspace.create(request({ path: stageDir(root, 'delete-live-home') }))).workspace
+    const sessionId = SessionId('session-live-to-delete')
+    expectOk(await api.sessions.create(request({ workspaceId: workspace.workspaceId, sessionId })))
+    expect(ctx.agents.get(sessionId)).toBeDefined()
+
+    const abort = new AbortController()
+    const stream: AsyncIterator<RpcRequest<HostFrame>> =
+      api.events.host(request({}), abort.signal)[Symbol.asyncIterator]()
+    const removedFrame = nextHostFrame(stream)
+
+    const deleteRes = expectOk(await api.workspace.deleteSession(request({ sessionId })))
+    expect(deleteRes.archivedSessionIds).toEqual([])
+
+    expect(await removedFrame).toMatchObject({
+      payload: { type: 'host/session-removed', sessionId },
+    })
+
+    abort.abort()
+  })
 })
