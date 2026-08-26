@@ -54,9 +54,9 @@ describe('ic_ds_ icon set', () => {
   })
 })
 
-describe('FishLogo (ConstLogo)', () => {
+describe('ConstLogo', () => {
   it('renders the Const logo in currentColor at the native ratio', () => {
-    const { container } = render(<primitives.FishLogo />)
+    const { container } = render(<primitives.ConstLogo />)
     const svg = container.querySelector('svg')!
     expect(svg.getAttribute('width')).toBe('24')
     expect(svg.getAttribute('height')).toBe('24')

@@ -8,7 +8,7 @@ import type { IconProps } from './icons/props.ts'
  * @param props.className - extra class for layout placement.
  * @returns the logo svg.
  */
-export function FishLogo({ size = 24, className }: IconProps) {
+export function ConstLogo({ size = 24, className }: IconProps) {
   return (
     <svg
       width={size}
@@ -40,3 +40,5 @@ export function FishLogo({ size = 24, className }: IconProps) {
     </svg>
   )
 }
+
+export const FishLogo = ConstLogo

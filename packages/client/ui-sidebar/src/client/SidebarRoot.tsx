@@ -18,7 +18,7 @@
 import { useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
 import {
-  BrandWordmark, FishLogo,
+  BrandWordmark, ConstLogo,
   IconAutomationsOutline16, IconDesignOutline16,
   IconNewChatOutline16, IconPanelLeftOutline16, IconSearchOutline16,
   Tooltip,
@@ -193,7 +193,7 @@ export function SidebarRoot({
               aria-label={collapsed ? t('toggle.open') : t('toggle.collapse')}
               onClick={() => { toggleSidebar() }}
             >
-              {!wide && <FishLogo className={css.railFish} size={24} />}
+              {!wide && <ConstLogo className={css.railFish} size={24} />}
               {/* Rail icons render at 18 (figma rail spec); expanded keeps the glyph-native sizes. */}
               <IconPanelLeftOutline16 className={css.panelIcon} size={wide ? 16 : 18} />
             </button>
