@@ -199,14 +199,11 @@ export class WorkspaceRuntime implements IWorkspaces {
     if (arguments.length === 0) {
       const workspace = this.list.getSnapshot()
       const current = this.sessions.list.getSnapshot().current
-      const currentWorkspaceId = current === undefined
-        ? undefined
-        : workspace.items.find(item => item.sessionIds.includes(current))?.workspaceId
-      target = currentWorkspaceId ?? workspace.recentWorkspaceId
-    }
-    if (target === undefined) {
-      this.sessions.clear()
-      return
+      if (current !== undefined) {
+        target = workspace.items.find(item => item.sessionIds.includes(current))?.workspaceId
+      } else {
+        target = workspace.recentWorkspaceId
+      }
     }
     void this.connectWorkspace(target).then(
       (sessionId) => { this.sessions.open(sessionId) },

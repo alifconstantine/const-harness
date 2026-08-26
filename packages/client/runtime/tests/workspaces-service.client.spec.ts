@@ -454,6 +454,11 @@ describe('WorkspaceRuntime', () => {
     await Promise.resolve()
     expect(connect).toHaveBeenLastCalledWith(wid('recent-home'))
 
+    sessions.open(sid('outside-session'))
+    workspaces.startSession()
+    await Promise.resolve()
+    expect(connect).toHaveBeenLastCalledWith(undefined)
+
     workspaces.startSession(undefined)
     await Promise.resolve()
     expect(connect).toHaveBeenLastCalledWith(undefined)
@@ -462,9 +467,10 @@ describe('WorkspaceRuntime', () => {
     const emptyApi = new FakeApiClient()
     const emptySessions = new SessionRuntime(emptyCtx, emptyApi, fakeRemote())
     const emptyWorkspaces = new WorkspaceRuntime(emptyCtx, emptyApi, emptySessions)
-    const clear = vi.spyOn(emptySessions, 'clear')
+    const connectEmpty = vi.spyOn(emptyWorkspaces, 'connectWorkspace').mockReturnValue(unresolved)
     emptyWorkspaces.startSession()
-    expect(clear).toHaveBeenCalledOnce()
+    await Promise.resolve()
+    expect(connectEmpty).toHaveBeenLastCalledWith(undefined)
   })
 
   it('archives a session, projects the set from the response, list, and frame, and clears only the current one', async () => {
