@@ -215,6 +215,7 @@
     { "path": "./packages/shell/tool-bash" },
     { "path": "./packages/fs/fs" },
     { "path": "./packages/fs/fs-local" },
+    { "path": "./packages/fs/fs-snapshot" },
     { "path": "./packages/e2b/fs-e2b" },
     { "path": "./packages/fs/fs-observation-policy" },
     { "path": "./packages/fs/fs-sandbox" },

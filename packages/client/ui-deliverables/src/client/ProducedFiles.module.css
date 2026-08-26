@@ -1,105 +1,189 @@
-/* Turn-tail produced-files summary: one measured chip lane plus an optional
-   native-folder action below it. */
+/* Turn-tail produced-files / changed files summary card matching Image 1 */
 
-.root {
-  position: relative;
-  display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
-  align-items: center;
-  column-gap: 8px;
-  row-gap: 6px;
-  margin-top: 16px;
-  font-size: 13px;
-  line-height: 22px;
-}
-
-.label {
-  grid-column: 1;
-  grid-row: 1;
-  color: var(--dsw-alias-label-tertiary);
-}
-
-.row {
-  grid-column: 2;
-  grid-row: 1;
+.container {
   display: flex;
-  flex-wrap: nowrap;
+  flex-direction: column;
+  margin-top: 14px;
+  background: #181818;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  overflow: hidden;
+  font-size: 13px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  cursor: pointer;
+  user-select: none;
+  background: rgba(255, 255, 255, 0.02);
+  transition: background 0.15s ease;
+}
+
+.header:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.headerLeft {
+  display: flex;
   align-items: center;
   gap: 8px;
-  min-width: 0;
-  overflow: hidden;
 }
 
-/* One produced file. A link by behavior (it opens the file), a chip by shape:
-   full paths are long, while the measured lane stays on one row. */
-.file {
-  flex: 0 0 auto;
-  max-width: 320px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  margin: 0;
-  padding: 0 8px;
-  border: none;
+.chevron {
+  color: #888888;
+  transition: transform 0.2s ease;
+  transform: rotate(-90deg);
+  flex-shrink: 0;
+}
+
+.chevronExpanded {
+  transform: rotate(0deg);
+}
+
+.headerText {
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.statAdd {
+  color: #22c55e;
+}
+
+.statDel {
+  color: #ef4444;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.undoButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 6px;
-  background: var(--dsw-alias-interactive-bg-hover);
-  color: var(--dsw-alias-label-secondary);
+  background: rgba(255, 255, 255, 0.05);
+  color: #cccccc;
   font: inherit;
+  font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.file:hover {
-  color: var(--dsw-alias-label-primary);
-  text-decoration: underline;
+.undoButton:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
 }
 
-.file:focus-visible,
-.showFolder:focus-visible {
-  outline: none;
-  box-shadow: inset 0 0 0 2px var(--dsw-alias-border-l3);
+.undoIcon {
+  color: #aaaaaa;
 }
 
-/* Overflow count: the row never silently drops files it did not show. */
-.more {
-  flex: 0 0 auto;
+.fileList {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: #141414;
+}
+
+.fileRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 8px;
+  border-radius: 6px;
+  cursor: default;
+  transition: background 0.15s ease;
+  min-width: 0;
+}
+
+.fileRow:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.fileMain {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.fileName {
+  font-weight: 600;
+  color: #ffffff;
   white-space: nowrap;
-  color: var(--dsw-alias-label-tertiary);
 }
 
-.showFolder {
-  grid-column: 2;
-  grid-row: 2;
-  justify-self: start;
-  margin: 0;
-  padding: 0 2px;
-  border: none;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--dsw-alias-label-tertiary);
+.fileDir {
+  color: #71717a;
+  font-size: 12px;
+  white-space: nowrap;
+  margin-left: 2px;
+}
+
+.fileStats {
+  display: flex;
+  gap: 5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: 6px;
+}
+
+.fileActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.rowButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #d4d4d8;
   font: inherit;
-  line-height: 20px;
+  font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.showFolder:hover {
-  color: var(--dsw-alias-label-secondary);
-  text-decoration: underline;
+.rowButton:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
 }
 
-/* Exact browser-native probes for every candidate shown count. They share the
-   visible styles but never affect layout, accessibility, or scroll width. */
-.measure {
-  position: absolute;
-  width: 0;
-  height: 0;
-  overflow: hidden;
-  visibility: hidden;
-  pointer-events: none;
-  contain: strict;
-}
-
-.probe {
-  position: absolute;
-  inset: 0 auto auto 0;
-  width: max-content;
+.openChevron {
+  color: #a1a1aa;
 }

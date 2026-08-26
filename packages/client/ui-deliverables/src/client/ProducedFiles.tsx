@@ -1,50 +1,20 @@
-// ProducedFiles: the produced-file row a finished turn ends with. The paths
-// come pre-matched by the turn-tail chain from the mutation tools'
-// follow-along locations, never from the closing prose. Clicking one goes
-// through the same openFile the tool rows use — the Host's own opener, on the
-// Host machine.
+/**
+ * ProducedFiles: File Change Summary and Review Card rendered at the end of a turn.
+ * Displays total files changed with +add/-del stats, collapsible list of files with
+ * language badges, Review button opening the interactive Diff Review Modal, and Undo.
+ *
+ * @module @deepseek-ai/dsh-client-ui-deliverables
+ */
 
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { HostDescriptionSource } from '@deepseek-ai/dsh-client-connection/client'
 import type { InjectFace, PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
 import type { TurnTailOwnerProps } from '@deepseek-ai/dsh-client-ui-conversation/client'
-import { basename } from './turn-deliverables.ts'
+import { FileIcon } from './FileIcon.tsx'
+import { DiffReviewModal } from './DiffReviewModal.tsx'
+import { basename, dirname, truncatePath, type ProducedFileItem } from './turn-deliverables.ts'
 import type { NS } from './locales.ts'
 import css from './ProducedFiles.module.css'
-
-/** At most six chips compete for the one-line summary; every other path stays counted. */
-const SHOWN_LIMIT = 6
-
-/**
- * Select the largest prefix whose measured chips and exact remainder fit.
- * @param available - usable width of the one-line file lane.
- * @param gap - computed flex gap between adjacent visible items.
- * @param chipWidths - measured widths for the candidate file chips.
- * @param moreWidthsByShown - exact localized remainder width for each shown count.
- * @returns Number of leading chips to render.
- */
-export function fitProducedFiles(
-  available: number,
-  gap: number,
-  chipWidths: readonly number[],
-  moreWidthsByShown: readonly (number | undefined)[],
-): number {
-  if (available <= 0) return chipWidths.length
-  const prefix = [0]
-  let prefixWidth = 0
-  for (const width of chipWidths) {
-    prefixWidth += width
-    prefix.push(prefixWidth)
-  }
-  let largestFit = 0
-  for (const [shown, width] of prefix.entries()) {
-    const more = moreWidthsByShown[shown]
-    const items = shown + (more === undefined ? 0 : 1)
-    const needed = width + (more ?? 0) + Math.max(0, items - 1) * gap
-    if (needed <= available) largestFit = shown
-  }
-  return largestFit
-}
 
 /** Registration-side Host capability facts. */
 export interface ProducedFilesInjected {
@@ -58,99 +28,202 @@ export interface ProducedFilesInjected {
 
 /** Matched paths plus the opener, locale, and injected Host capability. */
 export type ProducedFilesProps = Pick<TurnTailOwnerProps, 'openFile'> & {
-  matched: readonly string[]
+  matched: readonly ProducedFileItem[]
+  onUndo?: (() => void) | undefined
 } & PropsLocale<typeof NS> & InjectFace<ProducedFilesInjected>
 
-function moreLabel(t: ProducedFilesProps['t'], count: number): string {
-  return count === 1 ? t('produced.moreOne') : t('produced.more', { count: String(count) })
-}
-
-/**
- * Render one turn's produced files as openable chips.
- * @param props - selector-matched paths, the chat view's file opener, and the locale seat.
- * @returns The produced-files row.
- */
 export function ProducedFiles({
-  matched: paths, openFile, isLoopback, useHostDescription, t,
+  matched: files,
+  openFile,
+  onUndo,
+  t,
 }: ProducedFilesProps) {
-  const hostCanOpenPath = useHostDescription(description => description?.canOpenPath === true)
-  const canOpenPath = isLoopback && hostCanOpenPath
-  const limit = Math.min(paths.length, SHOWN_LIMIT)
-  const [shownCount, setShownCount] = useState(limit)
-  const rowRef = useRef<HTMLDivElement>(null)
-  const chipProbes = useRef<Array<HTMLButtonElement | null>>([])
-  const moreProbe = useRef<HTMLSpanElement>(null)
+  const [expanded, setExpanded] = useState(true)
+  const [reviewOpen, setReviewOpen] = useState(false)
+  const [selectedFileForReview, setSelectedFileForReview] = useState<string | undefined>()
+  const [undoStatus, setUndoStatus] = useState<'idle' | 'confirm' | 'done'>('idle')
 
-  useLayoutEffect(() => {
-    const row = rowRef.current
-    const remainderProbe = moreProbe.current
-    /* v8 ignore next -- React attaches both refs before the layout effect runs. */
-    if (row === null || remainderProbe === null) return
-    const measure = (): void => {
-      const styles = getComputedStyle(row)
-      const gap = Number.parseFloat(styles.columnGap || styles.gap) || 0
-      // React attaches every still-mounted callback ref before layout effects run.
-      const activeChipProbes = chipProbes.current.slice(0, limit) as HTMLButtonElement[]
-      const chips = activeChipProbes.map(probe => probe.getBoundingClientRect().width)
-      const more = Array.from({ length: limit + 1 }, (_, candidate) => {
-        if (paths.length === candidate) return undefined
-        remainderProbe.textContent = moreLabel(t, paths.length - candidate)
-        return remainderProbe.getBoundingClientRect().width
-      })
-      setShownCount(fitProducedFiles(row.clientWidth, gap, chips, more))
+  const { totalAdditions, totalDeletions } = useMemo(() => {
+    let add = 0
+    let del = 0
+    for (const f of files) {
+      add += f.additions
+      del += f.deletions
     }
-    measure()
-    if (typeof ResizeObserver === 'undefined') return
-    const observer = new ResizeObserver(measure)
-    observer.observe(row)
-    for (const probe of [...chipProbes.current, moreProbe.current]) {
-      if (probe !== null) observer.observe(probe)
-    }
-    return () => { observer.disconnect() }
-  }, [limit, paths, t])
+    return { totalAdditions: add, totalDeletions: del }
+  }, [files])
 
-  const visibleCount = Math.min(shownCount, limit)
-  const shown = paths.slice(0, visibleCount)
-  const hidden = paths.length - shown.length
+  if (files.length === 0) return null
+
+  const countLabel = files.length === 1
+    ? t('produced.fileChanged')
+    : t('produced.filesChanged', { count: String(files.length) })
+
+  const handleOpenReview = (e: React.MouseEvent, filePath?: string) => {
+    e.stopPropagation()
+    setSelectedFileForReview(filePath ?? files[0]?.path)
+    setReviewOpen(true)
+  }
+
+  const handleUndoClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (undoStatus === 'confirm') {
+      onUndo?.()
+      setUndoStatus('done')
+      setTimeout(() => { setUndoStatus('idle') }, 2000)
+    } else {
+      setUndoStatus('confirm')
+      setTimeout(() => { setUndoStatus('idle') }, 3000)
+    }
+  }
+
   return (
-    <div className={css.root}>
-      <span className={css.label}>{t('produced.label')}</span>
-      <div ref={rowRef} className={css.row} data-produced-files-row>
-        {shown.map(path => (
-          <button
-            key={path}
-            type="button"
-            className={css.file}
-            // The full path is the disambiguator when two turns produce files
-            // that share a basename; the chip itself stays short.
-            title={path}
-            aria-label={t('produced.open', { name: path })}
-            onClick={() => { openFile(path) }}
-          >
-            {basename(path)}
-          </button>
-        ))}
-        {hidden > 0 && <span className={css.more}>{moreLabel(t, hidden)}</span>}
+    <>
+      <div className={css.container}>
+        {/* Header summary bar */}
+        <div
+          className={css.header}
+          onClick={() => { setExpanded(prev => !prev) }}
+          role="button"
+          tabIndex={0}
+          aria-expanded={expanded}
+        >
+          <div className={css.headerLeft}>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`${css.chevron} ${expanded ? css.chevronExpanded : ''}`}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+            <span className={css.headerText}>{countLabel}</span>
+            <div className={css.stats}>
+              {totalAdditions > 0 && (
+                <span className={css.statAdd}>+{totalAdditions}</span>
+              )}
+              {totalDeletions > 0 && (
+                <span className={css.statDel}>-{totalDeletions}</span>
+              )}
+            </div>
+          </div>
+
+          <div className={css.headerRight}>
+            <button
+              type="button"
+              className={css.undoButton}
+              onClick={handleUndoClick}
+              aria-label={t('produced.revert')}
+              title={undoStatus === 'confirm' ? t('produced.revertConfirm') : t('produced.revert')}
+            >
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={css.undoIcon}
+              >
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                <path d="M3 3v5h5" />
+              </svg>
+              <span>{undoStatus === 'confirm' ? t('produced.revertConfirm') : (undoStatus === 'done' ? t('produced.revertSuccess') : (t('produced.revert') || 'Undo'))}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* File list (collapsible) */}
+        {expanded && (
+          <div className={css.fileList}>
+            {files.map((file) => {
+              const fileBasename = basename(file.path)
+              const fileDir = dirname(file.path)
+              const truncatedDir = fileDir ? `${truncatePath(fileDir, 45)}/` : ''
+
+              return (
+                <div
+                  key={file.path}
+                  className={css.fileRow}
+                  title={file.path}
+                >
+                  <div className={css.fileMain}>
+                    <FileIcon filename={fileBasename} size={15} />
+                    <span className={css.fileName}>{fileBasename}</span>
+                    {truncatedDir && (
+                      <span className={css.fileDir}>{truncatedDir}</span>
+                    )}
+                    <div className={css.fileStats}>
+                      {file.additions > 0 && (
+                        <span className={css.statAdd}>+{file.additions}</span>
+                      )}
+                      {file.deletions > 0 && (
+                        <span className={css.statDel}>-{file.deletions}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className={css.fileActions}>
+                    <button
+                      type="button"
+                      className={css.rowButton}
+                      onClick={(e) => { handleOpenReview(e, file.path) }}
+                      aria-label={`${t('produced.review')} ${fileBasename}`}
+                    >
+                      {t('produced.review')}
+                    </button>
+
+                    <button
+                      type="button"
+                      className={css.rowButton}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        openFile(file.path)
+                      }}
+                      aria-label={t('produced.open', { name: fileBasename })}
+                    >
+                      <span>Open</span>
+                      <svg
+                        width="11"
+                        height="11"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={css.openChevron}
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
-      {hidden > 0 && canOpenPath && (
-        <button type="button" className={css.showFolder} onClick={() => { openFile('.') }}>
-          {t('produced.showInFolder')}
-        </button>
+
+      {/* Review Diff Modal */}
+      {reviewOpen && (
+        <DiffReviewModal
+          open={reviewOpen}
+          onClose={() => { setReviewOpen(false) }}
+          files={files}
+          openFile={openFile}
+          totalAdditions={totalAdditions}
+          totalDeletions={totalDeletions}
+          {...(selectedFileForReview !== undefined ? { initialSelectedPath: selectedFileForReview } : {})}
+        />
       )}
-      <div className={css.measure} aria-hidden="true">
-        {paths.slice(0, limit).map((path, index) => (
-          <button
-            key={path}
-            ref={(node) => { chipProbes.current[index] = node }}
-            type="button"
-            tabIndex={-1}
-            className={`${css.file} ${css.probe}`}
-          >
-            {basename(path)}
-          </button>
-        ))}
-        <span ref={moreProbe} className={`${css.more} ${css.probe}`} />
-      </div>
-    </div>
+    </>
   )
 }

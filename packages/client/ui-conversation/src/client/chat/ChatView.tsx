@@ -253,7 +253,7 @@ function groupFlowNodes(
  * ordered business Node crosses the keyed renderer seat.
  */
 export function ChatView({
-  useSession, useSessions, useStore, renderSlot, sessionId, openFile, loadOlder, loadImage, inspectCall, chatScroll, forkAt,
+  useSession, useSessions, useStore, renderSlot, sessionId, openFile, loadOlder, loadImage, inspectCall, chatScroll, forkAt, undoTurn,
   fileMentions, t,
 }: ChatViewSlotProps) {
   const order = useSession(s => s.chat.order)
@@ -446,7 +446,7 @@ export function ChatView({
       const composer = el.querySelector<HTMLElement>('[data-composer-seat]')
       const columnHeight = column?.offsetHeight ?? 0
       const availableHeight = el.clientHeight - (composer?.offsetHeight ?? 0)
-      if (columnHeight > availableHeight) {
+      if (columnHeight > 0 ? columnHeight > availableHeight : el.scrollHeight > el.clientHeight) {
         el.scrollTop = el.scrollHeight
         observedTopRef.current = el.scrollTop
         chatScroll.save(null)
@@ -525,6 +525,7 @@ export function ChatView({
                   openFile={openFile}
                   inspectCall={inspectCall}
                   forkAt={forkAt}
+                  undoTurn={undoTurn}
                   loadImage={loadImage}
                   fileMentions={fileMentions}
                   renderSlot={renderSlot}
@@ -550,6 +551,7 @@ export function ChatView({
                     openFile={openFile}
                     inspectCall={inspectCall}
                     forkAt={forkAt}
+                    undoTurn={undoTurn}
                     loadImage={loadImage}
                     fileMentions={fileMentions}
                     renderSlot={renderSlot}

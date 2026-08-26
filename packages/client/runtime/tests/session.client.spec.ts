@@ -1013,4 +1013,24 @@ describe('reference stability (the memo contract)', () => {
     feed(ev.assistant(12, 1, '完成'))
     expect(session.getSnapshot()).not.toBe(resolved)
   })
+
+  it('rollbackTurn truncates the session history and extracts the undone turn prompt', async () => {
+    const { api, session } = makeSession()
+    api.onHistory = () => histResponse(plainTurn(0, 0, 'Question 1', 'Answer 1'))
+    await session.open()
+    const feed = (event: SessionEvent) => { session.handleMuxEnvelope('r' as never, { type: 'session/event', sessionId: SID, event }) }
+    feed(ev.user(6, 'Question 2'))
+    feed(ev.turnStart(7, 1))
+    feed(ev.assistant(8, 1, 'Answer 2'))
+    feed(ev.turnEnd(9, 1))
+
+    expect(session.getSnapshot().chat.order.length).toBeGreaterThan(3)
+
+    const result = await session.rollbackTurn(1)
+    expect(result.userPrompt).toBe('Question 2')
+
+    // After rollback, Turn 1 is removed from snapshot
+    const after = session.getSnapshot()
+    expect(after.chat.timeline.turns.has(1)).toBe(false)
+  })
 })

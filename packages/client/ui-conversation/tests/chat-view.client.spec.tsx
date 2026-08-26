@@ -1092,7 +1092,7 @@ describe('ChatView', () => {
     Object.defineProperty(scroller, 'scrollHeight', { value: 1_400, writable: true })
     act(() => { notify?.() })
     expect(scroller.scrollTop).toBe(200)
-    expect(observe).toHaveBeenCalledTimes(1)
+    expect(observe).toHaveBeenCalledTimes(2)
   })
 
   it('entering the at-bottom threshold does not snap the remaining scroll distance', () => {

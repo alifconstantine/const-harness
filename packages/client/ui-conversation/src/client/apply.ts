@@ -437,6 +437,18 @@ export function apply(ctx: Context): void {
               // Fork or child-rename failure keeps the source view untouched.
             })
         },
+        undoTurn: (turnNumber) => {
+          void (async () => {
+            const result = await scoped.rollbackTurn(turnNumber)
+            if (result.userPrompt) {
+              const shell = inputHub.shell(sessionId)
+              shell.setDraft(result.userPrompt)
+              if (result.userImages && result.userImages.length > 0) {
+                shell.addImages(result.userImages as never)
+              }
+            }
+          })()
+        },
       }
     },
   }, ChatView)

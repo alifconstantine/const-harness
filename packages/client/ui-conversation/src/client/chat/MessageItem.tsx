@@ -236,9 +236,28 @@ export function PendingSteeringBubble({ content, loadImage, t }: {
 
 /** User and admitted-steering keyed Chat renderer. */
 export const UserMessageNodeView = memo(function UserMessageNodeView({
-  node, loadImage, t,
+  node, loadImage, t, inputActions, undoTurn,
 }: ChatNodeViewProps<'user' | 'steering'>) {
   const data = node.data
+  const handleRestore = () => {
+    const { text, images } = contentParts(data.content)
+    inputActions.setDraft(text)
+    if (images.length > 0) {
+      const ids = images
+        .map(img => (img.attachment as { draftId?: string }).draftId)
+        .filter((id): id is string => typeof id === 'string')
+      if (ids.length > 0) {
+        inputActions.addImages(ids as never)
+      }
+    }
+    const turn = node.location.kind === 'turn' || node.location.kind === 'step'
+      ? node.location.turn
+      : undefined
+    if (turn !== undefined && undoTurn) {
+      undoTurn(turn.turn)
+    }
+  }
+
   return (
     <UserStyleBubble
       content={data.content}
@@ -250,6 +269,7 @@ export const UserMessageNodeView = memo(function UserMessageNodeView({
           time={data.time}
           clock="start"
           className={css.actions}
+          onRestore={handleRestore}
           t={t}
         />
       )}

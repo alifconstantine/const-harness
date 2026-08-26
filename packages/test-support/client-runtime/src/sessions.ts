@@ -123,6 +123,15 @@ export class FixtureSession implements SessionFace {
   }
 
   /**
+   * Stub for rollbackTurn on FakeSession.
+   * @param _turn - turn number to rollback.
+   * @returns empty result.
+   */
+  rollbackTurn(_turn: number): Promise<{ userPrompt?: string; userImages?: string[]; restoredFiles?: string[] }> {
+    return Promise.resolve({ restoredFiles: [] })
+  }
+
+  /**
    * Fail-loud stub; supply `loadOlder` on the fixture's session face to exercise it.
    * @returns never — always throws.
    */

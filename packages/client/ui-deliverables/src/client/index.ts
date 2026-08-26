@@ -57,8 +57,9 @@ export function apply(ctx: ClientContext): void {
     forClosing(owner) {
       // Same claim test the turn-tail chain entry runs: no produced files,
       // no vocabulary — the two surfaces agree by construction.
-      const paths = selectProducedFiles(owner)
-      if (paths === null) return undefined
+      const items = selectProducedFiles(owner)
+      if (items === null) return undefined
+      const paths = items.map(i => i.path)
       return producedFileMentions(paths, owner.openFile, path => t('produced.open', { name: path }))
     },
   }

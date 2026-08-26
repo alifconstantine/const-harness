@@ -361,6 +361,75 @@ export class Session implements SessionFace {
     return { ok: true, value: { matched: result.value !== undefined } }
   }
 
+  /**
+   * Rollback / undo a turn in the session:
+   * 1. Finds the user prompt message that initiated the turn and extracts its text/images.
+   * 2. Truncates the local event log to before that turn and rebuilds the conversation window.
+   * 3. Returns the restored user prompt and user images.
+   * @param turnNumber - the turn to undo.
+   * @returns the extracted user prompt text, image draft ids, and restored files.
+   */
+  rollbackTurn(turnNumber: number): Promise<{ userPrompt?: string; userImages?: string[]; restoredFiles?: string[] }> {
+    let targetSeq: number | undefined
+    let userPrompt: string | undefined
+    const userImages: string[] = []
+
+    // Find the turn boundary and user message for turnNumber
+    for (let i = 0; i < this.events.length; i++) {
+      const ev = this.events[i]
+      if (ev && ev.type === 'turn/start' && (ev.data as { turn?: number }).turn === turnNumber) {
+        // Look backwards for the user/steering message associated with this turn
+        for (let j = i - 1; j >= 0; j--) {
+          const prev = this.events[j]
+          if (prev && (prev.type === 'user/message' || (prev.type as string) === 'steering/message')) {
+            targetSeq = prev.seq
+            const data = prev.data as { content?: unknown }
+            if (typeof data.content === 'string') {
+              userPrompt = data.content
+            } else if (Array.isArray(data.content)) {
+              for (const part of data.content as { type?: string; text?: string; attachment?: { draftId?: string } }[]) {
+                if (part.type === 'text' && typeof part.text === 'string') {
+                  userPrompt = part.text
+                }
+                if (part.type === 'image' && part.attachment?.draftId) {
+                  userImages.push(part.attachment.draftId)
+                }
+              }
+            }
+            break
+          }
+        }
+        if (targetSeq === undefined) {
+          targetSeq = ev.seq
+        }
+        break
+      }
+    }
+
+    if (targetSeq === undefined) {
+      return Promise.resolve({ restoredFiles: [] })
+    }
+
+    // Truncate local events & views
+    const cutIndex = this.events.findIndex(e => e.seq >= targetSeq)
+    if (cutIndex !== -1) {
+      this.events = this.events.slice(0, cutIndex)
+      this.views = this.views.slice(0, cutIndex)
+      const entries: HistoryEntry[] = this.events.map((event, idx) => {
+        const view = this.views[idx]
+        return view !== undefined ? { event, view } : { event }
+      })
+      this.conversation.replaceWindow(entries.map(conversationInput), this.hasMore)
+      this.notifier.markDirty()
+    }
+
+    return Promise.resolve({
+      ...(userPrompt !== undefined ? { userPrompt } : {}),
+      ...(userImages.length > 0 ? { userImages } : {}),
+      restoredFiles: [],
+    })
+  }
+
   /** First open: pull the tail page (idempotent — in-flight/already-open returns the existing promise). */
   open(): Promise<void> {
     if (this.openState === 'open') return Promise.resolve()

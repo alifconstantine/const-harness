@@ -4287,6 +4287,16 @@ importers:
         specifier: workspace:^
         version: link:../../sandbox/sandbox-policy
 
+  packages/fs/fs-snapshot:
+    dependencies:
+      '@deepseek-ai/dsh-home-paths':
+        specifier: workspace:^
+        version: link:../../util/home-paths
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+
   packages/fs/tool-fs:
     dependencies:
       '@deepseek-ai/schemastery':

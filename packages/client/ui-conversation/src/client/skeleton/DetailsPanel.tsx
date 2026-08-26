@@ -2,7 +2,7 @@
 // Supports Chooser state, dynamic tabs (Terminal, Trajectory, Details, Review, Browser, Tasks),
 // and persistent tool call inspection.
 
-import { Fragment, useEffect, useId, useRef, useState } from 'react'
+import { Fragment, useEffect, useId, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
 import {
   CodeBlock,
@@ -179,6 +179,36 @@ export function DetailsPanel({
     }
     actions.setCompanionTab(tabId)
   }
+
+  const reviewFiles = useMemo(() => {
+    const files: { path: string; name: string; additions: number; deletions: number }[] = []
+    const seen = new Set<string>()
+
+    for (const node of sessionSnapshot.nodes) {
+      if (node.kind === 'assistant') {
+        for (const block of node.blocks) {
+          const callView = 'view' in block ? block.view : undefined
+          if (callView && typeof callView === 'object' && 'card' in callView && callView.card === 'diff' && 'diffs' in callView && Array.isArray(callView.diffs)) {
+            for (const diffItem of callView.diffs as readonly { path: string; oldText?: string | null; newText?: string }[]) {
+              if (!seen.has(diffItem.path)) {
+                seen.add(diffItem.path)
+                const name = diffItem.path.split(/[/\\]/).pop() ?? diffItem.path
+                const oldLines = diffItem.oldText ? diffItem.oldText.split('\n').length : 0
+                const newLines = diffItem.newText ? diffItem.newText.split('\n').length : 0
+                files.push({
+                  path: diffItem.path,
+                  name,
+                  additions: Math.max(1, newLines),
+                  deletions: Math.max(0, oldLines),
+                })
+              }
+            }
+          }
+        }
+      }
+    }
+    return files
+  }, [sessionSnapshot])
 
   const handleCloseTab = (tabId: CompanionTabId, e?: React.MouseEvent) => {
     e?.stopPropagation()
@@ -603,6 +633,31 @@ export function DetailsPanel({
                 </li>
               ))}
             </ul>
+          )}
+        </div>
+      ) : activeTab === 'review' ? (
+        <div className={css.body}>
+          <div className={css.sectionLabel} style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
+            Review ({reviewFiles.length} {reviewFiles.length === 1 ? 'file' : 'files'})
+          </div>
+          {reviewFiles.length === 0 ? (
+            <div className={css.empty}>No file modifications recorded in this session yet.</div>
+          ) : (
+            <div className={css.turnSteps}>
+              {reviewFiles.map(file => (
+                <div
+                  key={file.path}
+                  className={css.stepRow}
+                  title={file.path}
+                >
+                  <span className={css.stepName}>📄 {file.name}</span>
+                  <span style={{ fontSize: 11, fontFamily: 'monospace' }}>
+                    <span style={{ color: '#22c55e', marginRight: 4 }}>+{file.additions}</span>
+                    {file.deletions > 0 && <span style={{ color: '#ef4444' }}>-{file.deletions}</span>}
+                  </span>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       ) : null}

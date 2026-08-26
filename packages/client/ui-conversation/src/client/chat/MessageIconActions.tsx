@@ -25,6 +25,8 @@ export interface MessageIconActionsProps {
   clock: 'start' | 'end'
   /** Fork the session at this message; omission hides the branch action. */
   onBranch?: (() => void) | undefined
+  /** Restore prompt text (and images) to composer input. */
+  onRestore?: (() => void) | undefined
   /** The message is not a completed transcript tail, so branch stays visible but unavailable. */
   branchUnavailable?: boolean | undefined
   /** Parent layout class composed onto the actions row. */
@@ -44,7 +46,7 @@ export interface MessageIconActionsProps {
  * @returns The actions row element.
  */
 export function MessageIconActions({
-  text, time, runMs, ttftMs, tokensPerSecond, clock, onBranch, branchUnavailable = false, className,
+  text, time, runMs, ttftMs, tokensPerSecond, clock, onBranch, onRestore, branchUnavailable = false, className,
   extraActions, t,
 }: MessageIconActionsProps) {
   const day = useCalendarDay()
@@ -115,6 +117,30 @@ export function MessageIconActions({
           {copied ? <IconCheckOutline16 /> : <IconCopyOutline16 />}
         </button>
       </Tooltip>
+      {onRestore !== undefined && (
+        <Tooltip label={t('message.restorePrompt')} side="bottom">
+          <button
+            type="button"
+            className={css.action}
+            aria-label={t('message.restorePrompt')}
+            onClick={onRestore}
+          >
+            <svg
+              width={14}
+              height={14}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+            </svg>
+          </button>
+        </Tooltip>
+      )}
       {extraActions}
       {onBranch !== undefined && (
         <Tooltip label={branchUnavailable ? t('message.branchUnavailable') : t('message.branch')} side="bottom">

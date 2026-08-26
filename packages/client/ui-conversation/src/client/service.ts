@@ -56,6 +56,12 @@ export interface IConversation {
    * @returns completion of the page pull.
    */
   loadOlder(): Promise<void>
+  /**
+   * Rollback / undo a turn in the scoped session.
+   * @param turn - the turn number to rollback.
+   * @returns the extracted user prompt, images, and restored files.
+   */
+  rollbackTurn(turn: number): Promise<{ userPrompt?: string; userImages?: string[]; restoredFiles?: string[] }>
 }
 
 /** Create one browser-only draft descriptor; only its id enters input state. */
@@ -288,6 +294,11 @@ export class ConversationController extends Service implements IConversation {
   /** Pull one older history page for the scoped Session. */
   async loadOlder(): Promise<void> {
     await this.scopedSession('loadOlder').loadOlder()
+  }
+
+  /** Rollback / undo a turn in the scoped session. */
+  async rollbackTurn(turn: number): Promise<{ userPrompt?: string; userImages?: string[]; restoredFiles?: string[] }> {
+    return this.scopedSession('rollbackTurn').rollbackTurn(turn)
   }
 
   /** Resolve the caller scope's session face or throw on root contexts. */

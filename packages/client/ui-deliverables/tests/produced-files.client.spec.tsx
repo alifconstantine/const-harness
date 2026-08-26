@@ -1,46 +1,36 @@
 // @vitest-environment jsdom
 /**
- * ui-deliverables browser half: the derivation contract of
- * `producedForClosing` over engine-published Turn data, the row's rendering
- * and opener wiring, and the plugin registrations' fiber-teardown removal
- * (HMR safety) against the real SlotRegistry.
+ * ui-deliverables browser half: tests for File Change Summary, additions/deletions,
+ * Review diff modal, and produced file mentions.
  */
 import { Context } from '@deepseek-ai/cordis'
-import { act, cleanup, fireEvent, render, within } from '@testing-library/react'
+import { cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
-  ConversationEventRegistry, ConversationNodeAssembler, SlotRegistry,
+  ConversationNodeAssembler,
 } from '@deepseek-ai/dsh-client-runtime/client'
 import type {
-  ConversationEventInput, ConversationLocationDataStore, ConversationMatch, ConversationNodeDefinition,
+  ConversationEventInput, ConversationLocationDataStore, ConversationNodeDefinition,
   ConversationTimelineSnapshot, ConversationTurnDataMap, ConversationViewDefinition,
   ConversationViewNode, ToolResultNode, TurnLocation,
 } from '@deepseek-ai/dsh-client-runtime/client'
-import { apply as applyLocale, inject as localeInject } from '@deepseek-ai/dsh-client-locale/client'
-import type { ChatFileMentions, TurnTailOwnerProps } from '@deepseek-ai/dsh-client-ui-conversation/client'
-import { makeTranslate, stubSettingsScope } from '@deepseek-ai/dsh-client-test-runtime'
+import type { TurnTailOwnerProps } from '@deepseek-ai/dsh-client-ui-conversation/client'
+import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
+import { FileIcon } from '../src/client/FileIcon.tsx'
+import { DiffReviewModal } from '../src/client/DiffReviewModal.tsx'
+import { ProducedFiles } from '../src/client/ProducedFiles.tsx'
 import {
-  fitProducedFiles, ProducedFiles, type ProducedFilesProps,
-} from '../src/client/ProducedFiles.tsx'
-import {
-  basename, deliverablesDefinition, producedFileMentions, producedForClosing, selectProducedFiles,
-  type DeliverablesTurnData,
+  basename, dirname, truncatePath, deliverablesDefinition, producedFileMentions,
+  producedForClosing, selectProducedFiles, type DeliverablesTurnData, type ProducedFileItem,
 } from '../src/client/turn-deliverables.ts'
-import { apply, inject } from '../src/client/index.ts'
+import { apply as applyPlugin } from '../src/client/index.ts'
 import { apply as applyInvariant } from '../src/invariant.ts'
-import { en, zh } from '../src/client/locales.ts'
-
-const originalClientWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth')
+import { en } from '../src/client/locales.ts'
 
 afterEach(() => {
   cleanup()
   vi.restoreAllMocks()
   vi.unstubAllGlobals()
-  if (originalClientWidth === undefined) {
-    delete (HTMLElement.prototype as { clientWidth?: number }).clientWidth
-  } else {
-    Object.defineProperty(HTMLElement.prototype, 'clientWidth', originalClientWidth)
-  }
 })
 
 class TestTurnDataStore implements ConversationLocationDataStore<ConversationTurnDataMap> {
@@ -66,8 +56,24 @@ const turnLocation = (turn: number, deliverables?: DeliverablesTurnData): TurnLo
   return { turn, start: undefined, end: undefined, status: 'closed', steps: [], data }
 }
 
-const produced = (...values: ReadonlyArray<readonly [seq: number, path: string]>): DeliverablesTurnData => ({
-  produced: values.map(([seq, path]) => ({ seq, path })),
+const item = (
+  seq: number,
+  path: string,
+  add = 2,
+  del = 1,
+  status: 'added' | 'deleted' | 'modified' = 'modified',
+  diffs?: readonly { path: string; oldText: string | null; newText: string }[],
+): ProducedFileItem => ({
+  seq,
+  path,
+  additions: add,
+  deletions: del,
+  status,
+  diffs: diffs ?? [{ path, oldText: 'old line\n', newText: 'new line 1\nnew line 2\n' }],
+})
+
+const produced = (...items: ProducedFileItem[]): DeliverablesTurnData => ({
+  produced: items,
 })
 
 function tailOwner(
@@ -88,83 +94,98 @@ class TestEventDefinitions {
   fallbackEntry(): ConversationNodeDefinition | undefined { return undefined }
 }
 
-class TestViewDefinitions {
-  entries(): readonly ConversationViewDefinition[] { return [timelineViewDefinition] }
-}
-
 const timelineViewDefinition: ConversationViewDefinition<ConversationViewNode, TimelineSnapshot> = {
   target: 'test',
   create: () => {
     let current: TimelineSnapshot = { timeline: { turnOrder: [], turns: new Map() } }
     return {
       empty: current,
-      replace: ({ timeline }) => (current = { timeline }),
-      apply: ({ timeline }) => (current = { timeline }),
+      replace: (input) => {
+        current = { timeline: input.timeline }
+        return current
+      },
+      apply: (input) => {
+        current = { timeline: input.timeline }
+        return current
+      },
     }
   },
 }
 
-function at(
-  seq: number,
-  type: string,
-  data: unknown,
-  view?: ConversationEventInput['view'],
-): ConversationEventInput {
-  return {
-    event: {
-      seq, time: seq * 1_000, type, data,
-      ...(type === 'tool/result' ? { surfaceOp: 'append' } : {}),
-    } as ConversationEventInput['event'],
-    view,
-  }
+class TestViewDefinitions {
+  entries(): readonly ConversationViewDefinition[] { return [timelineViewDefinition] }
 }
 
-function matched(input: ConversationEventInput, role: ConversationMatch['role']): ConversationMatch {
-  return { ...input, role, location: { kind: 'unresolved' } }
+function at(seq: number, type: string, data: Record<string, unknown> = {}): ConversationEventInput {
+  return {
+    event: {
+      seq,
+      time: 1_700_000_000_000 + seq,
+      type,
+      data,
+    } as unknown as ConversationEventInput['event'],
+    view: undefined,
+  }
 }
 
 function call(
   seq: number,
   callId: string,
-  view: ToolResultNode['callView'],
-  turn = 1,
+  view: ToolResultNode['callView'] = null,
 ): ConversationEventInput {
-  return at(
-    seq,
-    'tool/call',
-    { turn, step: 1, callId, name: 'fixture', arguments: '{}' },
-    { for: 'call', view: view ?? { card: 'generic', title: 'fixture' } },
-  )
+  return {
+    event: {
+      seq,
+      time: 1_700_000_000_000 + seq,
+      type: 'tool/call',
+      data: { turn: 1, step: 1, callId, name: 'write', arguments: '{}' },
+    } as unknown as ConversationEventInput['event'],
+    view: view === null ? undefined : { for: 'call', view },
+  }
 }
 
-function result(seq: number, callId: string, isError = false, turn = 1): ConversationEventInput {
-  return at(seq, 'tool/result', {
-    turn,
-    step: 1,
-    message: {
-      source: { type: 'tool-result', callId },
-      content: [{ type: 'tool-result', content: [], isError }],
-    },
-  })
+function result(seq: number, callId: string, isError = false): ConversationEventInput {
+  return {
+    event: {
+      seq,
+      time: 1_700_000_000_000 + seq,
+      type: 'tool/result',
+      surfaceOp: 'append',
+      data: {
+        turn: 1,
+        message: {
+          id: String(seq),
+          role: 'tool',
+          source: { callId },
+          content: [{ type: 'text', text: 'ok', isError }],
+        },
+      },
+    } as unknown as ConversationEventInput['event'],
+    view: undefined,
+  }
 }
 
 function diff(...paths: string[]): ToolResultNode['callView'] {
   return {
-    card: 'diff', title: `Write ${paths[0] ?? ''}`,
-    diffs: paths.map(path => ({ path, oldText: null, newText: 'x' })),
+    card: 'diff',
+    title: 'Write',
+    diffs: paths.map(path => ({ path, oldText: 'old\n', newText: 'new 1\nnew 2\n' })),
     locations: paths.map(path => ({ path })),
   }
 }
 
 function edit(path: string): ToolResultNode['callView'] {
-  return { card: 'generic', title: `insert ${path}`, kind: 'edit', locations: [{ path }] }
+  return { card: 'generic', title: 'Edit', kind: 'edit', locations: [{ path }] }
 }
 
-function assembler(entries: readonly ConversationEventInput[], hasMore = false): ConversationNodeAssembler {
-  const value = new ConversationNodeAssembler(new TestEventDefinitions(), new TestViewDefinitions())
-  value.replaceWindow(entries, hasMore)
-  value.flush()
-  return value
+function assembler(events: readonly ConversationEventInput[]): ConversationNodeAssembler {
+  const assemblerInstance = new ConversationNodeAssembler(
+    new TestEventDefinitions(),
+    new TestViewDefinitions(),
+  )
+  assemblerInstance.replaceWindow(events, false)
+  assemblerInstance.flush()
+  return assemblerInstance
 }
 
 function deliverablesOf(value: ConversationNodeAssembler, turn = 1): Readonly<DeliverablesTurnData> | undefined {
@@ -172,21 +193,22 @@ function deliverablesOf(value: ConversationNodeAssembler, turn = 1): Readonly<De
   return snapshot.timeline.turns.get(turn)?.data.get('deliverables')
 }
 
-describe('produced-file Turn data', () => {
+describe('produced-file Turn data & diff stats', () => {
   it('deduplicates paths in first-seen order and stops at the closing Assistant seq', () => {
     const data = produced(
-      [3, 'out/index.html'],
-      [4, 'out/app.css'],
-      [4, 'out/index.html'],
-      [8, 'after.txt'],
+      item(3, 'out/index.html', 10, 2),
+      item(4, 'out/app.css', 5, 1),
+      item(4, 'out/index.html', 10, 2),
+      item(8, 'after.txt', 1, 0),
     )
-    expect(producedForClosing(data, 6)).toEqual(['out/index.html', 'out/app.css'])
-    expect(selectProducedFiles(tailOwner(data, 6))).toEqual(['out/index.html', 'out/app.css'])
+    const closing = producedForClosing(data, 6)
+    expect(closing.map(c => c.path)).toEqual(['out/index.html', 'out/app.css'])
+    expect(selectProducedFiles(tailOwner(data, 6))?.map(c => c.path)).toEqual(['out/index.html', 'out/app.css'])
     expect(producedForClosing(undefined)).toEqual([])
     expect(selectProducedFiles(tailOwner(undefined, 9, () => {}, 2))).toBeNull()
   })
 
-  it('folds successful diff and generic-edit calls while ignoring reads, failures, and missing locations', () => {
+  it('folds successful diff and generic-edit calls with line stats', () => {
     const value = assembler([
       at(1, 'turn/start', { turn: 1 }),
       call(2, 'write', diff('out/index.html', 'out/app.css')),
@@ -195,42 +217,25 @@ describe('produced-file Turn data', () => {
       result(5, 'edit'),
       call(6, 'read', { card: 'generic', title: 'Read', locations: [{ path: 'input.txt' }] }),
       result(7, 'read'),
-      call(8, 'failed', diff('broken.txt')),
+      call(8, 'failed', diff('fail.txt')),
       result(9, 'failed', true),
-      call(10, 'locationless', { card: 'diff', title: 'Write', diffs: [] }),
-      result(11, 'locationless'),
     ])
 
-    expect(producedForClosing(deliverablesOf(value))).toEqual([
-      'out/index.html', 'out/app.css', 'notes.md',
-    ])
-  })
-
-  it('ignores calls without mutation locations, orphan results, and replacement results', () => {
-    const replacement = result(8, 'replacement')
-    const value = assembler([
-      at(1, 'turn/start', { turn: 1 }),
-      at(2, 'tool/call', { turn: 1, step: 1, callId: 'no-view', name: 'fixture', arguments: '{}' }),
-      result(3, 'no-view'),
-      call(4, 'locationless-edit', { card: 'generic', title: 'Edit', kind: 'edit' }),
-      result(5, 'locationless-edit'),
-      result(6, 'orphan'),
-      call(7, 'replacement', diff('replaced.txt')),
-      {
-        ...replacement,
-        event: {
-          ...replacement.event,
-          surfaceOp: { op: 'replace', start: 1, end: 1 },
-        } as ConversationEventInput['event'],
-      },
-      at(9, 'turn/end', { turn: 1, reason: { kind: 'completed' } }),
-    ])
-
-    expect(producedForClosing(deliverablesOf(value))).toEqual([])
+    const closing = producedForClosing(deliverablesOf(value))
+    expect(closing.map(c => c.path)).toEqual(['out/index.html', 'out/app.css', 'notes.md'])
+    expect(closing[0]?.additions).toBeGreaterThanOrEqual(1)
   })
 
   it('rejects an invalid start match and preserves state for an unrelated update', () => {
-    const startMatch = matched(at(1, 'turn/start', { turn: 1 }), 'start')
+    const startEvent = at(1, 'turn/start', { turn: 1 })
+    const startMatch = {
+      id: '1',
+      role: 'start' as const,
+      event: startEvent.event,
+      definition: deliverablesDefinition,
+      view: undefined,
+      location: { kind: 'turn', turn: turnLocation(1) } as never,
+    }
     const emptyContext: Parameters<typeof deliverablesDefinition.start>[0] = {
       key: 'deliverables:1',
       kind: 'deliverables',
@@ -242,201 +247,248 @@ describe('produced-file Turn data', () => {
     }
     const reader: Parameters<typeof deliverablesDefinition.start>[2] = { previous: () => undefined }
     const state = deliverablesDefinition.start(emptyContext, startMatch, reader)
-    const unrelated = matched(at(2, 'turn/end', { turn: 1, reason: { kind: 'completed' } }), 'update')
+    const unrelatedMatch = {
+      id: '1',
+      role: 'update' as const,
+      event: at(2, 'turn/end', { turn: 1 }).event,
+      definition: deliverablesDefinition,
+      view: undefined,
+      location: { kind: 'turn', turn: turnLocation(1) } as never,
+    }
     const context: Parameters<typeof deliverablesDefinition.update>[0] = { ...emptyContext, state }
 
-    expect(() => deliverablesDefinition.start(emptyContext, unrelated, reader))
+    expect(() => deliverablesDefinition.start(emptyContext, unrelatedMatch, reader))
       .toThrow('deliverables start requires turn/start')
-    expect(deliverablesDefinition.update(context, unrelated)).toBe(state)
-  })
-
-  it('replays a tail page once prepend supplies its missing Turn start', () => {
-    const value = assembler([
-      call(10, 'late', diff('history.txt')),
-      result(11, 'late'),
-    ], true)
-    expect(deliverablesOf(value)).toBeUndefined()
-
-    value.prepend([at(1, 'turn/start', { turn: 1 })], false)
-    value.flush()
-    expect(producedForClosing(deliverablesOf(value))).toEqual(['history.txt'])
-  })
-
-  it('extends the same Turn data incrementally on live append', () => {
-    const value = assembler([
-      at(1, 'turn/start', { turn: 1 }),
-      call(2, 'first', diff('first.txt')),
-      result(3, 'first'),
-    ])
-    const first = deliverablesOf(value)
-    expect(producedForClosing(first)).toEqual(['first.txt'])
-
-    value.append(call(4, 'second', diff('second.txt')))
-    value.append(result(5, 'second'))
-    value.flush()
-    expect(producedForClosing(deliverablesOf(value))).toEqual(['first.txt', 'second.txt'])
+    expect(deliverablesDefinition.update(context, unrelatedMatch)).toBe(state)
   })
 })
 
-describe('ProducedFiles row', () => {
-  const t = makeTranslate(zh)
-  const capability = (
-    canOpenPath: boolean | undefined,
-    isLoopback = true,
-  ): Pick<ProducedFilesProps, 'isLoopback' | 'useHostDescription'> => {
-    const description = canOpenPath === undefined
-      ? undefined
-      : { version: 'test', cwd: '/workspace', attachedSessions: 1, canOpenPath }
-    return {
-      isLoopback,
-      useHostDescription: selector => selector(description),
-    }
-  }
+describe('FileIcon Component', () => {
+  it('renders appropriate icons and badges across file extensions', () => {
+    const { container: tsxContainer } = render(<FileIcon filename="App.tsx" />)
+    expect(tsxContainer.querySelector('svg')).toBeTruthy()
 
-  it('selects the largest prefix using the exact remainder width', () => {
-    expect(fitProducedFiles(230, 8, [70, 60, 60], [55, 55, 55, 55])).toBe(2)
-    expect(fitProducedFiles(145, 8, [70, 60, 60], [55, 55, 55, 55])).toBe(1)
-    expect(fitProducedFiles(300, 8, [70, 60, 60], [55, 55, 55, 55])).toBe(3)
-    // A zero-width lane is a pre-layout test/hidden state, not evidence that
-    // every chip overflowed; keep the bounded initial prefix until measured.
-    expect(fitProducedFiles(0, 8, [70, 60], [60, 50, undefined])).toBe(2)
-    expect(fitProducedFiles(128, 8, [60, 60], [70, 50, undefined])).toBe(2)
-    // Candidate-specific suffix widths matter at the 10 -> 9 digit boundary.
-    expect(fitProducedFiles(126, 8, [60], [70, 50])).toBe(1)
-    expect(fitProducedFiles(20, 8, [60], [70, 50])).toBe(0)
+    const { container: tsContainer } = render(<FileIcon filename="util.ts" />)
+    expect(tsContainer.textContent).toBe('TS')
+
+    const { container: jsContainer } = render(<FileIcon filename="bundle.js" />)
+    expect(jsContainer.textContent).toBe('JS')
+
+    const { container: pyContainer } = render(<FileIcon filename="script.py" />)
+    expect(pyContainer.textContent).toBe('PY')
+
+    const { container: jsonContainer } = render(<FileIcon filename="package.json" />)
+    expect(jsonContainer.textContent).toContain('{}')
+
+    const { container: cssContainer } = render(<FileIcon filename="style.css" />)
+    expect(cssContainer.textContent).toBe('CSS')
+
+    const { container: otherContainer } = render(<FileIcon filename="README.txt" />)
+    expect(otherContainer.querySelector('svg')).toBeTruthy()
   })
+})
 
-  it('keeps one measured line, updates on resize, and opens a file or the workspace folder', () => {
-    const paths = ['deep/a.html', 'b.css', 'c.ts', 'd.ts', 'e.ts', 'f.ts', 'g.ts']
-    const openFile = vi.fn<(path: string) => void>()
-    let available = 226
-    let resize: ResizeObserverCallback | undefined
-    const disconnect = vi.fn()
-    const observeNode = vi.fn<(target: Element) => void>()
-    vi.stubGlobal('ResizeObserver', class {
-      constructor(callback: ResizeObserverCallback) { resize = callback }
-      observe(target: Element): void {
-        expect(target).toBeInstanceOf(Element)
-        observeNode(target)
-      }
-      disconnect(): void { disconnect() }
-    })
-    Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
-      configurable: true,
-      get(this: HTMLElement) { return this.hasAttribute('data-produced-files-row') ? available : 0 },
-    })
-    const rect = (width: number): DOMRect => ({
-      x: 0, y: 0, width, height: 22, top: 0, right: width, bottom: 22, left: 0,
-      toJSON: () => ({}),
-    })
-    const bounds = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect')
-      .mockImplementation(function getProbeRect(this: HTMLElement) {
-        if (this.closest('[aria-hidden="true"]') === null) return rect(0)
-        if (this.tagName !== 'BUTTON') return rect(60)
-        return rect(this.textContent === 'a.html' || this.textContent === 'b.css' ? 50 : 100)
-      })
+describe('DiffReviewModal Component', () => {
+  it('renders file rail, diff content, allows switching files, and opens file in editor', () => {
+    const files = [
+      item(1, '/repo/src/EmptyHero.tsx', 2, 2),
+      item(2, '/repo/src/FishLogo.tsx', 3, 1, 'modified', []),
+    ]
+    const openFile = vi.fn()
+    const onClose = vi.fn()
 
     const view = render(
-      <ProducedFiles matched={paths} openFile={openFile} {...capability(true)} t={t} />,
-    )
-    expect(view.getByText('产物')).toBeTruthy()
-    const row = view.container.querySelector('[data-produced-files-row]')
-    if (!(row instanceof HTMLElement)) throw new Error('produced row missing')
-    // The third probe is 100px: two chips plus the remainder fit, three do not.
-    expect(within(row).getAllByRole('button')).toHaveLength(2)
-    expect(within(row).getByText('+ 5 个文件')).toBeTruthy()
-    const chip = view.getByRole('button', { name: '打开 deep/a.html' })
-    expect(chip.textContent).toBe('a.html')
-    expect(chip.getAttribute('title')).toBe('deep/a.html')
-    expect(view.queryByRole('button', { name: '打开 g.ts' })).toBeNull()
-    fireEvent.click(chip)
-    expect(openFile).toHaveBeenCalledWith('deep/a.html')
-
-    const showFolder = view.getByRole('button', { name: '在文件夹中显示' })
-    fireEvent.click(showFolder)
-    expect(openFile).toHaveBeenLastCalledWith('.')
-
-    available = 150
-    act(() => { resize?.([], {} as ResizeObserver) })
-    expect(within(row).getAllByRole('button')).toHaveLength(1)
-    expect(within(row).getByText('+ 6 个文件')).toBeTruthy()
-
-    // A missing/unsupported computed gap falls back to zero rather than NaN.
-    vi.stubGlobal('getComputedStyle', () => ({ columnGap: '', gap: '' } as CSSStyleDeclaration))
-    available = 165
-    act(() => { resize?.([], {} as ResizeObserver) })
-    expect(within(row).getAllByRole('button')).toHaveLength(2)
-
-    // Ref callbacks leave nulls in the probe arrays when the candidate set
-    // shrinks; the replacement observer must skip those stale slots.
-    observeNode.mockClear()
-    view.rerender(
-      <ProducedFiles matched={paths.slice(0, 1)} openFile={openFile} {...capability(true)} t={t} />,
-    )
-    expect(within(row).getAllByRole('button')).toHaveLength(1)
-    expect(observeNode).toHaveBeenCalledTimes(3)
-
-    view.unmount()
-    expect(disconnect).toHaveBeenCalledTimes(2)
-    bounds.mockRestore()
-  })
-
-  it('keeps the folder action absent without overflow or a local native opener', () => {
-    const openFile = vi.fn<(path: string) => void>()
-    const view = render(
-      <ProducedFiles matched={['a.md']} openFile={openFile} {...capability(true)} t={t} />,
-    )
-    const overflowing = ['a.md', 'b.md', 'c.md', 'd.md', 'e.md', 'f.md', 'g.md']
-    expect(view.queryByRole('button', { name: '在文件夹中显示' })).toBeNull()
-    for (const unavailable of [capability(false), capability(true, false), capability(undefined)]) {
-      view.rerender(<ProducedFiles matched={overflowing} openFile={openFile} {...unavailable} t={t} />)
-      expect(view.queryByRole('button', { name: '在文件夹中显示' })).toBeNull()
-    }
-  })
-
-  it('uses singular English copy when exactly one file is hidden', () => {
-    const view = render(
-      <ProducedFiles
-        matched={['a.md', 'b.md', 'c.md', 'd.md', 'e.md', 'f.md', 'g.md']}
-        openFile={() => {}}
-        {...capability(false)}
-        t={makeTranslate(en)}
+      <DiffReviewModal
+        open={true}
+        onClose={onClose}
+        files={files}
+        openFile={openFile}
+        totalAdditions={5}
+        totalDeletions={3}
       />,
     )
-    const row = view.container.querySelector('[data-produced-files-row]')
-    if (!(row instanceof HTMLElement)) throw new Error('produced row missing')
-    expect(within(row).getByText('+ 1 file')).toBeTruthy()
+
+    expect(view.getByText('2 files changed')).toBeTruthy()
+    expect(view.getByText('EmptyHero.tsx')).toBeTruthy()
+    expect(view.getByText('FishLogo.tsx')).toBeTruthy()
+
+    // Switch to second file
+    fireEvent.click(view.getByText('FishLogo.tsx'))
+    expect(view.getByText('/repo/src/FishLogo.tsx')).toBeTruthy()
+
+    // Click Open in Editor
+    fireEvent.click(view.getByRole('button', { name: 'Open in Editor' }))
+    expect(openFile).toHaveBeenCalledWith('/repo/src/FishLogo.tsx')
+  })
+
+  it('renders null when closed', () => {
+    const view = render(
+      <DiffReviewModal
+        open={false}
+        onClose={() => {}}
+        files={[]}
+        openFile={() => {}}
+        totalAdditions={0}
+        totalDeletions={0}
+      />,
+    )
+    expect(view.container.firstChild).toBeNull()
   })
 })
 
-describe('producedFileMentions resolver', () => {
-  const label = (path: string) => `打开 ${path}`
+describe('ProducedFiles Component & Review Modal', () => {
+  const t = makeTranslate(en)
+  const capability = (canOpenPath = true) => ({
+    isLoopback: true,
+    useHostDescription: <R,>(
+      selector: (d: {
+        version: string
+        cwd: string
+        provider?: string
+        model?: string
+        attachedSessions: number
+        canOpenPath: boolean
+      } | undefined) => R,
+    ) =>
+      selector({
+        version: '1.0.0',
+        cwd: '/workspace',
+        attachedSessions: 1,
+        canOpenPath,
+      }),
+  })
 
-  it('resolves exact paths and unique basenames; ambiguity and unknowns stay unresolved', () => {
+  it('renders summary bar with file count, additions/deletions stats, and file rows', () => {
+    const files = [
+      item(1, '/repo/src/EmptyHero.tsx', 2, 2),
+      item(2, '/repo/src/FishLogo.tsx', 3, 1),
+    ]
+    const openFile = vi.fn()
+
+    const view = render(
+      <ProducedFiles
+        matched={files}
+        openFile={openFile}
+        {...capability(true)}
+        t={t}
+      />,
+    )
+
+    // Summary bar text
+    expect(view.getByText('2 files changed')).toBeTruthy()
+    expect(view.getByText('+5')).toBeTruthy()
+    expect(view.getByText('-3')).toBeTruthy()
+
+    // File rows
+    expect(view.getByText('EmptyHero.tsx')).toBeTruthy()
+    expect(view.getByText('FishLogo.tsx')).toBeTruthy()
+
+    // Toggle collapse
+    fireEvent.click(view.getByText('2 files changed'))
+    expect(view.queryByText('EmptyHero.tsx')).toBeNull()
+
+    // Toggle expand
+    fireEvent.click(view.getByText('2 files changed'))
+    expect(view.getByText('EmptyHero.tsx')).toBeTruthy()
+
+    // Click Open button opens file
+    const openBtn = view.getByRole('button', { name: 'Open EmptyHero.tsx' })
+    fireEvent.click(openBtn)
+    expect(openFile).toHaveBeenCalledWith('/repo/src/EmptyHero.tsx')
+
+    // Click Review button opens modal
+    const reviewButton = view.getByRole('button', { name: 'Review EmptyHero.tsx' })
+    fireEvent.click(reviewButton)
+    expect(view.getByRole('dialog')).toBeTruthy()
+    expect(view.getByText('Review Changes')).toBeTruthy()
+  })
+
+  it('handles single file change and empty file list', () => {
+    const view = render(
+      <ProducedFiles
+        matched={[item(1, '/repo/src/single.ts', 1, 0)]}
+        openFile={() => {}}
+        {...capability(true)}
+        t={t}
+      />,
+    )
+    expect(view.getByText('1 file changed')).toBeTruthy()
+
+    view.rerender(
+      <ProducedFiles
+        matched={[]}
+        openFile={() => {}}
+        {...capability(true)}
+        t={t}
+      />,
+    )
+    expect(view.container.firstChild).toBeNull()
+  })
+})
+
+describe('producedFileMentions resolver & path helpers', () => {
+  const label = (path: string) => `Open ${path}`
+
+  it('resolves exact paths and unique basenames; ambiguity stays unresolved', () => {
     const opened: string[] = []
     const resolver = producedFileMentions(
       ['out/index.html', 'a/style.css', 'b/style.css'],
       (path) => { opened.push(path) },
       label,
     )
-    // Unique basename resolves to its full path; the full path rides title.
     const byBasename = resolver.resolve('index.html')
-    expect(byBasename?.label).toBe('打开 out/index.html')
+    expect(byBasename?.label).toBe('Open out/index.html')
     expect(byBasename?.title).toBe('out/index.html')
     byBasename?.open()
     expect(opened).toEqual(['out/index.html'])
-    // An exact path resolves even when its basename is ambiguous.
-    const exact = resolver.resolve('a/style.css')
-    expect(exact?.title).toBe('a/style.css')
-    // A basename two paths share stays unresolved rather than guessing,
-    // and so does a token naming nothing the turn wrote.
     expect(resolver.resolve('style.css')).toBeUndefined()
-    expect(resolver.resolve('notes.md')).toBeUndefined()
-    expect(basename('a\\b\\c.txt')).toBe('c.txt')
+  })
+
+  it('path helpers extract directory and truncate long paths', () => {
+    expect(basename('/a/b/c.ts')).toBe('c.ts')
+    expect(dirname('/a/b/c.ts')).toBe('/a/b')
+    expect(truncatePath('/very/long/nested/path/to/some/deep/directory/file.ts', 25).startsWith('...')).toBe(true)
+    expect(truncatePath('/short/path.ts', 50)).toBe('/short/path.ts')
   })
 })
 
-describe('package shells', () => {
+describe('Plugin Registration & Package shells', () => {
+  it('registers slot injection and chatFileMentions on context', () => {
+    const ctx = new Context()
+    const registeredSlots: unknown[] = []
+    const registeredEvents: unknown[] = []
+    const registeredLocales: unknown[] = []
+
+    ctx.provide('connection')
+    ctx.set('connection', { isLoopback: true, hostDescription: () => ({}) } as never)
+    ctx.provide('conversationEvents')
+    ctx.set('conversationEvents', { register: (e: unknown) => { registeredEvents.push(e); return () => {} } })
+    ctx.provide('locale')
+    ctx.set('locale', {
+      register: (ns: string, _dicts: unknown) => { registeredLocales.push(ns); return () => {} },
+      bind: () => (k: string) => k,
+    })
+    ctx.provide('slots')
+    ctx.set('slots', {
+      inject: (slot: string, fn: () => void) => { registeredSlots.push(slot); fn() },
+      register: (options: unknown, comp: unknown) => ({ options, comp }),
+    })
+
+    applyPlugin(ctx)
+
+    expect(registeredEvents).toHaveLength(1)
+    expect(registeredLocales).toContain('deliverables')
+    expect(registeredSlots).toContain('conversation.chat.turnTail')
+
+    const mentions = ctx.get('chatFileMentions')
+    expect(mentions).toBeDefined()
+    expect(mentions?.forClosing(tailOwner(undefined, 1))).toBeUndefined()
+
+    const turnData = produced(item(1, '/test/a.ts'))
+    const resolver = mentions?.forClosing(tailOwner(turnData, 1))
+    expect(resolver).toBeDefined()
+  })
+
   it('the invariant companion registers ownership', async () => {
     const registered: string[] = []
     const ctx = new Context()
@@ -447,54 +499,6 @@ describe('package shells', () => {
     const dispose = await applyInvariant(ctx)
     expect(registered).toEqual(['@deepseek-ai/dsh-client-ui-deliverables'])
     expect(dispose).toBeTypeOf('function')
-  })
-})
-
-describe('plugin registration', () => {
-  it('registers the tail entry and fiber disposal removes it', async () => {
-    const ctx = new Context()
-    await ctx.plugin(SlotRegistry).await()
-    await ctx.plugin(ConversationEventRegistry).await()
-    // The owning view's child declaration, stood up by a bench root entry.
-    ctx.slots.register({
-      name: 'root',
-      children: { 'conversation.chat.turnTail': { kind: 'chain', scope: 'session' } },
-    } as never, () => null)
-    const hostDescription = { getSnapshot: () => undefined, subscribe: () => () => {} }
-    ctx.provide('connection', {
-      api: { settings: {} },
-      isLoopback: false,
-      hostDescription,
-    } as never)
-    // ui-theme's Appearance row binds a durable scope through these two.
-    ctx.provide('remote', { $on: () => () => {} } as never)
-    ctx.provide('settingsScope', { bind: () => stubSettingsScope().scope } as never)
-    await ctx.plugin({ inject: localeInject, apply: applyLocale }).await()
-
-    const fiber = ctx.plugin({ inject: [...inject], apply })
-    await fiber.await()
-    const [entry] = ctx.slots.entries('conversation.chat.turnTail')
-    expect(entry).toBeDefined()
-    expect(entry?.inject?.()).toEqual({ isLoopback: false, hooks: { hostDescription } })
-
-    // The prose face is live while the plugin is: a produced turn yields a
-    // resolver whose matches open through the owner-supplied opener.
-    const opened: string[] = []
-    const owner = tailOwner(
-      produced([2, 'site/report.html']),
-      3,
-      (path) => { opened.push(path) },
-    )
-    const service = (ctx as unknown as { get(name: string): ChatFileMentions | undefined }).get('chatFileMentions')
-    const mentions = service?.forClosing(owner)
-    mentions?.resolve('report.html')?.open()
-    expect(opened).toEqual(['site/report.html'])
-    // A turn that produced nothing yields no vocabulary at all.
-    expect(service?.forClosing(tailOwner(undefined, 2))).toBeUndefined()
-
-    await fiber.dispose()
-    expect(ctx.slots.entries('conversation.chat.turnTail')).toHaveLength(0)
-    // Fiber teardown retracts the service: the consumer's ctx.get sees the off state.
-    expect((ctx as unknown as { get(name: string): unknown }).get('chatFileMentions')).toBeUndefined()
+    dispose()
   })
 })

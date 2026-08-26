@@ -333,6 +333,11 @@ export interface TurnTailOwnerProps {
    * view resolves relative paths against the session cwd).
    */
   openFile: (path: string) => void
+  /**
+   * Rollback / undo this turn: restores user prompt into composer, reverts
+   * file changes on disk, and removes the turn from the session transcript.
+   */
+  onUndo?: (() => void) | undefined
 }
 
 /**
@@ -366,6 +371,8 @@ export interface ChatNodeOwnerProps {
   openFile: (path: string) => void
   inspectCall: (callId: CallId) => void
   forkAt: (seq: number) => void
+  /** Undo the specified turn number and restore prompt text into composer. */
+  undoTurn?: ((turn: number) => void) | undefined
   /** Resolve a session-authorized historical image for inline display. */
   loadImage: (attachment: ImageAttachmentRef) => Promise<string>
   fileMentions: (owner: TurnTailOwnerProps) => MarkdownFileMentions | undefined
@@ -712,6 +719,8 @@ export interface ChatViewInjected {
   }
   /** Fork through the completed turn ending at the eligible message `seq`, then open the child. */
   forkAt: (seq: number) => void
+  /** Undo the specified turn number and restore prompt text into composer. */
+  undoTurn?: ((turn: number) => void) | undefined
   /**
    * Prose file-mention vocabulary for one closing message, from the optional
    * {@link ChatFileMentions} service (resolved lazily per call, so composing

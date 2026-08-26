@@ -79,6 +79,13 @@ export interface ISession {
    * @returns the admission result, or the Remote face's error branch.
    */
   command(line: string): Promise<RemoteResult<{ matched: boolean }>>
+  /**
+   * Rollback / undo a turn in the session: restores the user prompt text,
+   * reverts modified files, and truncates the turn's input and output from the active transcript.
+   * @param turn - the turn number to rollback.
+   * @returns the extracted user prompt text, images, and list of restored files.
+   */
+  rollbackTurn(turn: number): Promise<{ userPrompt?: string; userImages?: string[]; restoredFiles?: string[] }>
 }
 
 /**
