@@ -64,6 +64,7 @@ interface BenchOptions {
     maxImagePixels: number
     mediaTypes: readonly ('image/png' | 'image/jpeg' | 'image/webp' | 'image/gif')[]
   }
+  contextPressure?: unknown
   draft?: string
   running?: boolean
   subagent?: Exclude<ConversationSnapshot['subagent'], null>
@@ -156,7 +157,13 @@ function bench(over?: BenchOptions) {
     useProjection: ((key: string, selector?: (v: unknown) => unknown) =>
       (selector ?? (v => v))(key === 'permissions'
         ? over?.permissions
-        : key === 'plan' ? over?.plan : key === 'imageLimits' ? over?.imageLimits : undefined)),
+        : key === 'plan'
+          ? over?.plan
+          : key === 'imageLimits'
+            ? over?.imageLimits
+            : key === 'contextPressure'
+              ? over?.contextPressure
+              : undefined)),
     useInput: bindSnapshotSelector(shell.state),
     inputActions: shell.actions,
     keyboard: shell,
@@ -1320,5 +1327,16 @@ describe('attachment launcher chrome and control seats', () => {
     cleanup()
     const live = bench({ running: true, permissions })
     expect((live.view.getByLabelText(/^访问模式/) as HTMLButtonElement).disabled).toBe(false)
+  })
+
+  it('renders context meter before the model selector in trailing controls', () => {
+    const { view } = bench({
+      contextPressure: { projectedTokens: 45000, contextWindow: 100000 },
+      modelEntry: <i data-testid="model-entry" />,
+    })
+    const model = view.getByTestId('model-entry')
+    const meter = view.getByLabelText(/45%/)
+    expect(meter).toBeTruthy()
+    expect(Boolean(meter.compareDocumentPosition(model) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true)
   })
 })
