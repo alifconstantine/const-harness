@@ -63,6 +63,15 @@ export function SidebarRoot({
   }, [collapsed])
   const wide = !collapsed || !settled
 
+  const currentSessionId = useSessions(state => state.current)
+  const workspaceItems = useWorkspaces(state => state.items)
+  const activeWorkspace = currentSessionId !== undefined && Array.isArray(workspaceItems)
+    ? workspaceItems.find(w => w.sessionIds.includes(currentSessionId))
+    : undefined
+  const newTaskTooltip = activeWorkspace?.title
+    ? `${t('nav.newTask')} (${activeWorkspace.title})`
+    : t('nav.newTask')
+
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   useEffect(() => {
     const handleOpen = () => { setCommandPaletteOpen(true) }
@@ -71,6 +80,9 @@ export function SidebarRoot({
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault()
         setCommandPaletteOpen(v => !v)
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
+        e.preventDefault()
+        startSession()
       }
     }
     window.addEventListener('keydown', handleKeyDown)
@@ -78,7 +90,7 @@ export function SidebarRoot({
       window.removeEventListener('const:open-command-palette', handleOpen)
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [])
+  }, [startSession])
 
   // Freeze the content at its expanded width while it fades out (collapsed
   // && wide): the sliding column then clips it instead of reflowing it. The
@@ -180,11 +192,12 @@ export function SidebarRoot({
       {/* Top action navigation list matching requirement #1 and Image 1 */}
       <nav className={css.topNav} aria-label="Main Navigation">
         {/* New task / New session */}
-        <Tooltip label={t('nav.newTask')} delayMs={500} disabled={wide}>
+        <Tooltip label={newTaskTooltip} delayMs={500} disabled={wide}>
           <button
             type="button"
             className={clsx(css.navItem, css.newSession)}
             aria-label={t('nav.newTask')}
+            title={activeWorkspace?.title ? `${t('nav.newTask')} (${activeWorkspace.title})` : undefined}
             onClick={() => { startSession() }}
           >
             <IconNewChatOutline16 size={wide ? 16 : 18} />

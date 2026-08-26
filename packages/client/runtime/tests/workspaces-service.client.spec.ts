@@ -434,6 +434,7 @@ describe('WorkspaceRuntime', () => {
     api.onList = () => Promise.resolve(ok({ items: [
       { sessionId: sid('current'), updatedAt: 1, running: false, blank: false },
       { sessionId: sid('recent'), updatedAt: 2, running: false, blank: false },
+      { sessionId: sid('outside-session'), updatedAt: 3, running: false, blank: false },
     ] as never[] }))
     await Promise.all([workspaces.refresh(), sessions.refresh()])
     await Promise.resolve()

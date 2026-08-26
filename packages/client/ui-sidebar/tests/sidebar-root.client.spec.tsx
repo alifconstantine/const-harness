@@ -26,7 +26,7 @@ const mockSessions = ((selector: (s: unknown) => unknown) => selector({
     s2: { id: 's2', displayTitle: 'Perbandingan ZCode dan DSH', updatedAt: Date.now() - 50000 },
   },
 })) as never
-const mockWorkspaces = ((selector: (s: unknown) => unknown) => selector({ phase: 'ready', workspaces: [] })) as never
+const mockWorkspaces = ((selector: (s: unknown) => unknown) => selector({ phase: 'ready', items: [] })) as never
 
 function mountShell({ collapsed = false, width = 300 }: { collapsed?: boolean; width?: number } = {}) {
   const startSession = vi.fn()
@@ -167,5 +167,14 @@ describe('SidebarRoot shell', () => {
     expect(dispatchSpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'const:open-workspace-picker' }))
     dispatchSpy.mockRestore()
     expect(screen.queryByPlaceholderText('Search actions, tasks, or files')).toBeNull()
+  })
+
+  it('triggers startSession when Ctrl+N or Cmd+N is pressed', () => {
+    const b = mountShell()
+    fireEvent.keyDown(window, { key: 'n', ctrlKey: true })
+    expect(b.startSession).toHaveBeenCalledOnce()
+
+    fireEvent.keyDown(window, { key: 'N', metaKey: true })
+    expect(b.startSession).toHaveBeenCalledTimes(2)
   })
 })

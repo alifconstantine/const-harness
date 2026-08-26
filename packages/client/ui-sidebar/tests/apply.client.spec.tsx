@@ -46,7 +46,7 @@ describe('ui-sidebar apply', () => {
     injected.startSession('workspace' as never)
     expect(b.workspaces.startSession).toHaveBeenCalledWith('workspace')
     injected.startSession()
-    expect(b.workspaces.startSession).toHaveBeenLastCalledWith(undefined)
+    expect(b.workspaces.startSession).toHaveBeenLastCalledWith()
     injected.toggleSidebar()
     expect(b.layout.toggleSidebar).toHaveBeenCalledOnce()
   })

@@ -85,7 +85,7 @@ describe('ui-workspace apply', () => {
     browser.startSession('ws' as never)
     expect(b.startSession).toHaveBeenCalledWith('ws')
     browser.startSession()
-    expect(b.startSession).toHaveBeenLastCalledWith(undefined)
+    expect(b.startSession).toHaveBeenLastCalledWith()
     browser.open('session' as never)
     expect(b.open).toHaveBeenCalledWith('session')
     const signal = new AbortController().signal
