@@ -1377,23 +1377,51 @@ describe('ChatView', () => {
       running: false,
     })
     const view = render(<h.ChatView {...h.props} />)
-    const disclosure = view.container.querySelector('[data-turn-work-disclosure]')
+    const disclosure = view.container.querySelector('[data-turn-work-disclosure]') as HTMLElement
     expect(disclosure).toBeTruthy()
-    const button = within(disclosure as HTMLElement).getByRole('button')
-    expect(button.textContent).toContain('12秒')
-    expect(button.textContent).toContain('2 contexts')
+    const button = disclosure.querySelector('button') as HTMLButtonElement
+    expect(button.textContent).toBe('用时 12秒')
     expect(button.getAttribute('aria-expanded')).toBe('false')
-
-    expect(view.queryByText('AGENTS.md')).toBeNull()
+    expect(disclosure.dataset.open).toBeUndefined()
 
     fireEvent.click(button)
     expect(button.getAttribute('aria-expanded')).toBe('true')
+    expect(disclosure.dataset.open).toBe('true')
     expect(view.getByText('AGENTS.md')).toBeTruthy()
     expect(view.getByText('skill-catalog')).toBeTruthy()
 
     fireEvent.click(button)
     expect(button.getAttribute('aria-expanded')).toBe('false')
-    expect(view.queryByText('AGENTS.md')).toBeNull()
+    expect(disclosure.dataset.open).toBeUndefined()
+  })
+
+  it('groups both context and tool-call nodes into a single TurnWorkDisclosure for completed turn', () => {
+    const startTime = 1_000
+    const endTime = 15_000
+    const ctx1: ConversationNode = {
+      kind: 'context', seq: 2, time: 2_000, content: [], source: null,
+      provenance: { role: 'inject', label: 'AGENTS.md' },
+      form: null,
+      turn: 1,
+    } as never
+    const tool1 = toolResult(3, 't1')
+    const h = makeHarness({
+      nodes: [user(1, 'commit'), ctx1, tool1, assistant(4, 'Committed!')],
+      turnTimings: new Map([[1, { startTime, endTime }]]),
+      turnEnds: new Map([[1, 4]]),
+      running: false,
+    })
+    const view = render(<h.ChatView {...h.props} />)
+    const disclosure = view.container.querySelector('[data-turn-work-disclosure]') as HTMLElement
+    expect(disclosure).toBeTruthy()
+    expect(disclosure.dataset.open).toBeUndefined()
+
+    const button = disclosure.querySelector('button') as HTMLButtonElement
+    expect(button.textContent).toBe('用时 14秒')
+
+    fireEvent.click(button)
+    expect(disclosure.dataset.open).toBe('true')
+    expect(button.getAttribute('aria-expanded')).toBe('true')
   })
 
   it('renders context nodes directly without disclosure during active running turn', () => {

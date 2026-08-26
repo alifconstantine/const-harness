@@ -34,10 +34,10 @@ export const TurnWorkDisclosure = memo(function TurnWorkDisclosure({
   const durationText = durationMs !== undefined ? formatRunDuration(durationMs, t) : undefined
   const title = durationText !== undefined
     ? t('message.workedFor', { duration: durationText })
-    : 'Worked'
+    : t('message.worked')
 
   return (
-    <div className={css.root} data-turn-work-disclosure="">
+    <div className={css.root} data-turn-work-disclosure="" data-open={open ? 'true' : undefined}>
       <button
         type="button"
         className={css.headerButton}
@@ -50,7 +50,9 @@ export const TurnWorkDisclosure = memo(function TurnWorkDisclosure({
         <span className={css.title}>{title}</span>
         {summary !== undefined && <span className={css.summary}>· {summary}</span>}
       </button>
-      {open && <div className={css.body}>{children}</div>}
+      <div className={open ? css.body : css.bodyHidden}>
+        {children}
+      </div>
     </div>
   )
 })

@@ -13,7 +13,9 @@
 // lifecycle updates replace only their own row without remounting it.
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import type { ChatNodeStore, ConversationTimelineSnapshot } from '@deepseek-ai/dsh-client-runtime/client'
+import type {
+  ChatConversationViewNode, ChatNodeStore, ConversationTimelineSnapshot,
+} from '@deepseek-ai/dsh-client-runtime/client'
 import { IconChevronDownOutline14 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ChatViewSlotProps } from '../contract/slots.ts'
 import { PendingSteeringBubble } from './MessageItem.tsx'
@@ -154,14 +156,32 @@ type FlowItem =
   }
 
 function isWorkNodeKind(kind: string | undefined): boolean {
-  return kind === 'context'
+  return kind === 'context' || kind === 'tool-call'
 }
 
-function formatWorkSummary(contexts: number, tools: number): string | undefined {
-  const parts: string[] = []
-  if (contexts > 0) parts.push(`${contexts} context${contexts > 1 ? 's' : ''}`)
-  if (tools > 0) parts.push(`${tools} tool${tools > 1 ? 's' : ''}`)
-  return parts.length > 0 ? parts.join(' · ') : undefined
+function calculateTurnDuration(
+  turnObj: { start?: { time: number }; end?: { time: number } } | undefined,
+  nodes: readonly (ChatConversationViewNode | undefined)[],
+): number | undefined {
+  if (turnObj?.start !== undefined && turnObj.end !== undefined) {
+    return Math.max(0, turnObj.end.time - turnObj.start.time)
+  }
+  let minTime: number | undefined
+  let maxTime: number | undefined
+  for (const node of nodes) {
+    if (node === undefined) continue
+    const time = 'time' in node.data && typeof node.data.time === 'number'
+      ? node.data.time
+      : undefined
+    if (time !== undefined && time > 0) {
+      if (minTime === undefined || time < minTime) minTime = time
+      if (maxTime === undefined || time > maxTime) maxTime = time
+    }
+  }
+  if (minTime !== undefined && maxTime !== undefined && maxTime >= minTime) {
+    return maxTime - minTime
+  }
+  return undefined
 }
 
 function groupFlowNodes(
@@ -183,8 +203,7 @@ function groupFlowNodes(
 
     if (node !== undefined && isWorkNodeKind(node.kind) && turnCoord !== undefined && isTurnClosed) {
       const workKeys: string[] = [key]
-      let contexts = node.kind === 'context' ? 1 : 0
-      let tools = node.kind === 'tool-call' ? 1 : 0
+      const workNodes: (ChatConversationViewNode | undefined)[] = [node]
       let j = i + 1
       while (j < order.length) {
         const nextKey = order[j]
@@ -195,22 +214,19 @@ function groupFlowNodes(
           : undefined
         if (nextTurnCoord === turnCoord && nextNode !== undefined && isWorkNodeKind(nextNode.kind)) {
           workKeys.push(nextKey)
-          if (nextNode.kind === 'context') contexts += 1
-          if (nextNode.kind === 'tool-call') tools += 1
+          workNodes.push(nextNode)
           j += 1
         } else {
           break
         }
       }
-      const durationMs = turnObj?.start !== undefined && turnObj.end !== undefined
-        ? Math.max(0, turnObj.end.time - turnObj.start.time)
-        : undefined
+      const durationMs = calculateTurnDuration(turnObj, workNodes)
       items.push({
         kind: 'work-group',
         key: `work-group:${turnCoord}:${key}`,
         turn: turnCoord,
         durationMs,
-        summary: formatWorkSummary(contexts, tools),
+        summary: undefined,
         keys: workKeys,
       })
       i = j - 1

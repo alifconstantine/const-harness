@@ -45,10 +45,8 @@ function extractAssistantText(node: ChatNode<'assistant-step'>): string {
   const data = node.data
   const parts: string[] = []
   const blocks = data.finalNode?.blocks ?? data.blocks
-  if (blocks !== undefined) {
-    for (const b of blocks) {
-      if (b.kind === 'text' && typeof b.text === 'string') parts.push(b.text)
-    }
+  for (const b of blocks) {
+    if (b.kind === 'text' && typeof b.text === 'string') parts.push(b.text)
   }
   return cleanPreviewText(parts.join(' '))
 }
@@ -69,7 +67,7 @@ function deriveTurnNavEntries(
       ? node.location.turn.turn
       : entries.length + 1
 
-    const userText = extractUserText(node.data.content as readonly unknown[])
+    const userText = extractUserText(node.data.content)
     const turnObj = timeline.turns.get(turnCoord)
     const isRunning = turnObj?.status === 'open'
 
@@ -159,10 +157,14 @@ export const TurnTimelineNav = memo(function TurnTimelineNav({
     const scroller = scrollerOf(local)
     const target = findAnchorElement(local, anchorKey)
     if (target !== null) {
-      const rect = target.getBoundingClientRect()
-      const scrollerRect = scroller.getBoundingClientRect()
-      const targetScrollTop = scroller.scrollTop + (rect.top - scrollerRect.top) - 20
-      scroller.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'smooth' })
+      if (typeof scroller.scrollTo === 'function') {
+        const rect = target.getBoundingClientRect()
+        const scrollerRect = scroller.getBoundingClientRect()
+        const targetScrollTop = scroller.scrollTop + (rect.top - scrollerRect.top) - 20
+        scroller.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'smooth' })
+      } else if (typeof target.scrollIntoView === 'function') {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
     }
   }, [listRef])
 

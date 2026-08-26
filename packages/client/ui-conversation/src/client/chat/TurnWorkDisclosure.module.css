@@ -70,3 +70,7 @@
   border: 1px solid var(--dsw-alias-border-l3);
   background-color: var(--dsw-alias-bg-subtle);
 }
+
+.bodyHidden {
+  display: none;
+}
