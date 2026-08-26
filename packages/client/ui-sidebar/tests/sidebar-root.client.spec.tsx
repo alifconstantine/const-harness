@@ -30,6 +30,7 @@ const mockWorkspaces = ((selector: (s: unknown) => unknown) => selector({ phase:
 
 function mountShell({ collapsed = false, width = 300 }: { collapsed?: boolean; width?: number } = {}) {
   const startSession = vi.fn()
+  const openSession = vi.fn()
   const toggleSidebar = vi.fn()
   let regionOwner: SidebarSectionOwnerProps | undefined
   let settingsOwner: SidebarSettingsOwnerProps | undefined
@@ -39,7 +40,7 @@ function mountShell({ collapsed = false, width = 300 }: { collapsed?: boolean; w
     <SidebarRoot
       collapsed={current.collapsed} width={current.width}
       useSessions={mockSessions} useWorkspaces={mockWorkspaces}
-      startSession={startSession} toggleSidebar={toggleSidebar} t={t}
+      startSession={startSession} openSession={openSession} toggleSidebar={toggleSidebar} t={t}
       renderSlot={((
         key: string,
         owner: SidebarFooterActionOwnerProps | SidebarSectionOwnerProps | SidebarSettingsOwnerProps,
@@ -60,6 +61,7 @@ function mountShell({ collapsed = false, width = 300 }: { collapsed?: boolean; w
   const view = render(root())
   return {
     startSession,
+    openSession,
     toggleSidebar,
     regionOwner: () => {
       if (regionOwner === undefined) throw new Error('region owner not rendered')
@@ -137,9 +139,9 @@ describe('SidebarRoot shell', () => {
   })
 
   it('opens command palette modal, switches tabs, searches tasks, and executes actions', () => {
-    mountShell()
+    const b = mountShell()
     fireEvent.click(screen.getByRole('button', { name: 'Search' }))
-    expect(screen.getByPlaceholderText('Search actions, tasks, or files')).toBeTruthy()
+    expect(screen.getByPlaceholderText('Search actions, tasks, or files...')).toBeTruthy()
     expect(screen.getByText('Recent tasks')).toBeTruthy()
     expect(screen.getByText('Evaluasi Plan Implementasi')).toBeTruthy()
 
@@ -153,18 +155,24 @@ describe('SidebarRoot shell', () => {
     expect(screen.getByText('Evaluasi Plan Implementasi')).toBeTruthy()
 
     // Search query
-    const input = screen.getByPlaceholderText('Search actions, tasks, or files')
+    const input = screen.getByPlaceholderText('Search actions, tasks, or files...')
     fireEvent.change(input, { target: { value: 'Evaluasi' } })
-    expect(screen.getByText('Evaluasi')).toBeTruthy()
+    expect(screen.getAllByText('Evaluasi').length).toBeGreaterThan(0)
 
-    // Switch to Actions and execute Open workspace action
-    fireEvent.change(input, { target: { value: '' } })
+    // Selecting a task opens it
+    const evalItem = screen.getAllByText('Evaluasi')[0]
+    expect(evalItem).toBeDefined()
+    fireEvent.click(evalItem!)
+    expect(b.openSession).toHaveBeenCalledWith('s1')
+
+    // Reopen modal to test action execution
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }))
     fireEvent.click(screen.getByRole('tab', { name: /actions/i }))
     const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
     fireEvent.click(screen.getByText('Open workspace'))
     expect(dispatchSpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'const:open-workspace-picker' }))
     dispatchSpy.mockRestore()
-    expect(screen.queryByPlaceholderText('Search actions, tasks, or files')).toBeNull()
+    expect(screen.queryByPlaceholderText('Search actions, tasks, or files...')).toBeNull()
   })
 
   it('triggers startSession when Ctrl+N or Cmd+N is pressed', () => {

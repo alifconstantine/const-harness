@@ -10,8 +10,8 @@ async function bench(declare = true) {
   const ctx = new Context()
   await ctx.plugin(SlotRegistry).await()
   const layout = { toggleSidebar: vi.fn() }
-  const workspaces = { startSession: vi.fn() }
-  const sessions = { open: vi.fn(), clear: vi.fn() }
+  const workspaces = { startSession: vi.fn(), openPath: vi.fn() }
+  const sessions = { open: vi.fn(), clear: vi.fn(), search: vi.fn().mockResolvedValue({ ok: true, value: [] }) }
   ctx.provide('layout', layout)
   ctx.provide('sessions', sessions as never)
   ctx.provide('workspaces', workspaces as never)
@@ -41,14 +41,20 @@ describe('ui-sidebar apply', () => {
     // Copy rides the standard locale seat, not the inject face.
     expect(b.slots.entries('sidebar')[0]!.locale).toBe('sidebar')
     const injected = (b.slots.entries('sidebar')[0]!.inject as () => SidebarRootInjected)()
-    expect(Object.keys(injected)).toEqual(['startSession', 'toggleSidebar'])
+    expect(Object.keys(injected)).toEqual(['startSession', 'openSession', 'toggleSidebar', 'openPath', 'searchSessions'])
     // Both arms delegate to the runtime's shared New Session action.
     injected.startSession('workspace' as never)
     expect(b.workspaces.startSession).toHaveBeenCalledWith('workspace')
     injected.startSession()
     expect(b.workspaces.startSession).toHaveBeenLastCalledWith()
+    injected.openSession('s1' as never)
+    expect(b.sessions.open).toHaveBeenCalledWith('s1')
     injected.toggleSidebar()
     expect(b.layout.toggleSidebar).toHaveBeenCalledOnce()
+    await injected.openPath?.('test-path')
+    expect(b.workspaces.openPath).toHaveBeenCalledWith('test-path')
+    await injected.searchSessions?.('query')
+    expect(b.sessions.search).toHaveBeenCalledWith('query', expect.any(Object))
   })
 
   it('fails when no live owner declared the sidebar slot', async () => {

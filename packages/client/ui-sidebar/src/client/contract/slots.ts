@@ -11,7 +11,7 @@ import type { PropsLocale, PropsRenderSlots, PropsRuntime } from '@deepseek-ai/d
 // Type-only: pulls ui-layout's SlotMap merge (the 'sidebar' entry) into every
 // program that sees this contract, so PropsRuntime<'sidebar'> resolves.
 import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
-import type { WorkspaceId } from '@deepseek-ai/dsh-client-runtime/client'
+import type { SessionId, SessionSearchResultItem, WorkspaceId } from '@deepseek-ai/dsh-client-runtime/client'
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface SlotMap {
@@ -64,8 +64,8 @@ export interface SidebarFooterActionOwnerProps {
 
 /**
  * Registrant-private injected share (arrives via the register inject
- * factory). The shell keeps only its own controls: starting a Session from
- * the New Session button and toggling the column.
+ * factory). The shell keeps its own controls: starting/opening a Session from
+ * the New Session button / search and toggling the column.
  */
 export type SidebarRootInjected = {
   /**
@@ -74,8 +74,14 @@ export type SidebarRootInjected = {
    * recent Workspace, or clear into the New Session pure view when none exist.
    */
   startSession: (workspaceId?: WorkspaceId) => void
+  /** Open an existing session. */
+  openSession: (id: SessionId) => void
   /** Toggle the sidebar column through the layout service. */
   toggleSidebar: () => void
+  /** Open a filesystem path with the Host operating system's default application. */
+  openPath?: ((path: string) => Promise<void>) | undefined
+  /** Search session contents via host sessionQuery. */
+  searchSessions?: ((query: string, signal?: AbortSignal) => Promise<SessionSearchResultItem[]>) | undefined
 }
 
 /**

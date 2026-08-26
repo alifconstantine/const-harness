@@ -35,7 +35,15 @@ export function apply(ctx: ClientContext): void {
     // The shell's New Session button rides the runtime's shared action
     // (current Session Workspace, then recent Workspace).
     startSession: (...args) => { ctx.workspaces.startSession(...args) },
+    openSession: (id) => { ctx.sessions.open(id) },
     toggleSidebar: () => { ctx.layout.toggleSidebar() },
+    openPath: path => ctx.workspaces.openPath(path),
+    searchSessions: async (query, signal) => {
+      const sig = signal ?? new AbortController().signal
+      const result = await ctx.sessions.search(query, sig)
+      if (!result.ok) throw new Error(result.error.message)
+      return result.value.items
+    },
   })
   ctx.effect(
     () => ctx.slots.register({

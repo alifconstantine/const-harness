@@ -49,7 +49,10 @@ export function SidebarRoot({
   useSessions,
   useWorkspaces,
   startSession,
+  openSession,
   toggleSidebar,
+  openPath,
+  searchSessions,
   t,
   renderSlot,
 }: SidebarRootComponentProps) {
@@ -71,7 +74,7 @@ export function SidebarRoot({
   useEffect(() => {
     const handleState = (e: Event) => {
       const custom = e as CustomEvent<{ active: boolean }>
-      setAutomationsActive(Boolean(custom.detail?.active))
+      setAutomationsActive(custom.detail.active)
     }
     const handleOpen = () => { setAutomationsActive(true) }
     const handleClose = () => { setAutomationsActive(false) }
@@ -88,7 +91,14 @@ export function SidebarRoot({
 
   useEffect(() => {
     const handleOpen = () => { setCommandPaletteOpen(true) }
+    const handleOpenSession = (e: Event) => {
+      const custom = e as CustomEvent<{ id: string }>
+      if (custom.detail.id) {
+        openSession(custom.detail.id as never)
+      }
+    }
     window.addEventListener('const:open-command-palette', handleOpen)
+    window.addEventListener('const:open-session', handleOpenSession)
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault()
@@ -101,9 +111,10 @@ export function SidebarRoot({
     window.addEventListener('keydown', handleKeyDown)
     return () => {
       window.removeEventListener('const:open-command-palette', handleOpen)
+      window.removeEventListener('const:open-session', handleOpenSession)
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [startSession])
+  }, [openSession, startSession])
 
   // Freeze the content at its expanded width while it fades out (collapsed
   // && wide): the sliding column then clips it instead of reflowing it. The
@@ -293,15 +304,20 @@ export function SidebarRoot({
         </div>
       </div>
 
-      <CommandPaletteModal
-        open={commandPaletteOpen}
-        onClose={() => { setCommandPaletteOpen(false) }}
-        useSessions={useSessions}
-        useWorkspaces={useWorkspaces}
-        startSession={startSession}
-        toggleSidebar={toggleSidebar}
-        t={t}
-      />
+      {commandPaletteOpen && (
+        <CommandPaletteModal
+          open={commandPaletteOpen}
+          onClose={() => { setCommandPaletteOpen(false) }}
+          useSessions={useSessions}
+          useWorkspaces={useWorkspaces}
+          startSession={startSession}
+          openSession={openSession}
+          toggleSidebar={toggleSidebar}
+          openPath={openPath}
+          searchSessions={searchSessions}
+          t={t}
+        />
+      )}
     </div>
   )
 }
