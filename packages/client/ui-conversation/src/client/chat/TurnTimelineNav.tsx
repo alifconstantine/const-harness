@@ -129,7 +129,7 @@ export const TurnTimelineNav = memo(function TurnTimelineNav({
   const entries = useMemo(() => deriveTurnNavEntries(order, nodeStore, timeline), [order, nodeStore, timeline])
   const [hoveredTurn, setHoveredTurn] = useState<number | null>(null)
   const [activeTurn, setActiveTurn] = useState<number | null>(null)
-  const [leftPos, setLeftPos] = useState<number | null>(null)
+  const [navPos, setNavPos] = useState<{ left: number; top: number } | null>(null)
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const rafRef = useRef<number | null>(null)
 
@@ -171,23 +171,26 @@ export const TurnTimelineNav = memo(function TurnTimelineNav({
     }
   }, [listRef])
 
-  // Track left position relative to conversation scroller
+  // Track position relative to conversation scroller
   useEffect(() => {
     const local = listRef.current
     if (local === null) return
     const el = scrollerOf(local)
 
-    const updateLeft = () => {
+    const updatePos = () => {
       const rect = el.getBoundingClientRect()
-      setLeftPos(rect.left + 18)
+      setNavPos({
+        left: rect.left + 18,
+        top: rect.top + rect.height / 2,
+      })
     }
 
-    updateLeft()
-    window.addEventListener('resize', updateLeft)
-    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(updateLeft) : null
+    updatePos()
+    window.addEventListener('resize', updatePos)
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(updatePos) : null
     ro?.observe(el)
     return () => {
-      window.removeEventListener('resize', updateLeft)
+      window.removeEventListener('resize', updatePos)
       ro?.disconnect()
     }
   }, [listRef])
@@ -262,7 +265,7 @@ export const TurnTimelineNav = memo(function TurnTimelineNav({
   return (
     <nav
       className={css.track}
-      style={leftPos !== null ? { left: leftPos } : undefined}
+      style={navPos !== null ? { left: navPos.left, top: navPos.top } : undefined}
       aria-label="Conversation Turns"
     >
       {entries.map((entry) => {

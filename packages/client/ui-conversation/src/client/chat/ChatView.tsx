@@ -296,7 +296,16 @@ export function ChatView({
 
   const toBottom = (el: HTMLElement): void => {
     anchorRef.current = null
-    el.scrollTop = el.scrollHeight
+    const column = el.querySelector<HTMLElement>('[data-chat-flow]')
+    const composer = el.querySelector<HTMLElement>('[data-composer-seat]')
+    const columnHeight = column?.offsetHeight ?? 0
+    const availableHeight = el.clientHeight - (composer?.offsetHeight ?? 0)
+
+    if (columnHeight > 0 && columnHeight <= availableHeight) {
+      el.scrollTop = 0
+    } else {
+      el.scrollTop = el.scrollHeight
+    }
     observedTopRef.current = el.scrollTop
     atBottomRef.current = true
     setAtBottom(true)
@@ -423,9 +432,15 @@ export function ChatView({
     const local = listRef.current
     if (local !== null && atBottomRef.current) {
       const el = scrollerOf(local)
-      el.scrollTop = el.scrollHeight
-      observedTopRef.current = el.scrollTop
-      chatScroll.save(null)
+      const column = el.querySelector<HTMLElement>('[data-chat-flow]')
+      const composer = el.querySelector<HTMLElement>('[data-composer-seat]')
+      const columnHeight = column?.offsetHeight ?? 0
+      const availableHeight = el.clientHeight - (composer?.offsetHeight ?? 0)
+      if (columnHeight > availableHeight) {
+        el.scrollTop = el.scrollHeight
+        observedTopRef.current = el.scrollTop
+        chatScroll.save(null)
+      }
     }
   }
   // Streaming, tool disclosures, and other flow changes resize the column;
