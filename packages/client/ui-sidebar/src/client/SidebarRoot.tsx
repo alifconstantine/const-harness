@@ -19,7 +19,7 @@ import { useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
 import {
   BrandWordmark, FishLogo,
-  IconAutomationsOutline16, IconDesignOutline16, IconMarketplaceOutline16,
+  IconAutomationsOutline16, IconDesignOutline16,
   IconNewChatOutline16, IconPanelLeftOutline16, IconSearchOutline16,
   Tooltip,
 } from '@deepseek-ai/dsh-client-ui-primitives'
@@ -228,21 +228,6 @@ export function SidebarRoot({
           >
             <IconAutomationsOutline16 size={wide ? 16 : 18} />
             {wide && <span className={css.navLabel}>{t('nav.automations')}</span>}
-          </button>
-        </Tooltip>
-
-        {/* Plugin Marketplace */}
-        <Tooltip label={t('nav.plugins')} side={wide ? 'bottom' : 'right'} delayMs={300}>
-          <button
-            type="button"
-            className={css.navItem}
-            aria-label={t('nav.plugins')}
-            onClick={() => {
-              window.dispatchEvent(new CustomEvent('const:open-settings', { detail: { section: 'plugins' } }))
-            }}
-          >
-            <IconMarketplaceOutline16 size={wide ? 16 : 18} />
-            {wide && <span className={css.navLabel}>{t('nav.plugins')}</span>}
           </button>
         </Tooltip>
 

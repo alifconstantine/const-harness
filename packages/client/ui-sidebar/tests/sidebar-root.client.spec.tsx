@@ -98,7 +98,6 @@ describe('SidebarRoot shell', () => {
 
     const nav = screen.getByRole('navigation', { name: 'Main Navigation' })
     expect(within(nav).getByRole('button', { name: 'Automations' })).toBeTruthy()
-    expect(within(nav).getByRole('button', { name: 'Plugin Marketplace' })).toBeTruthy()
     expect(within(nav).getByRole('button', { name: 'Design' })).toBeTruthy()
 
     fireEvent.click(screen.getByRole('button', { name: 'Collapse sidebar' }))

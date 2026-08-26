@@ -103,31 +103,12 @@ exports[`sidebar shell snapshots > renders the collapsed rail after the crossfad
         </span>
       </button>
       <button
-        aria-label="Plugin Marketplace"
-        class="navItem"
-        type="button"
-      >
-        <svg
-          data-content="d149a390"
-          fill="none"
-          height="16"
-          viewBox="0 0 16 16"
-          width="16"
-          xmlns="http://www.w3.org/2000/svg"
-        />
-        <span
-          class="navLabel"
-        >
-          Plugin Marketplace
-        </span>
-      </button>
-      <button
         aria-label="Design"
         class="navItem"
         type="button"
       >
         <svg
-          data-content="99655d86"
+          data-content="d95f4712"
           fill="none"
           height="16"
           viewBox="0 0 16 16"
@@ -276,31 +257,12 @@ exports[`sidebar shell snapshots > renders the expanded column (wordmark, capsul
         </span>
       </button>
       <button
-        aria-label="Plugin Marketplace"
-        class="navItem"
-        type="button"
-      >
-        <svg
-          data-content="d149a390"
-          fill="none"
-          height="16"
-          viewBox="0 0 16 16"
-          width="16"
-          xmlns="http://www.w3.org/2000/svg"
-        />
-        <span
-          class="navLabel"
-        >
-          Plugin Marketplace
-        </span>
-      </button>
-      <button
         aria-label="Design"
         class="navItem"
         type="button"
       >
         <svg
-          data-content="99655d86"
+          data-content="d95f4712"
           fill="none"
           height="16"
           viewBox="0 0 16 16"
@@ -449,31 +411,12 @@ exports[`sidebar shell snapshots > renders the expanded column in the default lo
         </span>
       </button>
       <button
-        aria-label="插件市场"
-        class="navItem"
-        type="button"
-      >
-        <svg
-          data-content="d149a390"
-          fill="none"
-          height="16"
-          viewBox="0 0 16 16"
-          width="16"
-          xmlns="http://www.w3.org/2000/svg"
-        />
-        <span
-          class="navLabel"
-        >
-          插件市场
-        </span>
-      </button>
-      <button
         aria-label="设计"
         class="navItem"
         type="button"
       >
         <svg
-          data-content="99655d86"
+          data-content="d95f4712"
           fill="none"
           height="16"
           viewBox="0 0 16 16"
