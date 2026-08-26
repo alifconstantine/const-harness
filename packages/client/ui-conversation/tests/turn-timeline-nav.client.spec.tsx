@@ -14,8 +14,8 @@ afterEach(() => {
 
 function makeMockStore(nodes: Record<string, ChatNode>): ChatNodeStore {
   return {
-    get: (key: string) => nodes[key] as never,
-    values: () => Object.values(nodes) as never,
+    get: (key: string) => nodes[key],
+    values: () => Object.values(nodes),
   }
 }
 

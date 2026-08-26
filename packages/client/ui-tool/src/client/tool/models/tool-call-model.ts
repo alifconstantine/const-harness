@@ -36,23 +36,28 @@ export const VARIANT_TITLES: Record<ToolRowVariant, string> = {
  */
 const TOOL_VARIANTS: Record<string, ToolRowVariant> = {
   bash: 'bash',
-  // The PowerShell twin is a shell tool: the bash row family (icon, colors)
-  // with its own title from TOOL_TITLES, not the generic `others` row.
   pwsh: 'bash',
+  run_command: 'bash',
+  job_kill: 'bash',
   read: 'read',
+  view_file: 'read',
+  read_file: 'read',
+  read_url_content: 'read',
   web_fetch: 'read',
   web_search: 'search',
   grep: 'search',
+  grep_search: 'search',
+  find_by_name: 'search',
+  list_dir: 'search',
+  job_list: 'search',
   glob: 'search',
   write: 'write',
+  write_to_file: 'write',
   edit: 'edit',
+  replace_file_content: 'edit',
   run_code: 'code',
   cordis_package_inspect: 'read',
   cordis_runtime_inspect: 'read',
-  // The three run-control verbs take one package id and produce a receipt, so
-  // the generic row is the decided intent, not an unclassified default: there is
-  // no program to show (that is `cordis_define`'s card) and no file to open. The
-  // id lands in the summary slot, and the titles below name the act.
   cordis_run: 'others',
   cordis_stop: 'others',
   cordis_undefine: 'others',
@@ -66,6 +71,17 @@ const TOOL_TITLES: Record<string, string> = {
   cordis_stop: 'Stop Cordis Plugin',
   cordis_undefine: 'Remove Cordis Plugin',
   pwsh: 'Pwsh',
+  run_command: 'Command',
+  job_kill: 'Kill task',
+  view_file: 'Read',
+  read_file: 'Read',
+  read_url_content: 'Fetch',
+  grep_search: 'Grep',
+  find_by_name: 'Find',
+  list_dir: 'List',
+  job_list: 'Tasks',
+  write_to_file: 'Write',
+  replace_file_content: 'Edit',
 }
 
 /**
@@ -140,13 +156,13 @@ function pickString(args: Record<string, unknown>, keys: readonly string[]): str
 
 /** Summary key preference per variant (args-derived; result-derived summaries are a ledger item). */
 const SUMMARY_KEYS: Record<ToolRowVariant, readonly string[]> = {
-  bash: ['description', 'command'],
-  read: ['path', 'file_path', 'url'],
-  search: ['query', 'pattern', 'url'],
-  write: ['path', 'file_path'],
-  edit: ['path', 'file_path'],
-  code: ['description'],
-  others: [],
+  bash: ['toolSummary', 'description', 'CommandLine', 'command'],
+  read: ['toolSummary', 'AbsolutePath', 'path', 'file_path', 'Url', 'url'],
+  search: ['toolSummary', 'query', 'Query', 'pattern', 'Pattern', 'SearchDirectory', 'DirectoryPath', 'url'],
+  write: ['toolSummary', 'Description', 'TargetFile', 'path', 'file_path'],
+  edit: ['toolSummary', 'Instruction', 'Description', 'TargetFile', 'path', 'file_path'],
+  code: ['toolSummary', 'description'],
+  others: ['toolSummary', 'description', 'reason'],
 }
 
 /**
@@ -175,7 +191,7 @@ function deriveSummary(variant: ToolRowVariant, argsRaw: string): string {
 }
 
 /** Path keys only — never `url` (web_fetch lands on the read variant). */
-const FILE_PATH_KEYS = ['path', 'file_path'] as const
+const FILE_PATH_KEYS = ['path', 'file_path', 'AbsolutePath', 'TargetFile'] as const
 
 /** File-tool variants whose summary may be an openable workspace path. */
 const FILE_PATH_VARIANTS: ReadonlySet<ToolRowVariant> = new Set(['read', 'write', 'edit'])

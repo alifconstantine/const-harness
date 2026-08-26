@@ -159,7 +159,7 @@ export function SessionHeaderMenu({
         title="Rename task"
         description="Enter a new title for this conversation task."
       >
-        <form onSubmit={handleRenameSubmit} className={css.renameForm}>
+        <form onSubmit={(e) => { void handleRenameSubmit(e) }} className={css.renameForm}>
           <Input
             value={titleInput}
             onChange={(e) => { setTitleInput(e.target.value) }}

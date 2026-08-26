@@ -40,6 +40,10 @@ import { registerConversationNodes } from './conversation-nodes/register.ts'
 import { registerChatNodeRenderers } from './chat/register-node-renderers.ts'
 import { CONVERSATION_SETTINGS_NAMESPACE, type ConversationSettings } from '../submission-settings.ts'
 
+interface SessionLogDownloader {
+  download(sessionId: SessionId): Promise<unknown> | void
+}
+
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface LocaleNamespaceMap {
     /** The conversation skeleton, chat flow, commands, details, and docks copy. */
@@ -272,7 +276,10 @@ export function apply(ctx: Context): void {
         layout.openDetails()
       },
       openPath: (path) => { void workspaces.openPath(path) },
-      downloadLog: (id) => { void ctx.get('sessionLogDownload')?.download(id) },
+      downloadLog: (id) => {
+        const downloader = ctx.get('sessionLogDownload') as SessionLogDownloader | undefined
+        void downloader?.download(id)
+      },
     }),
   }, ConversationSessionHeader)
 

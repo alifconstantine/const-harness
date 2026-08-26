@@ -405,7 +405,7 @@ export function DetailsPanel({
           )}
           items={plusMenuItems}
           onSelect={(tabId) => {
-            handleOpenTab(tabId as CompanionTabId)
+            handleOpenTab(tabId)
             setPlusMenuOpen(false)
           }}
           onClose={() => { setPlusMenuOpen(false) }}

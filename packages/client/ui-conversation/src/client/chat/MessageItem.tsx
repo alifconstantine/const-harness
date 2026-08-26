@@ -260,6 +260,9 @@ export const UserMessageNodeView = memo(function UserMessageNodeView({
 /** Injected-context keyed Chat renderer. */
 export const ContextMessageNodeView = memo(function ContextMessageNodeView({ node, t }: ChatNodeViewProps<'context'>) {
   const data = node.data
+  if (data.provenance.label === 'time-context' || data.provenance.label === '@deepseek-ai/dsh-system-prompt') {
+    return null
+  }
   return (
     <ContextInjectionRow
       content={data.content}

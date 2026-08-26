@@ -152,7 +152,8 @@
   font-size: 0.875em !important;
   background-color: var(--dsw-alias-markdown-inline-code);
   border-radius: 6px;
-  padding: 0 5px;
+  padding: 1px 6px;
+  margin: 0 2px;
 }
 
 .markdown :where(h1, h2, h3, h4, h5, h6) code {
@@ -173,47 +174,58 @@
 
 .tableScroll {
   max-width: 100%;
+  margin: 16px 0;
   overflow-x: auto;
   overscroll-behavior-x: contain;
+  border-radius: 8px;
+  border: 1px solid var(--dsw-alias-border-l3);
+  background: var(--dsw-alias-bg-subtle);
 }
 
 .tableScroll table {
   border-collapse: collapse;
-  width: max-content;
-  max-width: max-content;
+  width: 100%;
+  min-width: 100%;
 }
 
 .tableScroll th {
   text-align: start;
-  padding: 10px 16px;
+  padding: 10px 14px;
+  background: var(--dsw-alias-interactive-bg-hover);
   border-bottom: 1px solid var(--dsw-alias-border-l3);
   border-top: none;
   font: var(--dsw-font-markdown-table-head);
-  max-width: 320px;
-  max-width: min(30vw, 320px);
-  min-width: 100px;
+  font-weight: 600;
+  color: var(--dsw-alias-label-primary);
+  white-space: nowrap;
 }
 
 .tableScroll td {
-  padding: 10px 16px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--dsw-alias-border-l2);
   font: var(--dsw-font-markdown-table);
-  max-width: 320px;
-  max-width: min(30vw, 320px);
+  color: var(--dsw-alias-label-secondary);
+  vertical-align: top;
   min-width: 100px;
+}
+
+.tableScroll tr:last-child td {
+  border-bottom: none;
 }
 
 .tableScroll th:first-child,
 .tableScroll td:first-child {
-  padding-left: 0;
+  padding-left: 14px;
 }
 
+.tableScroll th:last-child,
 .tableScroll td:last-child {
-  padding-right: 0;
+  padding-right: 14px;
 }
 
 .tableScroll table code {
   font-size: 13px;
+  padding: 1px 5px;
 }
 
 .markdown > *:first-child,
