@@ -94,6 +94,16 @@ function payloadCoordinates(event: SessionEvent): Coordinates {
   return { ...turn === undefined ? {} : { turn }, ...step === undefined ? {} : { step } }
 }
 
+function isHumanUserMessage(event: SessionEvent | undefined): boolean {
+  if (!event) return false
+  if (event.type === 'user/message') {
+    const source = (event.data as { source?: { kind?: string } }).source
+    return source?.kind === 'user' || source === undefined
+  }
+  if ((event.type as string) === 'steering/message') return true
+  return false
+}
+
 function sameReferences<T>(left: readonly T[], right: readonly T[]): boolean {
   return left.length === right.length && left.every((value, index) => value === right[index])
 }
@@ -237,6 +247,19 @@ export class ConversationLocationIndex {
       if (event.type === 'turn/start') {
         currentTurn = event.data.turn
         currentStep = undefined
+        // Associate the initiating human user message right before turn/start with this turn
+        const entryIdx = entries.findIndex(e => e.event.seq === event.seq)
+        for (let i = entryIdx - 1; i >= 0; i--) {
+          const prevEv = entries[i]?.event
+          if (prevEv && isHumanUserMessage(prevEv)) {
+            const prevCoords = coordinates.get(prevEv.seq)
+            if (prevCoords && prevCoords.turn === undefined) {
+              coordinates.set(prevEv.seq, { ...prevCoords, turn: currentTurn })
+              turnDraft(currentTurn, prevEv.seq)
+            }
+            break
+          }
+        }
       }
       if (event.type === 'step/start') {
         currentTurn = event.data.turn
@@ -352,7 +375,10 @@ export class ConversationLocationIndex {
    * @param event - contiguous tail boundary event.
    * @returns seqs whose immutable Location reference changed.
    */
-  appendBoundary(event: SessionEvent): ReadonlySet<number> {
+  appendBoundary(
+    event: SessionEvent,
+    inputs?: ReadonlyMap<number, ConversationEventInput>,
+  ): ReadonlySet<number> {
     if (event.type !== 'turn/start' && event.type !== 'turn/end'
       && event.type !== 'step/start' && event.type !== 'step/end') {
       throw new Error(`conversation Location boundary expected, received ${event.type}`)
@@ -373,6 +399,25 @@ export class ConversationLocationIndex {
     }
     const turnNumber = explicit.turn ?? this.currentTurn
     if (turnNumber === undefined) throw new Error(`conversation boundary ${event.type} has no turn`)
+
+    if (event.type === 'turn/start') {
+      // Look back for preceding unassigned human user/steering message
+      for (let seq = event.seq - 1; seq >= 0; seq--) {
+        const prevInput = inputs?.get(seq)
+        if (prevInput?.event && !isHumanUserMessage(prevInput.event)) {
+          continue
+        }
+        const coords = this.coordinates.get(seq)
+        if (coords) {
+          if (coords.turn === undefined) {
+            this.coordinates.set(seq, { ...coords, turn: turnNumber })
+            this.indexTurnSeq(turnNumber, seq)
+            this.locations.set(seq, this.resolve(seq))
+          }
+          break
+        }
+      }
+    }
     const stepNumber = event.type === 'turn/start' || event.type === 'turn/end'
       ? undefined
       : explicit.step ?? (turnNumber === this.currentTurn ? this.currentStep : undefined)

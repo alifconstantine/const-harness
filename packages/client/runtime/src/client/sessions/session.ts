@@ -362,26 +362,34 @@ export class Session implements SessionFace {
   }
 
   /**
-   * Rollback / undo a turn in the session:
-   * 1. Finds the user prompt message that initiated the turn and extracts its text/images.
-   * 2. Truncates the local event log to before that turn and rebuilds the conversation window.
-   * 3. Returns the restored user prompt and user images.
-   * @param turnNumber - the turn to undo.
+   * Rolls back a turn: restores files on disk via host snapshot service, truncates events,
+   * and extracts the undone user prompt and images.
+   * @param turnNumber - 1-based turn number to rollback.
    * @returns the extracted user prompt text, image draft ids, and restored files.
    */
-  rollbackTurn(turnNumber: number): Promise<{ userPrompt?: string; userImages?: string[]; restoredFiles?: string[] }> {
+  async rollbackTurn(turnNumber: number): Promise<{ userPrompt?: string; userImages?: string[]; restoredFiles?: string[] }> {
     let targetSeq: number | undefined
     let userPrompt: string | undefined
     const userImages: string[] = []
 
-    // Find the turn boundary and user message for turnNumber
+    function isHumanUserMessage(event: SessionEvent | undefined): boolean {
+      if (!event) return false
+      if (event.type === 'user/message') {
+        const source = (event.data as { source?: { kind?: string } }).source
+        return source?.kind === 'user' || source === undefined
+      }
+      if ((event.type as string) === 'steering/message') return true
+      return false
+    }
+
+    // Find the turn boundary and human user message for turnNumber in local event buffer
     for (let i = 0; i < this.events.length; i++) {
       const ev = this.events[i]
       if (ev && ev.type === 'turn/start' && (ev.data as { turn?: number }).turn === turnNumber) {
-        // Look backwards for the user/steering message associated with this turn
+        // Look backwards for the initiating human user/steering message associated with this turn
         for (let j = i - 1; j >= 0; j--) {
           const prev = this.events[j]
-          if (prev && (prev.type === 'user/message' || (prev.type as string) === 'steering/message')) {
+          if (prev && isHumanUserMessage(prev)) {
             targetSeq = prev.seq
             const data = prev.data as { content?: unknown }
             if (typeof data.content === 'string') {
@@ -406,28 +414,51 @@ export class Session implements SessionFace {
       }
     }
 
-    if (targetSeq === undefined) {
-      return Promise.resolve({ restoredFiles: [] })
+    // Call host RPC to rollback snapshot files on disk
+    let restoredFiles: string[] = []
+    try {
+      const rpcRes = await this.api.sessions.rollbackTurn({
+        sessionId: this.sessionId,
+        turn: turnNumber,
+      })
+      if (rpcRes.result.ok) {
+        const val = rpcRes.result.value
+        restoredFiles = val.restoredFiles
+        if (val.userPrompt) {
+          userPrompt = val.userPrompt
+        }
+        if (val.userImages && val.userImages.length > 0) {
+          userImages.length = 0
+          userImages.push(...val.userImages)
+        }
+        if (val.targetSeq !== undefined) {
+          targetSeq = val.targetSeq
+        }
+      }
+    } catch (rpcErr) {
+      console.error('[session] failed to invoke host session.rollbackTurn:', rpcErr)
     }
 
     // Truncate local events & views
-    const cutIndex = this.events.findIndex(e => e.seq >= targetSeq)
-    if (cutIndex !== -1) {
-      this.events = this.events.slice(0, cutIndex)
-      this.views = this.views.slice(0, cutIndex)
-      const entries: HistoryEntry[] = this.events.map((event, idx) => {
-        const view = this.views[idx]
-        return view !== undefined ? { event, view } : { event }
-      })
-      this.conversation.replaceWindow(entries.map(conversationInput), this.hasMore)
-      this.notifier.markDirty()
+    if (targetSeq !== undefined) {
+      const cutIndex = this.events.findIndex(e => e.seq >= targetSeq)
+      if (cutIndex !== -1) {
+        this.events = this.events.slice(0, cutIndex)
+        this.views = this.views.slice(0, cutIndex)
+        const entries: HistoryEntry[] = this.events.map((event, idx) => {
+          const view = this.views[idx]
+          return view !== undefined ? { event, view } : { event }
+        })
+        this.conversation.replaceWindow(entries.map(conversationInput), this.hasMore)
+        this.notifier.markDirty()
+      }
     }
 
-    return Promise.resolve({
+    return {
       ...(userPrompt !== undefined ? { userPrompt } : {}),
       ...(userImages.length > 0 ? { userImages } : {}),
-      restoredFiles: [],
-    })
+      restoredFiles,
+    }
   }
 
   /** First open: pull the tail page (idempotent — in-flight/already-open returns the existing promise). */

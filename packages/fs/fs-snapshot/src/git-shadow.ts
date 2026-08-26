@@ -9,7 +9,7 @@
 import { createHash, randomUUID } from 'node:crypto'
 import { execFile } from 'node:child_process'
 import { existsSync } from 'node:fs'
-import { mkdir, rm } from 'node:fs/promises'
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { isAbsolute, join, relative, resolve } from 'node:path'
 import { constHomePath } from '@deepseek-ai/dsh-home-paths'
 
@@ -100,7 +100,7 @@ export class ShadowGit {
   }
 
   /**
-   * Ensure the shadow git repository is initialized.
+   * Ensure the shadow git repository is initialized and seeded from primary repo if available.
    */
   async ensureRepo(signal?: AbortSignal): Promise<void> {
     if (!existsSync(join(this.gitDir, 'HEAD'))) {
@@ -116,6 +116,28 @@ export class ShadowGit {
         }
       }
     }
+
+    // Seed alternates from primary .git repository if it exists to share object storage
+    const primaryGitDir = join(this.worktree, '.git')
+    const primaryObjects = join(primaryGitDir, 'objects')
+    if (existsSync(primaryObjects)) {
+      const alternatesFile = join(this.gitDir, 'objects', 'info', 'alternates')
+      if (!existsSync(alternatesFile)) {
+        await mkdir(join(this.gitDir, 'objects', 'info'), { recursive: true })
+        await writeFile(alternatesFile, `${primaryObjects}\n`, 'utf8').catch(() => {})
+      }
+    }
+
+    // Copy primary .git/info/exclude or .gitignore to shadow repo info/exclude
+    const primaryExclude = join(primaryGitDir, 'info', 'exclude')
+    const shadowExclude = join(this.gitDir, 'info', 'exclude')
+    if (existsSync(primaryExclude) && !existsSync(shadowExclude)) {
+      await mkdir(join(this.gitDir, 'info'), { recursive: true })
+      const excludeContent = await readFile(primaryExclude, 'utf8').catch(() => '')
+      if (excludeContent) {
+        await writeFile(shadowExclude, excludeContent, 'utf8').catch(() => {})
+      }
+    }
   }
 
   /**
@@ -127,7 +149,7 @@ export class ShadowGit {
     signal?: AbortSignal,
   ): Promise<{ stdout: string; stderr: string }> {
     return runGit(
-      [`--git-dir=${this.gitDir}`, `--work-tree=${this.worktree}`, ...args],
+      ['-c', 'core.autocrlf=false', '-c', 'core.eol=lf', `--git-dir=${this.gitDir}`, `--work-tree=${this.worktree}`, ...args],
       {
         cwd: this.worktree,
         ...(extraEnv !== undefined ? { env: extraEnv } : {}),
@@ -145,7 +167,7 @@ export class ShadowGit {
     const tempIndex = join(this.gitDir, `index-${randomUUID()}`)
 
     try {
-      // 1. Stage all files into the temporary index file
+      // 1. Stage all files into the temporary index file respecting ignore rules
       await this.exec(
         ['add', '-A', '--', '.'],
         { GIT_INDEX_FILE: tempIndex },
@@ -232,6 +254,7 @@ export class ShadowGit {
   /**
    * Restore files in the worktree from a given snapshot tree ID.
    * If `paths` is omitted or empty, restores all changed files from the tree.
+   * Files that were created after treeId (i.e. did not exist in treeId) are deleted.
    */
   async restore(
     treeId: string,
@@ -249,15 +272,42 @@ export class ShadowGit {
         signal,
       )
 
-      // 2. Checkout target files from the temporary index to the worktree
+      // 2. Get list of files present in treeId
+      const existingInTree = new Set(await this.files(treeId, signal))
+
       if (paths && paths.length > 0) {
-        const pathArgs = paths.map(p => relative(this.worktree, resolve(this.worktree, p)))
-        await this.exec(
-          ['checkout-index', '-f', '--', ...pathArgs],
-          { GIT_INDEX_FILE: tempIndex },
-          signal,
-        )
+        const checkoutList: string[] = []
+        for (const p of paths) {
+          const rel = relative(this.worktree, resolve(this.worktree, p)).replaceAll('\\', '/')
+          const fullPath = resolve(this.worktree, rel)
+          if (existingInTree.has(rel)) {
+            checkoutList.push(rel)
+          } else {
+            // File did not exist in the snapshot tree -> delete from worktree
+            await rm(fullPath, { force: true, recursive: true }).catch(() => {})
+          }
+        }
+
+        if (checkoutList.length > 0) {
+          await this.exec(
+            ['checkout-index', '-f', '--', ...checkoutList],
+            { GIT_INDEX_FILE: tempIndex },
+            signal,
+          )
+        }
       } else {
+        // Full restore: find all current workspace files, delete any not in tree, and checkout all
+        const currentTree = await this.capture(signal).catch(() => undefined)
+        if (currentTree !== undefined) {
+          const currentFiles = await this.files(currentTree, signal)
+          for (const cur of currentFiles) {
+            if (!existingInTree.has(cur)) {
+              const fullPath = resolve(this.worktree, cur)
+              await rm(fullPath, { force: true, recursive: true }).catch(() => {})
+            }
+          }
+        }
+
         await this.exec(
           ['checkout-index', '-a', '-f'],
           { GIT_INDEX_FILE: tempIndex },

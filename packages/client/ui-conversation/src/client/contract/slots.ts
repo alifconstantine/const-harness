@@ -373,6 +373,8 @@ export interface ChatNodeOwnerProps {
   forkAt: (seq: number) => void
   /** Undo the specified turn number and restore prompt text into composer. */
   undoTurn?: ((turn: number) => void) | undefined
+  /** Rollback the turn and resubmit an edited prompt to generate again. */
+  editTurn?: ((turn: number, text: string) => Promise<void> | void) | undefined
   /** Resolve a session-authorized historical image for inline display. */
   loadImage: (attachment: ImageAttachmentRef) => Promise<string>
   fileMentions: (owner: TurnTailOwnerProps) => MarkdownFileMentions | undefined
@@ -721,6 +723,8 @@ export interface ChatViewInjected {
   forkAt: (seq: number) => void
   /** Undo the specified turn number and restore prompt text into composer. */
   undoTurn?: ((turn: number) => void) | undefined
+  /** Rollback the turn and resubmit an edited prompt to generate again. */
+  editTurn?: ((turn: number, text: string) => Promise<void> | void) | undefined
   /**
    * Prose file-mention vocabulary for one closing message, from the optional
    * {@link ChatFileMentions} service (resolved lazily per call, so composing

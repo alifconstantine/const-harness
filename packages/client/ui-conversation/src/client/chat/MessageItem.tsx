@@ -3,12 +3,14 @@
 // assistant answers), pending steering (copy only), context injection,
 // compaction marker, retry disclosure, and unknown-surface JSON rows.
 
-import { memo, useEffect, useMemo, useState } from 'react'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import type {
   ModelRetryNode, TurnErrorNode, UserMessageNode,
 } from '@deepseek-ai/dsh-client-runtime/client'
-import { JsonBlock, MessageText, StateDot } from '@deepseek-ai/dsh-client-ui-primitives'
+import {
+  IconCloseOutline16, IconPlusOutline16, JsonBlock, MessageText, StateDot, Tooltip,
+} from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ChatNodeViewProps, ChatViewSlotProps } from '../contract/slots.ts'
 import { ImageGallery, type ImageLoader } from '@deepseek-ai/dsh-client-ui-attachment'
 import { messageImageLabels } from '../image-labels.ts'
@@ -234,42 +236,186 @@ export function PendingSteeringBubble({ content, loadImage, t }: {
   )
 }
 
+interface InlinePromptEditorProps {
+  initialText: string
+  images: { attachment: UserImage['attachment'] }[]
+  imageLoader: ImageLoader
+  t: ChatViewSlotProps['t']
+  onCancel: () => void
+  onSubmit: (newText: string) => void | Promise<void>
+}
+
+function InlinePromptEditor({
+  initialText,
+  images,
+  imageLoader,
+  t,
+  onCancel,
+  onSubmit,
+}: InlinePromptEditorProps) {
+  const [draft, setDraft] = useState(initialText)
+  const [submitting, setSubmitting] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.focus()
+      const len = textareaRef.current.value.length
+      textareaRef.current.setSelectionRange(len, len)
+      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = `${Math.min(280, Math.max(48, textareaRef.current.scrollHeight))}px`
+    }
+  }, [])
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setDraft(e.target.value)
+    e.target.style.height = 'auto'
+    e.target.style.height = `${Math.min(280, Math.max(48, e.target.scrollHeight))}px`
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      onCancel()
+      return
+    }
+    if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+      e.preventDefault()
+      void handleActionSubmit()
+    }
+  }
+
+  const handleActionSubmit = async () => {
+    if (submitting) return
+    const trimmed = draft.trim()
+    if (trimmed === '' && images.length === 0) return
+    setSubmitting(true)
+    try {
+      await onSubmit(trimmed)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className={css.userRow}>
+      <div className={css.editCard}>
+        {images.length > 0 && (
+          <div style={{ marginBottom: 8 }}>
+            <ImageGallery images={images} load={imageLoader} align="start" labels={messageImageLabels(t)} />
+          </div>
+        )}
+        <textarea
+          ref={textareaRef}
+          className={css.editTextarea}
+          value={draft}
+          placeholder={t('placeholder.default')}
+          disabled={submitting}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          rows={1}
+        />
+        <div className={css.editToolbar}>
+          <div className={css.editToolbarLeft}>
+            <Tooltip label={t('input.attachFiles')} side="top">
+              <button
+                type="button"
+                className={css.editActionBtn}
+                aria-label={t('input.attachFiles')}
+                disabled={submitting}
+              >
+                <IconPlusOutline16 />
+              </button>
+            </Tooltip>
+          </div>
+          <div className={css.editToolbarRight}>
+            <Tooltip label={t('access.confirm.cancel')} side="top">
+              <button
+                type="button"
+                className={css.editActionBtn}
+                aria-label={t('access.confirm.cancel')}
+                disabled={submitting}
+                onClick={onCancel}
+              >
+                <IconCloseOutline16 />
+              </button>
+            </Tooltip>
+            <span className={css.editActionBtn} style={{ cursor: 'default', opacity: 0.6 }} aria-hidden>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <circle cx="10" cy="15" r="3" />
+                <polyline points="10 14 10 15 11.5 15" />
+              </svg>
+            </span>
+            <Tooltip label={t('input.send')} side="top">
+              <button
+                type="button"
+                className={css.editSubmitBtn}
+                aria-label={t('input.send')}
+                disabled={submitting || (draft.trim() === '' && images.length === 0)}
+                onClick={() => { void handleActionSubmit() }}
+              >
+                <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden>
+                  <path d="M8.3125 0.980183C8.66767 1.0531 8.97902 1.20418 9.2627 1.43233C9.48724 1.61297 9.73029 1.85793 9.97949 2.10714L14.707 6.83468L13.293 8.24874L9 3.95577V15.0417H7V3.95577L2.70703 8.24874L1.29297 6.83468L6.02051 2.10714C6.26971 1.85793 6.51277 1.61297 6.7373 1.43233C6.97662 1.23986 7.28445 1.04402 7.6875 0.980183C7.8973 0.947006 8.1031 0.95516 8.3125 0.980183Z" fill="currentColor" />
+                </svg>
+              </button>
+            </Tooltip>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /** User and admitted-steering keyed Chat renderer. */
 export const UserMessageNodeView = memo(function UserMessageNodeView({
-  node, loadImage, t, inputActions, undoTurn,
+  node, loadImage, t, inputActions, undoTurn, editTurn,
 }: ChatNodeViewProps<'user' | 'steering'>) {
+  const [isEditing, setIsEditing] = useState(false)
   const data = node.data
-  const handleRestore = () => {
-    const { text, images } = contentParts(data.content)
-    inputActions.setDraft(text)
-    if (images.length > 0) {
-      const ids = images
-        .map(img => (img.attachment as { draftId?: string }).draftId)
-        .filter((id): id is string => typeof id === 'string')
-      if (ids.length > 0) {
-        inputActions.addImages(ids as never)
-      }
-    }
+  const { text, images } = useMemo(() => contentParts(data.content), [data.content])
+  const imageLoader = loadImage
+
+  const handleEditSubmit = async (newText: string) => {
     const turn = node.location.kind === 'turn' || node.location.kind === 'step'
       ? node.location.turn
       : undefined
-    if (turn !== undefined && undoTurn) {
+    if (turn !== undefined && editTurn) {
+      await editTurn(turn.turn, newText)
+      setIsEditing(false)
+    } else if (turn !== undefined && undoTurn) {
+      inputActions.setDraft(newText)
       undoTurn(turn.turn)
+      setIsEditing(false)
     }
+  }
+
+  if (isEditing) {
+    return (
+      <InlinePromptEditor
+        initialText={text}
+        images={images}
+        imageLoader={imageLoader}
+        t={t}
+        onCancel={() => { setIsEditing(false) }}
+        onSubmit={handleEditSubmit}
+      />
+    )
   }
 
   return (
     <UserStyleBubble
       content={data.content}
-      imageLoader={loadImage}
+      imageLoader={imageLoader}
       t={t}
-      actions={text => (
+      actions={bubbleText => (
         <MessageIconActions
-          text={text}
+          text={bubbleText}
           time={data.time}
           clock="start"
           className={css.actions}
-          onRestore={handleRestore}
+          onEdit={() => { setIsEditing(true) }}
           t={t}
         />
       )}
@@ -280,7 +426,7 @@ export const UserMessageNodeView = memo(function UserMessageNodeView({
 /** Injected-context keyed Chat renderer. */
 export const ContextMessageNodeView = memo(function ContextMessageNodeView({ node, t }: ChatNodeViewProps<'context'>) {
   const data = node.data
-  if (data.provenance.label === 'time-context' || data.provenance.label === '@deepseek-ai/dsh-system-prompt') {
+  if (data.provenance.label === 'time-context' || (data.provenance.label === '@deepseek-ai/dsh-system-prompt' && data.form !== 'snapshot')) {
     return null
   }
   return (

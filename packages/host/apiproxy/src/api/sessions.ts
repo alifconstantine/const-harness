@@ -370,4 +370,19 @@ export interface SessionsApi {
    */
   cancel(request: RpcRequest<{ sessionId: SessionId }>): Promise<RpcResponse<{ accepted: true }>>
 
+  /**
+   * Rolls back / undoes a turn in a session: restores workspace files on disk to the pre-turn snapshot,
+   * truncates the host session event log, and extracts the undone user prompt and attachments.
+   */
+  rollbackTurn(request: RpcRequest<{
+    sessionId: SessionId
+    turn: number
+  }>):
+  Promise<RpcResponse<{
+    success: boolean
+    userPrompt?: string
+    userImages?: string[]
+    restoredFiles: string[]
+    targetSeq?: number
+  }>>
 }

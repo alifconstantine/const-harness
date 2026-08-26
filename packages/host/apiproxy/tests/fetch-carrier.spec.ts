@@ -108,6 +108,9 @@ function fakeApi(overrides: Partial<{ muxFrames: MuxFrame[]; hostFrames: HostFra
       async cancel(request) {
         return { rpcId: request.rpcId, result: { ok: true, value: { accepted: true as const } } }
       },
+      async rollbackTurn(request) {
+        return { rpcId: request.rpcId, result: { ok: true, value: { success: true, restoredFiles: [] } } }
+      },
     },
     subagents: {
       async list(request) {

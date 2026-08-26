@@ -351,3 +351,18 @@ export const sessionCancelRequestSchema = z.object({
 export const sessionCancelValueSchema = z.object({
   accepted: z.literal(true),
 }) satisfies z.ZodType<Wire<ResponseValue<'session.cancel'>>>
+
+/** session.rollbackTurn request payload. */
+export const sessionRollbackTurnRequestSchema = z.object({
+  sessionId: sessionIdSchema,
+  turn: z.number().int().positive(),
+}) satisfies z.ZodType<Wire<RequestPayload<'session.rollbackTurn'>>>
+
+/** session.rollbackTurn response value. */
+export const sessionRollbackTurnValueSchema = z.object({
+  success: z.boolean(),
+  userPrompt: z.string().optional(),
+  userImages: z.array(z.string()).optional(),
+  restoredFiles: z.array(z.string()),
+  targetSeq: z.number().int().nonnegative().optional(),
+}) satisfies z.ZodType<Wire<ResponseValue<'session.rollbackTurn'>>>

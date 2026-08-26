@@ -104,19 +104,17 @@ export function calculateNextRunAt(schedule: AutomationSchedule, fromMs: number 
     return target.toISOString()
   }
 
-  if (schedule.kind === 'custom') {
-    const intervalMinutes = schedule.intervalMinutes ?? (schedule.intervalSeconds ? Math.round(schedule.intervalSeconds / 60) : 60)
-    if (schedule.time && intervalMinutes >= 1440) {
-      const days = Math.round(intervalMinutes / 1440)
-      const target = new Date(fromMs)
-      target.setHours(hour, minute, 0, 0)
-      if (target.getTime() <= fromMs) {
-        target.setDate(target.getDate() + days)
-      }
-      return target.toISOString()
+  const intervalMinutes = schedule.intervalMinutes ?? (schedule.intervalSeconds ? Math.round(schedule.intervalSeconds / 60) : 60)
+  if (schedule.time && intervalMinutes >= 1440) {
+    const days = Math.round(intervalMinutes / 1440)
+    const target = new Date(fromMs)
+    target.setHours(hour, minute, 0, 0)
+    if (target.getTime() <= fromMs) {
+      target.setDate(target.getDate() + days)
     }
-    return new Date(fromMs + intervalMinutes * 60 * 1000).toISOString()
+    return target.toISOString()
   }
+  return new Date(fromMs + intervalMinutes * 60 * 1000).toISOString()
 
   return new Date(fromMs + 24 * 3600 * 1000).toISOString()
 }
@@ -222,9 +220,9 @@ export class AutomationsManager {
       createdAt: now,
       updatedAt: now,
       runCount: 0,
-      ...(data.workspaceId !== undefined ? { workspaceId: data.workspaceId as WorkspaceId } : {}),
+      nextRunAt,
+      ...(data.workspaceId !== undefined ? { workspaceId: data.workspaceId } : {}),
       ...(data.model !== undefined ? { model: data.model } : {}),
-      ...(nextRunAt !== undefined ? { nextRunAt } : {}),
     }
     this.automations.unshift(item)
     await this.persist()
@@ -241,9 +239,10 @@ export class AutomationsManager {
   }
 
   private registerTools(): void {
-    if (!this.ctx.tools) return
+    const tools = this.ctx.get('tools')
+    if (!tools) return
 
-    this.ctx.tools.register(defineTool({
+    tools.register(defineTool({
       name: 'automation_create',
       description: 'Create a new scheduled automation task (cron job). The task will run periodically or at scheduled times in its own dedicated session and will be visible in the Automations dashboard.',
       parameters: {
@@ -297,7 +296,7 @@ export class AutomationsManager {
       },
       execute: async (args) => {
         const schedule: AutomationSchedule = {
-          kind: args.schedule_kind as AutomationSchedule['kind'],
+          kind: args.schedule_kind,
           ...(args.time !== undefined ? { time: args.time } : {}),
           ...(args.day_of_week !== undefined ? { dayOfWeek: args.day_of_week } : {}),
           ...(args.day_of_month !== undefined ? { dayOfMonth: args.day_of_month } : {}),
@@ -307,7 +306,7 @@ export class AutomationsManager {
           title: args.title,
           instructions: args.instructions,
           schedule,
-          ...(args.permission_preset !== undefined ? { permissionPreset: args.permission_preset as AutomationItem['permissionPreset'] } : {}),
+          ...(args.permission_preset !== undefined ? { permissionPreset: args.permission_preset } : {}),
         })
         return {
           success: true,
@@ -318,7 +317,7 @@ export class AutomationsManager {
       },
     }))
 
-    this.ctx.tools.register(defineTool({
+    tools.register(defineTool({
       name: 'automation_list',
       description: 'List all configured scheduled automations and their next scheduled run times.',
       parameters: {},
@@ -349,7 +348,7 @@ export class AutomationsManager {
       },
     }))
 
-    this.ctx.tools.register(defineTool({
+    tools.register(defineTool({
       name: 'automation_delete',
       description: 'Delete a scheduled automation by its ID.',
       parameters: {
@@ -372,7 +371,7 @@ export class AutomationsManager {
       },
     }))
 
-    this.ctx.tools.register(defineTool({
+    tools.register(defineTool({
       name: 'automation_run',
       description: 'Trigger an immediate execution of a scheduled automation by its ID.',
       parameters: {
@@ -447,7 +446,7 @@ export class AutomationsManager {
     try {
       let cwd: string | undefined
       if (item.workspaceId) {
-        const ws = this.ctx.workspaceRegistry?.get(item.workspaceId as WorkspaceId)
+        const ws = this.ctx.workspaceRegistry.get(item.workspaceId as WorkspaceId)
         if (ws) cwd = ws.path
       }
 
@@ -459,8 +458,8 @@ export class AutomationsManager {
 
       if (item.workspaceId) {
         try {
-          const ws = this.ctx.workspaceRegistry?.get(item.workspaceId as WorkspaceId)
-          ws?.attachSession(sessionId)
+          const ws = this.ctx.workspaceRegistry.get(item.workspaceId as WorkspaceId)
+          if (ws) await ws.attachSession(sessionId)
         } catch {
           // Non-fatal
         }
@@ -475,7 +474,7 @@ export class AutomationsManager {
       }
 
       try {
-        const preset = item.permissionPreset ?? 'workspace-write'
+        const preset = item.permissionPreset
         agent.session.append('permission/preset', { preset })
       } catch {
         // Non-fatal
@@ -552,7 +551,7 @@ export class AutomationsManager {
         if (schedule !== undefined) {
           item.schedule = schedule
           const next = calculateNextRunAt(schedule)
-          if (next !== undefined) item.nextRunAt = next
+          item.nextRunAt = next
         }
         if (workspaceId !== undefined) item.workspaceId = workspaceId
         if (permissionPreset !== undefined) item.permissionPreset = permissionPreset
@@ -561,7 +560,7 @@ export class AutomationsManager {
           item.enabled = enabled
           if (enabled && !item.nextRunAt) {
             const next = calculateNextRunAt(item.schedule)
-            if (next !== undefined) item.nextRunAt = next
+            item.nextRunAt = next
           }
         }
         item.updatedAt = new Date().toISOString()

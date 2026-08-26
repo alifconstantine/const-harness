@@ -449,6 +449,23 @@ export function apply(ctx: Context): void {
             }
           })()
         },
+        editTurn: (turnNumber, text) => {
+          void (async () => {
+            const result = await scoped.rollbackTurn(turnNumber)
+            const session = sessions.binding(sessionId)?.session
+            if (session !== undefined) {
+              const content: ({ type: 'text'; text: string } | { type: 'image'; attachment: { draftId: string } })[] = [
+                { type: 'text', text },
+              ]
+              if (result.userImages && result.userImages.length > 0) {
+                for (const draftId of result.userImages) {
+                  content.push({ type: 'image', attachment: { draftId } })
+                }
+              }
+              await session.prompt(content as never, 'queue')
+            }
+          })()
+        },
       }
     },
   }, ChatView)

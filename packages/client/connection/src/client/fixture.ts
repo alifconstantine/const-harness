@@ -2506,6 +2506,10 @@ function createFixtureWorld(options: FixtureOptions): FixtureWorld {
         }
         return ok(request, { accepted: true as const })
       },
+      rollbackTurn: request => ok(request, {
+        success: true,
+        restoredFiles: [],
+      }),
     },
     subagents: {
       list: request => ok(request, { entries: [], parentAvailable: true }),
@@ -3143,6 +3147,7 @@ export class FixtureApiClient extends AbstractApiClient {
       case 'session.attachment': return this.api.sessions.attachment(request)
       case 'session.updateQueue': return this.api.sessions.updateQueue(request)
       case 'session.cancel': return this.api.sessions.cancel(request)
+      case 'session.rollbackTurn': return this.api.sessions.rollbackTurn(request)
       case 'subagent.list': return this.api.subagents.list(request)
       case 'subagent.history': return this.api.subagents.history(request)
       case 'subagent.prompt': return this.api.subagents.prompt(request, signal)

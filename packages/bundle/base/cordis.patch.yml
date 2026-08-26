@@ -221,6 +221,9 @@
     - id: fs-observation-policy
       name: '@deepseek-ai/dsh-fs-observation-policy'
 
+    - id: fs-snapshot
+      name: '@deepseek-ai/dsh-fs-snapshot'
+
     - id: tool-fs
       name: '@deepseek-ai/dsh-tool-fs'
 

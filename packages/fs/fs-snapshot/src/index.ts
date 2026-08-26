@@ -5,6 +5,7 @@
  */
 
 import { Context, Service } from '@deepseek-ai/cordis'
+import type { Session, SessionEvent } from '@deepseek-ai/dsh-session'
 import { ShadowGit, type FileDiffStat, type ShadowGitOptions } from './git-shadow.ts'
 
 export type { FileDiffStat, ShadowGitOptions }
@@ -40,6 +41,9 @@ export class SnapshotService extends Service {
 
   /**
    * Get or create a ShadowGit instance for a given workspace path.
+   * @param worktree - target workspace path.
+   * @param projectId - optional project identifier.
+   * @returns the ShadowGit instance.
    */
   getShadow(worktree: string, projectId?: string): ShadowGit {
     const key = `${worktree}::${projectId ?? ''}`
@@ -56,6 +60,10 @@ export class SnapshotService extends Service {
 
   /**
    * Capture a snapshot of a worktree directory.
+   * @param worktree - target workspace path.
+   * @param projectId - optional project identifier.
+   * @param signal - optional abort signal.
+   * @returns the captured snapshot git tree ID.
    */
   async capture(worktree: string, projectId?: string, signal?: AbortSignal): Promise<string> {
     const shadow = this.getShadow(worktree, projectId)
@@ -64,6 +72,11 @@ export class SnapshotService extends Service {
 
   /**
    * Compute structured file diffs between two snapshot tree IDs.
+   * @param worktree - target workspace path.
+   * @param fromTree - base tree ID.
+   * @param toTree - target tree ID.
+   * @param options - diff options including context lines, project ID, and abort signal.
+   * @returns array of file diff statistics.
    */
   async diff(
     worktree: string,
@@ -77,6 +90,10 @@ export class SnapshotService extends Service {
 
   /**
    * Restore files in a worktree from a snapshot tree ID.
+   * @param worktree - target workspace path.
+   * @param treeId - snapshot tree ID to restore from.
+   * @param options - restore options including specific paths, project ID, and abort signal.
+   * @returns completion promise.
    */
   async restore(
     worktree: string,
@@ -89,6 +106,7 @@ export class SnapshotService extends Service {
 
   /**
    * Record a completed turn's snapshot boundary.
+   * @param record - turn snapshot record containing session ID, turn number, and tree IDs.
    */
   recordTurnSnapshot(record: TurnSnapshotRecord): void {
     let sessionMap = this.turnSnapshots.get(record.sessionId)
@@ -101,6 +119,9 @@ export class SnapshotService extends Service {
 
   /**
    * Retrieve snapshot metadata for a turn.
+   * @param sessionId - session identifier.
+   * @param turn - turn number.
+   * @returns the snapshot record for the turn, or undefined if not found.
    */
   getTurnSnapshot(sessionId: string, turn: number): TurnSnapshotRecord | undefined {
     return this.turnSnapshots.get(sessionId)?.get(turn)
@@ -108,6 +129,11 @@ export class SnapshotService extends Service {
 
   /**
    * Rollback the workspace to the exact state before a turn executed.
+   * @param sessionId - session identifier.
+   * @param turn - turn number to rollback.
+   * @param worktree - workspace directory path.
+   * @param projectId - optional project identifier.
+   * @returns result indicating success, restored file paths, and optional error message.
    */
   async rollbackTurn(
     sessionId: string,
@@ -121,9 +147,7 @@ export class SnapshotService extends Service {
     }
 
     try {
-      const changedFiles = record.diffs.map(d => d.relativePath)
       await this.restore(worktree, record.beforeTreeId, {
-        ...(changedFiles.length > 0 ? { paths: changedFiles } : {}),
         ...(projectId !== undefined ? { projectId } : {}),
       })
       return { success: true, restoredFiles: record.diffs.map(d => d.path) }
@@ -141,7 +165,48 @@ export const name = 'fs-snapshot'
 
 /** Apply the snapshot service to the Cordis context. */
 export function apply(ctx: Context): void {
-  new SnapshotService(ctx)
+  const service = new SnapshotService(ctx)
+  const pendingTurns = new Map<string, { beforeTreeId: string }>()
+
+  ctx.on('session/event', (session: Session, event: SessionEvent) => {
+    void (async () => {
+      const sessionId = session.header.id
+      const worktree = session.header.cwd ?? process.cwd()
+
+      if (event.type === 'turn/start') {
+        const data = event.data as { turn?: number }
+        const turn = data.turn ?? 1
+        try {
+          const beforeTreeId = await service.capture(worktree)
+          pendingTurns.set(`${sessionId}:${turn}`, { beforeTreeId })
+        } catch {
+          // fail-soft snapshot capture
+        }
+      } else if (event.type === 'turn/end') {
+        const data = event.data as { turn?: number }
+        const turn = data.turn ?? 1
+        const key = `${sessionId}:${turn}`
+        const pending = pendingTurns.get(key)
+        if (pending) {
+          pendingTurns.delete(key)
+          try {
+            const afterTreeId = await service.capture(worktree)
+            const diffs = await service.diff(worktree, pending.beforeTreeId, afterTreeId)
+            service.recordTurnSnapshot({
+              sessionId,
+              turn,
+              beforeTreeId: pending.beforeTreeId,
+              afterTreeId,
+              diffs,
+              timestamp: Date.now(),
+            })
+          } catch {
+            // fail-soft snapshot diff calculation
+          }
+        }
+      }
+    })()
+  })
 }
 
 export default SnapshotService

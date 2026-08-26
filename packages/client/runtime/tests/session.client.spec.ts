@@ -1033,4 +1033,45 @@ describe('reference stability (the memo contract)', () => {
     const after = session.getSnapshot()
     expect(after.chat.timeline.turns.has(1)).toBe(false)
   })
+
+  it('rollbackTurn skips plugin context injections and extracts the real human prompt', async () => {
+    const { api, session } = makeSession()
+    api.onHistory = () => histResponse([])
+    await session.open()
+    const feed = (event: SessionEvent) => { session.handleMuxEnvelope('r' as never, { type: 'session/event', sessionId: SID, event }) }
+
+    // Human user message
+    feed({
+      seq: 0,
+      time: 1000,
+      type: 'user/message',
+      data: {
+        content: 'Human user prompt',
+        source: { kind: 'user' },
+      },
+    } as SessionEvent)
+
+    // Plugin context injection (e.g. time-context)
+    feed({
+      seq: 1,
+      time: 1001,
+      type: 'user/message',
+      data: {
+        content: 'Time sampled while preparing turn 1, step 1: 2026-08-26T22:56:39+07:00[Asia/Jakarta]...',
+        source: { kind: 'plugin', plugin: 'time-context', form: 'snapshot', sections: [] },
+      },
+    } as SessionEvent)
+
+    feed(ev.turnStart(2, 1))
+    feed(ev.assistant(3, 1, 'Answer 1'))
+    feed(ev.turnEnd(4, 1))
+
+    const result = await session.rollbackTurn(1)
+    expect(result.userPrompt).toBe('Human user prompt')
+
+    // After rollback, Turn 1 and human prompt are cleanly excised
+    const after = session.getSnapshot()
+    expect(after.chat.timeline.turns.has(1)).toBe(false)
+    expect(after.chat.order.length).toBe(0)
+  })
 })

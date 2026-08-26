@@ -69,6 +69,7 @@ export const SERVICE_PAGE: Record<string, string> = {
   dynamicCordisRunner: 'extensions.md',
   e2b: 'subprocess.md',
   fs: 'filesystem.md',
+  snapshot: 'filesystem.md',
   goals: 'goal.md',
   webServer: 'web-server.md',
   invariants: 'invariants.md',
@@ -578,6 +579,9 @@ export const TYPE_LINK_EXEMPTIONS: Readonly<Record<string, string>> = {
   WorkflowAgentEndInfo: 'event-local snapshot is owned by packages/workflow/workflow/src/index.ts',
   WorkflowAgentInfo: 'event-local snapshot is owned by packages/workflow/workflow/src/index.ts',
   WorkflowResultInfo: 'event-local snapshot is owned by packages/workflow/workflow/src/index.ts',
+  ShadowGit: 'snapshot shadow git instance is owned by packages/fs/fs-snapshot/src/git-shadow.ts',
+  FileDiffStat: 'file diff stat model is owned by packages/fs/fs-snapshot/src/types.ts',
+  TurnSnapshotRecord: 'turn snapshot record model is owned by packages/fs/fs-snapshot/src/types.ts',
 }
 
 /** Repository data policy consumed by the Cordis catalog projector. */

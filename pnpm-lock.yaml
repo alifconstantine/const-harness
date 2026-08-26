@@ -1037,6 +1037,9 @@ importers:
       '@deepseek-ai/dsh-fs-sandbox':
         specifier: workspace:^
         version: link:../../fs/fs-sandbox
+      '@deepseek-ai/dsh-fs-snapshot':
+        specifier: workspace:^
+        version: link:../../fs/fs-snapshot
       '@deepseek-ai/dsh-goal':
         specifier: workspace:^
         version: link:../../goal/goal
@@ -4292,6 +4295,9 @@ importers:
       '@deepseek-ai/dsh-home-paths':
         specifier: workspace:^
         version: link:../../util/home-paths
+      '@deepseek-ai/dsh-session':
+        specifier: workspace:^
+        version: link:../../core/session
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: workspace:^

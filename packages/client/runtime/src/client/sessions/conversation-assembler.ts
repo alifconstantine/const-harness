@@ -198,7 +198,7 @@ export class ConversationNodeAssembler implements ConversationViewSnapshotStore 
     let publication: ConversationPublication = 'none'
     if (isLocationBoundary(input.event.type)) {
       const previousTimeline = this.locationIndex.snapshot()
-      const changed = this.locationIndex.appendBoundary(input.event)
+      const changed = this.locationIndex.appendBoundary(input.event, this.inputs)
       if (this.locationIndex.snapshot() !== previousTimeline) {
         this.timelineDirty = true
         publication = 'immediate'

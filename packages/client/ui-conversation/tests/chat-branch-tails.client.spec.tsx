@@ -11,7 +11,7 @@ import { bindSnapshotSelector } from '@deepseek-ai/dsh-client-web-react'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
 import { zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/zh.ts'
 import type {
-  ChatConversationViewNode, ConversationNode,
+  ChatConversationViewNode, ConversationLocation, ConversationNode,
 } from '@deepseek-ai/dsh-client-runtime/client'
 import type { ChatNodeViewProps } from '../src/client/contract/slots.ts'
 import {
@@ -45,12 +45,14 @@ const t: ChatNodeViewProps['t'] = makeTranslate(zh, commonZh)
 const RETRY_ID = 'retry-fixture' as Extract<ConversationNode, { kind: 'model-retry' }>['retryId']
 
 interface MessageItemProps {
-  readonly node: ConversationNode
+  readonly node: ConversationNode & { readonly location?: ConversationLocation }
   readonly t: ChatNodeViewProps['t']
+  readonly editTurn?: ((turn: number, text: string) => Promise<void> | void) | undefined
+  readonly undoTurn?: ((turn: number) => void) | undefined
 }
 
 /** Legacy-node fixture adapter for the independently registered renderers. */
-function MessageItem({ node, t: translate }: MessageItemProps) {
+function MessageItem({ node, t: translate, editTurn, undoTurn }: MessageItemProps) {
   const kind = node.kind === 'assistant' ? 'assistant-step' : node.kind
   const viewNode: ChatConversationViewNode = {
     key: `fixture:${node.kind}:${node.seq}`,
@@ -58,11 +60,11 @@ function MessageItem({ node, t: translate }: MessageItemProps) {
     id: String(node.seq),
     target: 'chat',
     anchorSeq: node.seq,
-    location: { kind: 'session' },
+    location: node.location ?? { kind: 'session' },
     visibility: 'visible',
     data: node.kind === 'model-retry' ? { attempts: [node], current: node } : node,
   }
-  const props = { node: viewNode, t: translate } as ChatNodeViewProps
+  const props = { node: viewNode, t: translate, editTurn, undoTurn } as ChatNodeViewProps
   switch (node.kind) {
     case 'user':
     case 'steering':
@@ -81,7 +83,7 @@ function MessageItem({ node, t: translate }: MessageItemProps) {
 }
 
 describe('MessageItem arms', () => {
-  it('user bubbles expose clock / copy and neither branch nor edit; copy writes the text', () => {
+  it('user bubbles expose clock / copy and edit and not branch; copy writes the text', () => {
     const writeText = vi.fn().mockResolvedValue(undefined)
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
@@ -100,10 +102,61 @@ describe('MessageItem arms', () => {
     )
     expect(screen.getByText('14:24')).toBeTruthy()
     expect(screen.getByRole('button', { name: '复制' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: '编辑' })).toBeTruthy()
     expect(screen.queryByRole('button', { name: '在新对话中分支' })).toBeNull()
-    expect(screen.queryByRole('button', { name: '编辑' })).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: '复制' }))
     expect(writeText).toHaveBeenCalledWith('hello bubble')
+  })
+
+  it('user bubble edit opens inline editor, allows canceling or submitting via editTurn', async () => {
+    const editTurn = vi.fn().mockResolvedValue(undefined)
+    const turnLocation = {
+      kind: 'turn' as const,
+      turn: {
+        turn: 2,
+        status: 'closed' as const,
+        steps: [],
+        data: { get: () => undefined, set: () => {}, has: () => false },
+      },
+    }
+    const { unmount } = render(
+      <MessageItem
+        t={t}
+        editTurn={editTurn}
+        node={{
+          kind: 'user',
+          seq: 5,
+          time: 1000,
+          location: turnLocation as never,
+          content: [{ type: 'text', text: 'original prompt' }] as never,
+          source: null,
+        }}
+      />,
+    )
+    // Initially shows bubble with Edit button
+    expect(screen.getByText('original prompt')).toBeTruthy()
+    const editBtn = screen.getByRole('button', { name: '编辑' })
+    fireEvent.click(editBtn)
+
+    // Now in edit mode
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
+    expect(textarea.value).toBe('original prompt')
+
+    // Test cancel
+    const cancelBtn = screen.getByRole('button', { name: '取消' })
+    fireEvent.click(cancelBtn)
+    expect(screen.queryByRole('textbox')).toBeNull()
+    expect(screen.getByText('original prompt')).toBeTruthy()
+
+    // Open edit mode again and submit new text
+    fireEvent.click(screen.getByRole('button', { name: '编辑' }))
+    const textarea2 = screen.getByRole('textbox') as HTMLTextAreaElement
+    fireEvent.change(textarea2, { target: { value: 'updated prompt' } })
+    const sendBtn = screen.getByRole('button', { name: '发送消息' })
+    fireEvent.click(sendBtn)
+
+    expect(editTurn).toHaveBeenCalledWith(2, 'updated prompt')
+    unmount()
   })
 
   it('user copy falls back to execCommand when clipboard.writeText is unavailable', () => {

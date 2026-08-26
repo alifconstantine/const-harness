@@ -155,16 +155,35 @@ type FlowItem =
     readonly keys: readonly string[]
   }
 
+function hasVisibleProse(node: ChatConversationViewNode | undefined): boolean {
+  if (node === undefined) return false
+  if (node.kind === 'assistant' || node.kind === 'assistant-step') {
+    const data = node.data as { blocks?: readonly { kind?: string; text?: string }[] } | undefined
+    if (data?.blocks && Array.isArray(data.blocks)) {
+      return data.blocks.some((b: { kind?: string; text?: string }) =>
+        (b.kind === 'text' || b.kind === 'image') && (b.kind !== 'text' || (typeof b.text === 'string' && b.text.trim() !== '')))
+    }
+  }
+  return false
+}
+
+function isTextBearingAssistant(node: ChatConversationViewNode | undefined): boolean {
+  return hasVisibleProse(node)
+}
+
 function isWorkNode(node: ChatConversationViewNode | undefined): boolean {
   if (node === undefined) return false
   if (node.kind === 'tool-call') return true
   if (node.kind === 'context') {
-    const data = node.data as { provenance?: { label?: string } } | undefined
+    const data = node.data as { provenance?: { label?: string }; form?: string } | undefined
     const label = data?.provenance?.label
-    if (label === 'time-context' || label === '@deepseek-ai/dsh-system-prompt') {
+    if (label === 'time-context' || (label === '@deepseek-ai/dsh-system-prompt' && data?.form !== 'snapshot')) {
       return false
     }
     return true
+  }
+  if (node.kind === 'assistant' || node.kind === 'assistant-step') {
+    return !hasVisibleProse(node)
   }
   return false
 }
@@ -202,48 +221,95 @@ function groupFlowNodes(
   running: boolean,
 ): readonly FlowItem[] {
   const items: FlowItem[] = []
-  for (let i = 0; i < order.length; i++) {
+  let i = 0
+  while (i < order.length) {
     const key = order[i]
-    if (key === undefined) continue
+    if (key === undefined) {
+      i += 1
+      continue
+    }
     const node = nodeStore.get(key)
     const turnCoord = node?.location.kind === 'turn' || node?.location.kind === 'step'
       ? node.location.turn.turn
       : undefined
     const turnObj = turnCoord !== undefined ? timeline.turns.get(turnCoord) : undefined
-    const isTurnClosed = turnObj?.status === 'closed' || (turnCoord !== undefined && !running)
+    const isTurnClosed = turnCoord !== undefined && (turnObj?.status === 'closed' || !running)
 
-    if (isWorkNode(node) && turnCoord !== undefined && isTurnClosed) {
-      const workKeys: string[] = [key]
-      const workNodes: (ChatConversationViewNode | undefined)[] = [node]
-      let j = i + 1
-      while (j < order.length) {
-        const nextKey = order[j]
-        if (nextKey === undefined) break
-        const nextNode = nodeStore.get(nextKey)
-        const nextTurnCoord = nextNode?.location.kind === 'turn' || nextNode?.location.kind === 'step'
-          ? nextNode.location.turn.turn
-          : undefined
-        if (nextTurnCoord === turnCoord && isWorkNode(nextNode)) {
-          workKeys.push(nextKey)
-          workNodes.push(nextNode)
-          j += 1
-        } else {
-          break
-        }
+    // Non-turn items, running items, user messages, steering, and turn-tail stay single
+    if (!isTurnClosed || node?.kind === 'user' || node?.kind === 'steering' || node?.kind === 'turn-tail') {
+      items.push({ kind: 'single', key })
+      i += 1
+      continue
+    }
+
+    // Collect all consecutive nodes belonging to this completed turn
+    const turnNodeKeys: string[] = [key]
+    let j = i + 1
+    while (j < order.length) {
+      const nextKey = order[j]
+      if (nextKey === undefined) break
+      const nextNode = nodeStore.get(nextKey)
+      const nextTurnCoord = nextNode?.location.kind === 'turn' || nextNode?.location.kind === 'step'
+        ? nextNode.location.turn.turn
+        : undefined
+      if (nextTurnCoord !== turnCoord || nextNode?.kind === 'turn-tail' || nextNode?.kind === 'user' || nextNode?.kind === 'steering') {
+        break
       }
+      turnNodeKeys.push(nextKey)
+      j += 1
+    }
+
+    // Locate the closing text-bearing assistant node (the final response message)
+    let closingAssistantIdx = -1
+    for (let k = turnNodeKeys.length - 1; k >= 0; k--) {
+      const kKey = turnNodeKeys[k]
+      const kNode = kKey !== undefined ? nodeStore.get(kKey) : undefined
+      if (isTextBearingAssistant(kNode)) {
+        closingAssistantIdx = k
+        break
+      }
+    }
+
+    const workKeys = closingAssistantIdx >= 0
+      ? turnNodeKeys.slice(0, closingAssistantIdx)
+      : turnNodeKeys
+
+    // Filter workKeys to valid work items vs non-work items (e.g. earlier text-bearing messages)
+    const validWorkKeys = workKeys.filter(k => isWorkNode(nodeStore.get(k)))
+    const nonWorkKeys = workKeys.filter(k => !isWorkNode(nodeStore.get(k)))
+
+    for (const nwk of nonWorkKeys) {
+      items.push({ kind: 'single', key: nwk })
+    }
+
+    if (validWorkKeys.length > 0) {
+      const workNodes = validWorkKeys.map(k => nodeStore.get(k))
       const durationMs = calculateTurnDuration(turnObj, workNodes)
       items.push({
         kind: 'work-group',
-        key: `work-group:${turnCoord}:${key}`,
+        key: `work-group:${turnCoord}:${validWorkKeys[0]}`,
         turn: turnCoord,
         durationMs,
         summary: undefined,
-        keys: workKeys,
+        keys: validWorkKeys,
       })
-      i = j - 1
-    } else {
-      items.push({ kind: 'single', key })
     }
+
+    if (closingAssistantIdx >= 0) {
+      const closingKey = turnNodeKeys[closingAssistantIdx]
+      if (closingKey !== undefined) {
+        items.push({ kind: 'single', key: closingKey })
+      }
+      // Any remaining nodes after closingAssistantIdx (if any)
+      for (let k = closingAssistantIdx + 1; k < turnNodeKeys.length; k++) {
+        const remainingKey = turnNodeKeys[k]
+        if (remainingKey !== undefined) {
+          items.push({ kind: 'single', key: remainingKey })
+        }
+      }
+    }
+
+    i = j
   }
   return items
 }
@@ -253,8 +319,8 @@ function groupFlowNodes(
  * ordered business Node crosses the keyed renderer seat.
  */
 export function ChatView({
-  useSession, useSessions, useStore, renderSlot, sessionId, openFile, loadOlder, loadImage, inspectCall, chatScroll, forkAt, undoTurn,
-  fileMentions, t,
+  useSession, useSessions, useStore, renderSlot, sessionId, openFile, loadOlder,
+  loadImage, inspectCall, chatScroll, forkAt, undoTurn, editTurn, fileMentions, t,
 }: ChatViewSlotProps) {
   const order = useSession(s => s.chat.order)
   const nodeStore = useSession(s => s.chat.nodes)
@@ -526,6 +592,7 @@ export function ChatView({
                   inspectCall={inspectCall}
                   forkAt={forkAt}
                   undoTurn={undoTurn}
+                  editTurn={editTurn}
                   loadImage={loadImage}
                   fileMentions={fileMentions}
                   renderSlot={renderSlot}
@@ -552,6 +619,7 @@ export function ChatView({
                     inspectCall={inspectCall}
                     forkAt={forkAt}
                     undoTurn={undoTurn}
+                    editTurn={editTurn}
                     loadImage={loadImage}
                     fileMentions={fileMentions}
                     renderSlot={renderSlot}

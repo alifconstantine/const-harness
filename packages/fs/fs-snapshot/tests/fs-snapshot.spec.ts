@@ -131,6 +131,28 @@ describe('fs-snapshot engine & service', () => {
     expect(rolledBackContent).toBe('const App = () => <div>Hello</div>\n')
   })
 
+  it('deletes newly created files on turn rollback', async () => {
+    const shadow = new ShadowGit({
+      worktree: testDir,
+      gitDir: shadowGitDir,
+    })
+
+    await writeFile(join(testDir, 'base.txt'), 'base\n', 'utf8')
+    const treeBefore = await shadow.capture()
+
+    await writeFile(join(testDir, 'created-during-turn.ts'), 'console.log("hi")\n', 'utf8')
+    const treeAfter = await shadow.capture()
+
+    const diffs = await shadow.diff(treeBefore, treeAfter)
+    expect(diffs).toHaveLength(1)
+    expect(diffs[0]?.status).toBe('added')
+
+    // Rollback
+    await shadow.restore(treeBefore, ['created-during-turn.ts'])
+    const files = await shadow.files(treeBefore)
+    expect(files).toEqual(['base.txt'])
+  })
+
   it('registers invariant companion correctly', async () => {
     const registered: string[] = []
     const ctx = new Context()

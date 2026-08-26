@@ -2653,6 +2653,151 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
         agent.cancel({ kind: 'user' }, { keepInbox: true })
         return Promise.resolve(ok(request, { accepted: true as const }))
       },
+
+      async rollbackTurn(request) {
+        const { sessionId, turn } = request.payload
+        let source: SessionReadState
+        try {
+          source = await readSessionState(sessionId)
+        } catch (error: unknown) {
+          if (error instanceof SessionNotFound) {
+            return err(request, { code: 'session-not-found', message: error.message, details: { sessionId } })
+          }
+          return err(request, {
+            code: 'internal',
+            message: `rollback source unavailable for session "${sessionId}": ${String(error)}`,
+            details: {},
+          })
+        }
+
+        const agent = ctx.agents.get(sessionId)
+        if (agent?.status === 'running') {
+          agent.cancel({ kind: 'user' }, { keepInbox: true })
+        }
+
+        const events = source.events
+        let targetSeq: number | undefined
+        let userPrompt: string | undefined
+        const userImages: string[] = []
+
+        function isHumanUserMessage(event: SessionEvent | undefined): boolean {
+          if (!event) return false
+          if (event.type === 'user/message') {
+            const source = (event.data as { source?: { kind?: string } }).source
+            return source?.kind === 'user' || source === undefined
+          }
+          if ((event.type as string) === 'steering/message') return true
+          return false
+        }
+
+        for (let i = 0; i < events.length; i++) {
+          const ev = events[i]
+          if (ev && ev.type === 'turn/start' && (ev.data as { turn?: number }).turn === turn) {
+            for (let j = i - 1; j >= 0; j--) {
+              const prev = events[j]
+              if (prev && isHumanUserMessage(prev)) {
+                targetSeq = prev.seq
+                const data = prev.data as { content?: unknown }
+                if (typeof data.content === 'string') {
+                  userPrompt = data.content
+                } else if (Array.isArray(data.content)) {
+                  for (const part of data.content as { type?: string; text?: string; attachment?: { draftId?: string } }[]) {
+                    if (part.type === 'text' && typeof part.text === 'string') {
+                      userPrompt = part.text
+                    }
+                    if (part.type === 'image' && part.attachment?.draftId) {
+                      userImages.push(part.attachment.draftId)
+                    }
+                  }
+                }
+                break
+              }
+            }
+            if (targetSeq === undefined) {
+              targetSeq = ev.seq
+            }
+            break
+          }
+        }
+
+        let restoredFiles: string[] = []
+        const snapshotService = ctx.get('snapshot') as {
+          rollbackTurn: (sid: string, t: number, w: string) => Promise<{ success: boolean; restoredFiles: string[] }>
+        } | undefined
+        const attachedSession = ctx.sessions.get(sessionId)
+        const cwd = attachedSession?.header.cwd ?? process.cwd()
+
+        if (snapshotService !== undefined) {
+          try {
+            const res = await snapshotService.rollbackTurn(sessionId, turn, cwd)
+            if (res.success) {
+              restoredFiles = res.restoredFiles
+            }
+          } catch (err: unknown) {
+            console.error('[apiproxy] snapshot rollbackTurn failed:', err)
+          }
+        }
+
+        if (targetSeq !== undefined) {
+          const cutIndex = events.findIndex(e => e.seq >= targetSeq)
+          if (cutIndex !== -1) {
+            const eventsToKeep = events.slice(0, cutIndex)
+
+            // 1. Dispose live agent handle
+            try {
+              const liveHandle = sessionAgentHandles.get(sessionId)
+              if (liveHandle) {
+                sessionAgentHandles.delete(sessionId)
+                await liveHandle.dispose()
+              }
+            } catch (err: unknown) {
+              console.error('[apiproxy] error disposing live agent during rollback:', err)
+            }
+
+            // 2. Rewrite session persistence on disk
+            const persistence = ctx.get('sessionPersistence')
+            if (persistence !== undefined) {
+              try {
+                await persistence.delete(sessionId)
+                await persistence.create(source.header)
+                if (eventsToKeep.length > 0) {
+                  await persistence.append(sessionId, eventsToKeep)
+                }
+              } catch (err: unknown) {
+                console.error('[apiproxy] error rewriting persistence during rollback:', err)
+              }
+            }
+
+            // 3. Recreate the live Agent and Session on the host with truncated seed
+            try {
+              const composition = await composeAgent(resolveSessionPreset({ header: source.header, events: eventsToKeep }))
+              const handle = await ctx.agents.create({
+                sessionId,
+                seed: eventsToKeep,
+                meta: {
+                  ...source.header.cwd === undefined ? {} : { cwd: source.header.cwd },
+                  seedLength: eventsToKeep.length,
+                  ...source.header.parentSession === undefined ? {} : { parentSession: source.header.parentSession },
+                  ...composition.agentPreset === undefined ? {} : { agentPreset: composition.agentPreset },
+                },
+                agentOptions: agentOptions(),
+                setup: composition.setup,
+              })
+              sessionAgentHandles.set(sessionId, handle)
+            } catch (err: unknown) {
+              console.error('[apiproxy] error recreating agent during rollback:', err)
+            }
+          }
+        }
+
+        return ok(request, {
+          success: true,
+          ...(userPrompt !== undefined ? { userPrompt } : {}),
+          ...(userImages.length > 0 ? { userImages } : {}),
+          restoredFiles,
+          ...(targetSeq !== undefined ? { targetSeq } : {}),
+        })
+      },
     },
 
     subagents: {

@@ -1528,6 +1528,54 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'snapshot',
+    summary: 'Snapshot Service for capturing worktree states and managing rollbacks.',
+    description: 'Snapshot Service for capturing worktree states and managing rollbacks.',
+    methods: [
+      {
+        signature: 'getShadow(worktree: string, projectId?: string): ShadowGit',
+        description: 'Get or create a ShadowGit instance for a given workspace path.',
+        parameters: [{ name: 'worktree', description: 'target workspace path.' }, { name: 'projectId', description: 'optional project identifier.' }],
+        returns: 'the ShadowGit instance.',
+      },
+      {
+        signature: 'async capture(worktree: string, projectId?: string, signal?: AbortSignal): Promise<string>',
+        description: 'Capture a snapshot of a worktree directory.',
+        parameters: [{ name: 'worktree', description: 'target workspace path.' }, { name: 'projectId', description: 'optional project identifier.' }, { name: 'signal', description: 'optional abort signal.' }],
+        returns: 'the captured snapshot git tree ID.',
+      },
+      {
+        signature: 'async diff( worktree: string, fromTree: string, toTree: string, options?: { context?: number; projectId?: string; signal?: AbortSignal }, ): Promise<FileDiffStat[]>',
+        description: 'Compute structured file diffs between two snapshot tree IDs.',
+        parameters: [{ name: 'worktree', description: 'target workspace path.' }, { name: 'fromTree', description: 'base tree ID.' }, { name: 'toTree', description: 'target tree ID.' }, { name: 'options', description: 'diff options including context lines, project ID, and abort signal.' }],
+        returns: 'array of file diff statistics.',
+      },
+      {
+        signature: 'async restore( worktree: string, treeId: string, options?: { paths?: readonly string[]; projectId?: string; signal?: AbortSignal }, ): Promise<void>',
+        description: 'Restore files in a worktree from a snapshot tree ID.',
+        parameters: [{ name: 'worktree', description: 'target workspace path.' }, { name: 'treeId', description: 'snapshot tree ID to restore from.' }, { name: 'options', description: 'restore options including specific paths, project ID, and abort signal.' }],
+        returns: 'completion promise.',
+      },
+      {
+        signature: 'recordTurnSnapshot(record: TurnSnapshotRecord): void',
+        description: 'Record a completed turn\'s snapshot boundary.',
+        parameters: [{ name: 'record', description: 'turn snapshot record containing session ID, turn number, and tree IDs.' }],
+      },
+      {
+        signature: 'getTurnSnapshot(sessionId: string, turn: number): TurnSnapshotRecord | undefined',
+        description: 'Retrieve snapshot metadata for a turn.',
+        parameters: [{ name: 'sessionId', description: 'session identifier.' }, { name: 'turn', description: 'turn number.' }],
+        returns: 'the snapshot record for the turn, or undefined if not found.',
+      },
+      {
+        signature: 'async rollbackTurn( sessionId: string, turn: number, worktree: string, projectId?: string, ): Promise<{ success: boolean; restoredFiles: string[]; error?: string }>',
+        description: 'Rollback the workspace to the exact state before a turn executed.',
+        parameters: [{ name: 'sessionId', description: 'session identifier.' }, { name: 'turn', description: 'turn number to rollback.' }, { name: 'worktree', description: 'workspace directory path.' }, { name: 'projectId', description: 'optional project identifier.' }],
+        returns: 'result indicating success, restored file paths, and optional error message.',
+      },
+    ],
+  },
+  {
     key: 'spillStore',
     summary: 'Abstract spill storage service.',
     description: 'Abstract spill storage service. Subclass, implement saveText, and load the subclass as a plugin — it registers as `ctx.spillStore` (one implementation per context; loading a second throws, cordis\' standard duplicate-service behavior).\n\nSemantics every implementation must honor:\n\n- saveText persists the FULL `content` verbatim and returns an opaque locator, exact byte length, and model-facing retrieval guidance.\n- Storage is scoped by the request\'s SaveTextSpill.owner session; the backend chooses a private (not world-readable) location and a collision-free name derived from — never equal to — the caller\'s `suggestedName`.\n- `saveText` REJECTS on a real storage failure (permissions, ENOSPC, backend unavailable); the caller decides how to degrade (the spill policy treats a rejection as best-effort and keeps the inline result).',
@@ -3064,6 +3112,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface FileDiff {\n    path: string;\n    oldText: string | null;\n    newText: string;\n}',
   },
   {
+    name: 'FileDiffStat',
+    declaration: 'export interface FileDiffStat {\n    path: string;\n    relativePath: string;\n    status: \'added\' | \'deleted\' | \'modified\';\n    additions: number;\n    deletions: number;\n    patch?: string;\n}',
+  },
+  {
     name: 'FileLocation',
     declaration: 'export interface FileLocation {\n    path: string;\n    line?: number;\n}',
   },
@@ -4012,6 +4064,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type SettingsUpdateSource = \'update\' | \'provider\';',
   },
   {
+    name: 'ShadowGit',
+    declaration: 'export class ShadowGit {\n    readonly worktree: string;\n    readonly gitDir: string;\n    constructor(options: ShadowGitOptions);\n    async ensureRepo(signal?: AbortSignal): Promise<void>;\n    async capture(signal?: AbortSignal): Promise<string>;\n    async diff(fromTree: string, toTree: string, options?: {\n        context?: number;\n        signal?: AbortSignal;\n    }): Promise<FileDiffStat[]>;\n    async restore(treeId: string, paths?: readonly string[], signal?: AbortSignal): Promise<void>;\n    async files(treeId: string, signal?: AbortSignal): Promise<string[]>;\n}',
+  },
+  {
+    name: 'ShadowGitOptions',
+    declaration: 'export interface ShadowGitOptions {\n    worktree: string;\n    projectId?: string;\n    gitDir?: string;\n}',
+  },
+  {
     name: 'ShellExecRequest',
     declaration: 'export interface ShellExecRequest {\n    command: string;\n    workdir?: string | undefined;\n    timeoutMs?: number | undefined;\n    stdoutMaxBytes?: number | undefined;\n    signal?: AbortSignal | undefined;\n    stdin?: string | undefined;\n    env?: Record<string, string> | undefined;\n    dshEnv?: DshEnvironment | undefined;\n    sandboxPolicy?: SandboxExecutionPolicy | undefined;\n}',
   },
@@ -4490,6 +4550,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'TurnEndReasonMap',
     declaration: 'export interface TurnEndReasonMap {\n    completed: {\n        kind: \'completed\';\n    };\n    aborted: {\n        kind: \'aborted\';\n        reason: TurnEndCancelCause;\n    };\n    blocked: {\n        kind: \'blocked\';\n    };\n    error: {\n        kind: \'error\';\n        error: LlmFailure;\n    };\n    \'max-tokens\': {\n        kind: \'max-tokens\';\n    };\n    interrupted: {\n        kind: \'interrupted\';\n    };\n}',
+  },
+  {
+    name: 'TurnSnapshotRecord',
+    declaration: 'export interface TurnSnapshotRecord {\n    sessionId: string;\n    turn: number;\n    beforeTreeId: string;\n    afterTreeId: string;\n    diffs: FileDiffStat[];\n    timestamp: number;\n}',
   },
   {
     name: 'TypertCodec',

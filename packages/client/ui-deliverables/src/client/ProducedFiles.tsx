@@ -6,7 +6,7 @@
  * @module @deepseek-ai/dsh-client-ui-deliverables
  */
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { HostDescriptionSource } from '@deepseek-ai/dsh-client-connection/client'
 import type { InjectFace, PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
 import type { TurnTailOwnerProps } from '@deepseek-ai/dsh-client-ui-conversation/client'
@@ -42,6 +42,15 @@ export function ProducedFiles({
   const [reviewOpen, setReviewOpen] = useState(false)
   const [selectedFileForReview, setSelectedFileForReview] = useState<string | undefined>()
   const [undoStatus, setUndoStatus] = useState<'idle' | 'confirm' | 'done'>('idle')
+  const undoTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
+  useEffect(() => {
+    return () => {
+      if (undoTimerRef.current !== undefined) {
+        clearTimeout(undoTimerRef.current)
+      }
+    }
+  }, [])
 
   const { totalAdditions, totalDeletions } = useMemo(() => {
     let add = 0
@@ -67,13 +76,23 @@ export function ProducedFiles({
 
   const handleUndoClick = (e: React.MouseEvent) => {
     e.stopPropagation()
+    if (undoTimerRef.current !== undefined) {
+      clearTimeout(undoTimerRef.current)
+      undoTimerRef.current = undefined
+    }
     if (undoStatus === 'confirm') {
       onUndo?.()
       setUndoStatus('done')
-      setTimeout(() => { setUndoStatus('idle') }, 2000)
+      undoTimerRef.current = setTimeout(() => {
+        setUndoStatus('idle')
+        undoTimerRef.current = undefined
+      }, 2000)
     } else {
       setUndoStatus('confirm')
-      setTimeout(() => { setUndoStatus('idle') }, 3000)
+      undoTimerRef.current = setTimeout(() => {
+        setUndoStatus('idle')
+        undoTimerRef.current = undefined
+      }, 3000)
     }
   }
 
