@@ -155,8 +155,18 @@ type FlowItem =
     readonly keys: readonly string[]
   }
 
-function isWorkNodeKind(kind: string | undefined): boolean {
-  return kind === 'context' || kind === 'tool-call'
+function isWorkNode(node: ChatConversationViewNode | undefined): boolean {
+  if (node === undefined) return false
+  if (node.kind === 'tool-call') return true
+  if (node.kind === 'context') {
+    const data = node.data as { provenance?: { label?: string } } | undefined
+    const label = data?.provenance?.label
+    if (label === 'time-context' || label === '@deepseek-ai/dsh-system-prompt') {
+      return false
+    }
+    return true
+  }
+  return false
 }
 
 function calculateTurnDuration(
@@ -202,7 +212,7 @@ function groupFlowNodes(
     const turnObj = turnCoord !== undefined ? timeline.turns.get(turnCoord) : undefined
     const isTurnClosed = turnObj?.status === 'closed' || (turnCoord !== undefined && !running)
 
-    if (node !== undefined && isWorkNodeKind(node.kind) && turnCoord !== undefined && isTurnClosed) {
+    if (isWorkNode(node) && turnCoord !== undefined && isTurnClosed) {
       const workKeys: string[] = [key]
       const workNodes: (ChatConversationViewNode | undefined)[] = [node]
       let j = i + 1
@@ -213,7 +223,7 @@ function groupFlowNodes(
         const nextTurnCoord = nextNode?.location.kind === 'turn' || nextNode?.location.kind === 'step'
           ? nextNode.location.turn.turn
           : undefined
-        if (nextTurnCoord === turnCoord && nextNode !== undefined && isWorkNodeKind(nextNode.kind)) {
+        if (nextTurnCoord === turnCoord && isWorkNode(nextNode)) {
           workKeys.push(nextKey)
           workNodes.push(nextNode)
           j += 1
