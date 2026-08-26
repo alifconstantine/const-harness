@@ -3008,6 +3008,39 @@ function createFixtureWorld(options: FixtureOptions): FixtureWorld {
       })
       return Promise.resolve({ accepted: true })
     },
+    automations: {
+      list: request => ok(request, { items: [] }),
+      create: request => ok(request, {
+        item: {
+          id: 'fx-auto-1',
+          title: request.payload.title,
+          instructions: request.payload.instructions,
+          schedule: request.payload.schedule,
+          permissionPreset: request.payload.permissionPreset ?? 'workspace-write',
+          enabled: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          runCount: 0,
+        },
+      }),
+      update: request => ok(request, {
+        item: {
+          id: request.payload.id,
+          title: request.payload.title ?? 'Updated',
+          instructions: request.payload.instructions ?? '',
+          schedule: request.payload.schedule ?? { kind: 'daily', time: '09:00' },
+          permissionPreset: request.payload.permissionPreset ?? 'workspace-write',
+          enabled: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          runCount: 0,
+        },
+      }),
+      delete: request => ok(request, { deleted: true }),
+      run: request => ok(request, { success: true }),
+      history: request => ok(request, { items: [] }),
+      deleteRun: request => ok(request, { deleted: true }),
+    },
     // Satisfies the ApiProxy contract type only: the browser export button
     // hands GET /api/session.export to the native download manager, so this
     // stub is never reached through the fixture's dispatch.
@@ -3152,6 +3185,13 @@ export class FixtureApiClient extends AbstractApiClient {
       case 'llm.providers': return this.api.llm.providers(request)
       case 'llm.models': return this.api.llm.models(request)
       case 'llm.discoverModels': return this.api.llm.discoverModels(request, signal)
+      case 'automation.list': return this.api.automations.list(request)
+      case 'automation.create': return this.api.automations.create(request)
+      case 'automation.update': return this.api.automations.update(request)
+      case 'automation.delete': return this.api.automations.delete(request)
+      case 'automation.run': return this.api.automations.run(request)
+      case 'automation.history': return this.api.automations.history(request)
+      case 'automation.deleteRun': return this.api.automations.deleteRun(request)
     }
   }
 

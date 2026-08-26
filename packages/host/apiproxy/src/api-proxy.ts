@@ -57,6 +57,7 @@ import {
   SESSION_SEARCH_SNIPPET_MAX_CODE_POINTS,
   truncateUnicodeCodePoints,
 } from './api/session-search.ts'
+import { AutomationsManager } from './automations-service.ts'
 // Type-only: resolves `ctx.get('sessionProjections')` to the projection registry.
 import type {} from '@deepseek-ai/dsh-session-projection'
 // Type-only: resolves `ctx.get('tasks')` to the background job registry.
@@ -1132,6 +1133,15 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
   const muxQueues = new Set<FrameQueue<RpcRequest<MuxFrame>>>()
   const hostQueues = new Set<FrameQueue<RpcRequest<HostFrame>>>()
   const sessionAgentHandles = new Map<SessionId, { dispose: () => Promise<void> }>()
+  const automationsManager = new AutomationsManager(ctx, {
+    ensureSession: (sessionId, cwd) => ensureSession(sessionId, cwd, false),
+    defaultCwd: defaults.cwd,
+    setModel: (agent, model) => {
+      const cur = selectionFor(agent).current
+      selectionFor(agent).current = { ...cur, model }
+    },
+  })
+  automationsManager.start()
 
   function broadcastHostFrame(hostFrame: HostFrame): void {
     const req = frame(hostFrame)
@@ -3758,6 +3768,8 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
         )
       },
     },
+
+    automations: automationsManager.asApi(),
 
     respond(message: ClientResponse): Promise<RpcReceipt> {
       // Route by the echoed rpcId (the wire correlation): approvals first,

@@ -288,6 +288,47 @@ function fakeApi(overrides: Partial<{ muxFrames: MuxFrame[]; hostFrames: HostFra
         return { rpcId: request.rpcId, result: { ok: true, value: { models: [] } } }
       },
     },
+    automations: {
+      async list(request) {
+        return { rpcId: request.rpcId, result: { ok: true, value: { items: [] } } }
+      },
+      async create(request) {
+        return {
+          rpcId: request.rpcId,
+          result: {
+            ok: true,
+            value: {
+              item: {
+                id: 'auto-1',
+                title: request.payload.title,
+                instructions: request.payload.instructions,
+                schedule: request.payload.schedule,
+                permissionPreset: request.payload.permissionPreset ?? 'workspace-write',
+                enabled: true,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                runCount: 0,
+              },
+            },
+          },
+        }
+      },
+      async update(request) {
+        return { rpcId: request.rpcId, result: { ok: false, error: { code: 'bad-request', message: 'stub', details: { issues: [] } } } }
+      },
+      async delete(request) {
+        return { rpcId: request.rpcId, result: { ok: true, value: { deleted: true } } }
+      },
+      async run(request) {
+        return { rpcId: request.rpcId, result: { ok: true, value: { success: true } } }
+      },
+      async history(request) {
+        return { rpcId: request.rpcId, result: { ok: true, value: { items: [] } } }
+      },
+      async deleteRun(request) {
+        return { rpcId: request.rpcId, result: { ok: true, value: { deleted: true } } }
+      },
+    },
     events: {
       mux: (_request, signal) => stream(muxFrames, signal),
       host: (_request, signal) => stream(hostFrames, signal),

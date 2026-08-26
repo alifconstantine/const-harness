@@ -66,6 +66,26 @@ export function SidebarRoot({
   const newTaskTooltip = t('nav.newTask')
 
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
+  const [automationsActive, setAutomationsActive] = useState(false)
+
+  useEffect(() => {
+    const handleState = (e: Event) => {
+      const custom = e as CustomEvent<{ active: boolean }>
+      setAutomationsActive(Boolean(custom.detail?.active))
+    }
+    const handleOpen = () => { setAutomationsActive(true) }
+    const handleClose = () => { setAutomationsActive(false) }
+
+    window.addEventListener('const:automations-state', handleState)
+    window.addEventListener('const:open-automations', handleOpen)
+    window.addEventListener('const:close-automations', handleClose)
+    return () => {
+      window.removeEventListener('const:automations-state', handleState)
+      window.removeEventListener('const:open-automations', handleOpen)
+      window.removeEventListener('const:close-automations', handleClose)
+    }
+  }, [])
+
   useEffect(() => {
     const handleOpen = () => { setCommandPaletteOpen(true) }
     window.addEventListener('const:open-command-palette', handleOpen)
@@ -208,7 +228,10 @@ export function SidebarRoot({
             type="button"
             className={clsx(css.navItem, css.newSession)}
             aria-label={t('nav.newTask')}
-            onClick={() => { startSession() }}
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('const:close-automations'))
+              startSession()
+            }}
           >
             <IconNewChatOutline16 size={wide ? 16 : 18} />
             {wide && <span className={css.navLabel}>{t('nav.newTask')}</span>}
@@ -220,10 +243,14 @@ export function SidebarRoot({
         <Tooltip label={t('nav.automations')} side={wide ? 'bottom' : 'right'} delayMs={300}>
           <button
             type="button"
-            className={css.navItem}
+            className={clsx(css.navItem, automationsActive && css.active)}
             aria-label={t('nav.automations')}
             onClick={() => {
-              window.dispatchEvent(new CustomEvent('const:open-automations'))
+              if (automationsActive) {
+                window.dispatchEvent(new CustomEvent('const:close-automations'))
+              } else {
+                window.dispatchEvent(new CustomEvent('const:open-automations'))
+              }
             }}
           >
             <IconAutomationsOutline16 size={wide ? 16 : 18} />

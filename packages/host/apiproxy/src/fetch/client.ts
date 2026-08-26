@@ -69,6 +69,12 @@ import {
   subagentListValueSchema,
   subagentPromptValueSchema,
 } from '../api/subagents.schema.ts'
+import {
+  automationCreateValueSchema, automationDeleteRunValueSchema,
+  automationDeleteValueSchema, automationHistoryValueSchema,
+  automationListValueSchema, automationRunValueSchema,
+  automationUpdateValueSchema,
+} from '../api/automations.schema.ts'
 
 /**
  * Client consumption face of the contract (shape a): same domain tree as ApiProxy, but unary
@@ -165,6 +171,15 @@ export interface IApiClient {
     models(payload: RequestPayload<'llm.models'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'llm.models'>>>
     discoverModels(payload: RequestPayload<'llm.discoverModels'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'llm.discoverModels'>>>
   }
+  automations: {
+    list(payload: RequestPayload<'automation.list'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'automation.list'>>>
+    create(payload: RequestPayload<'automation.create'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'automation.create'>>>
+    update(payload: RequestPayload<'automation.update'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'automation.update'>>>
+    delete(payload: RequestPayload<'automation.delete'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'automation.delete'>>>
+    run(payload: RequestPayload<'automation.run'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'automation.run'>>>
+    history(payload: RequestPayload<'automation.history'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'automation.history'>>>
+    deleteRun(payload: RequestPayload<'automation.deleteRun'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'automation.deleteRun'>>>
+  }
   /** client-response passthrough (rpcId is a backfill of the server-request's id — never minted here). */
   respond(message: ClientResponse, signal?: AbortSignal): Promise<RpcReceipt>
 }
@@ -228,6 +243,13 @@ const UNARY_VALUE_SCHEMAS: { [K in keyof RpcMethodMap]: z.ZodType<Wire<ResponseV
   'llm.providers': llmProvidersValueSchema,
   'llm.models': llmModelsValueSchema,
   'llm.discoverModels': llmDiscoverModelsValueSchema,
+  'automation.list': automationListValueSchema,
+  'automation.create': automationCreateValueSchema,
+  'automation.update': automationUpdateValueSchema,
+  'automation.delete': automationDeleteValueSchema,
+  'automation.run': automationRunValueSchema,
+  'automation.history': automationHistoryValueSchema,
+  'automation.deleteRun': automationDeleteRunValueSchema,
 }
 
 /** Default timeout for bounded unary calls (rpc-compare 2026-07-19: a hung host must not leave callers pending forever). */
@@ -506,6 +528,16 @@ export abstract class AbstractApiClient implements IApiClient {
     providers: (payload, signal) => this.callUnary('llm.providers', payload, signal),
     models: (payload, signal) => this.callUnary('llm.models', payload, signal),
     discoverModels: (payload, signal) => this.callUnary('llm.discoverModels', payload, signal),
+  }
+
+  readonly automations: IApiClient['automations'] = {
+    list: (payload, signal) => this.callUnary('automation.list', payload, signal),
+    create: (payload, signal) => this.callUnary('automation.create', payload, signal),
+    update: (payload, signal) => this.callUnary('automation.update', payload, signal),
+    delete: (payload, signal) => this.callUnary('automation.delete', payload, signal),
+    run: (payload, signal) => this.callUnary('automation.run', payload, signal),
+    history: (payload, signal) => this.callUnary('automation.history', payload, signal),
+    deleteRun: (payload, signal) => this.callUnary('automation.deleteRun', payload, signal),
   }
 
   readonly events: IApiClient['events'] = {

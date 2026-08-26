@@ -287,6 +287,40 @@ export class FakeApiClient implements IApiClient {
     discoverModels: payload => this.record('llm.discoverModels', payload, Promise.resolve(ok({ models: [] }))),
   }
 
+  readonly automations: IApiClient['automations'] = {
+    list: payload => this.record('automation.list', payload, Promise.resolve(ok({ items: [] }))),
+    create: payload => this.record('automation.create', payload, Promise.resolve(ok({
+      item: {
+        id: 'fk-auto-1',
+        title: payload.title ?? 'fake',
+        instructions: payload.instructions ?? '',
+        schedule: payload.schedule ?? { kind: 'daily' },
+        permissionPreset: 'workspace-write',
+        enabled: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        runCount: 0,
+      },
+    }))),
+    update: payload => this.record('automation.update', payload, Promise.resolve(ok({
+      item: {
+        id: payload.id ?? 'fk-auto-1',
+        title: payload.title ?? 'fake',
+        instructions: payload.instructions ?? '',
+        schedule: payload.schedule ?? { kind: 'daily' },
+        permissionPreset: 'workspace-write',
+        enabled: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        runCount: 0,
+      },
+    }))),
+    delete: payload => this.record('automation.delete', payload, Promise.resolve(ok({ deleted: true }))),
+    run: payload => this.record('automation.run', payload, Promise.resolve(ok({ success: true }))),
+    history: payload => this.record('automation.history', payload, Promise.resolve(ok({ items: [] }))),
+    deleteRun: payload => this.record('automation.deleteRun', payload, Promise.resolve(ok({ deleted: true }))),
+  }
+
   /** When true, streams never fire onOpen (misbehaving-carrier material for the handshake timeout guard). */
   suppressStreamOpen = false
 

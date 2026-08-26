@@ -72,6 +72,12 @@ import {
   subagentListRequestSchema,
   subagentPromptRequestSchema,
 } from '../api/subagents.schema.ts'
+import {
+  automationCreateRequestSchema, automationDeleteRequestSchema,
+  automationDeleteRunRequestSchema, automationHistoryRequestSchema,
+  automationListRequestSchema, automationRunRequestSchema,
+  automationUpdateRequestSchema,
+} from '../api/automations.schema.ts'
 
 /**
  * Unary dispatch table, keyed by (and compiler-locked to) RpcMethodMap: a map row without a
@@ -144,6 +150,13 @@ const UNARY_ROUTES: UnaryRoutes = {
   'llm.providers': { schema: llmProvidersRequestSchema, invoke: (api, r) => api.llm.providers(r) },
   'llm.models': { schema: llmModelsRequestSchema, invoke: (api, r) => api.llm.models(r) },
   'llm.discoverModels': { schema: llmDiscoverModelsRequestSchema, invoke: (api, r, signal) => api.llm.discoverModels(r, signal) },
+  'automation.list': { schema: automationListRequestSchema, invoke: (api, r) => api.automations.list(r) },
+  'automation.create': { schema: automationCreateRequestSchema, invoke: (api, r) => api.automations.create(r) },
+  'automation.update': { schema: automationUpdateRequestSchema, invoke: (api, r) => api.automations.update(r) },
+  'automation.delete': { schema: automationDeleteRequestSchema, invoke: (api, r) => api.automations.delete(r) },
+  'automation.run': { schema: automationRunRequestSchema, invoke: (api, r) => api.automations.run(r) },
+  'automation.history': { schema: automationHistoryRequestSchema, invoke: (api, r) => api.automations.history(r) },
+  'automation.deleteRun': { schema: automationDeleteRunRequestSchema, invoke: (api, r) => api.automations.deleteRun(r) },
 }
 
 /** Route lookup that narrows an arbitrary path segment to a map key (single cast point for the string→key refinement). */
