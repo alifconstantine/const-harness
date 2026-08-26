@@ -20,7 +20,7 @@ import clsx from 'clsx'
 import {
   BrandWordmark, FishLogo,
   IconAutomationsOutline16, IconDesignOutline16, IconMarketplaceOutline16,
-  IconMobileOutline16, IconNewChatOutline16, IconPanelLeftOutline16, IconSearchOutline16,
+  IconNewChatOutline16, IconPanelLeftOutline16, IconSearchOutline16,
   Tooltip,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { SidebarRootComponentProps } from './contract/slots.ts'
@@ -63,7 +63,7 @@ export function SidebarRoot({
   }, [collapsed])
   const wide = !collapsed || !settled
 
-  const newTaskTooltip = wide ? t('nav.newTask') : `${t('nav.newTask')} (Ctrl+N)`
+  const newTaskTooltip = t('nav.newTask')
 
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   useEffect(() => {
@@ -166,20 +166,39 @@ export function SidebarRoot({
             <BrandWordmark />
           </button>
         )}
-        {/* Rail resting state is the whale mark; hovering swaps in the panel
-            icon (the expand affordance, figma sidebar-hover flow). */}
-        <Tooltip label={collapsed ? t('toggle.open') : t('toggle.collapse')} side={wide ? 'bottom' : 'right'} delayMs={300}>
-          <button
-            type="button"
-            className={clsx(css.iconButton, css.toggle)}
-            aria-label={collapsed ? t('toggle.open') : t('toggle.collapse')}
-            onClick={() => { toggleSidebar() }}
-          >
-            {!wide && <FishLogo className={css.railFish} size={24} />}
-            {/* Rail icons render at 18 (figma rail spec); expanded keeps the glyph-native sizes. */}
-            <IconPanelLeftOutline16 className={css.panelIcon} size={wide ? 16 : 18} />
-          </button>
-        </Tooltip>
+
+        <div className={css.logoActions}>
+          {/* Expanded: Search icon button sits next to the collapse sidebar button */}
+          {wide && (
+            <Tooltip label={t('nav.search')} side="bottom" delayMs={300}>
+              <button
+                type="button"
+                className={clsx(css.iconButton, css.searchButton)}
+                aria-label={t('nav.search')}
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('const:open-command-palette'))
+                }}
+              >
+                <IconSearchOutline16 size={16} />
+              </button>
+            </Tooltip>
+          )}
+
+          {/* Rail resting state is the whale mark; hovering swaps in the panel
+              icon (the expand affordance, figma sidebar-hover flow). */}
+          <Tooltip label={collapsed ? t('toggle.open') : t('toggle.collapse')} side={wide ? 'bottom' : 'right'} delayMs={300}>
+            <button
+              type="button"
+              className={clsx(css.iconButton, css.toggle)}
+              aria-label={collapsed ? t('toggle.open') : t('toggle.collapse')}
+              onClick={() => { toggleSidebar() }}
+            >
+              {!wide && <FishLogo className={css.railFish} size={24} />}
+              {/* Rail icons render at 18 (figma rail spec); expanded keeps the glyph-native sizes. */}
+              <IconPanelLeftOutline16 className={css.panelIcon} size={wide ? 16 : 18} />
+            </button>
+          </Tooltip>
+        </div>
       </div>
 
       {/* Top action navigation list matching requirement #1 and Image 1 */}
@@ -193,27 +212,8 @@ export function SidebarRoot({
           >
             <IconNewChatOutline16 size={wide ? 16 : 18} />
             {wide && <span className={css.navLabel}>{t('nav.newTask')}</span>}
-            {wide && <span className={css.shortcutBadge}>Ctrl+N</span>}
           </button>
         </Tooltip>
-
-        {/* Search */}
-        <Tooltip label={wide ? t('nav.search') : `${t('nav.search')} (Ctrl+K)`} side={wide ? 'bottom' : 'right'} delayMs={300}>
-          <button
-            type="button"
-            className={css.navItem}
-            aria-label={t('nav.search')}
-            onClick={() => {
-              window.dispatchEvent(new CustomEvent('const:open-command-palette'))
-            }}
-          >
-            <IconSearchOutline16 size={wide ? 16 : 18} />
-            {wide && <span className={css.navLabel}>{t('nav.search')}</span>}
-            {wide && <span className={css.shortcutBadge}>Ctrl+K</span>}
-          </button>
-        </Tooltip>
-
-        <div className={css.divider} role="separator" aria-orientation="horizontal" />
 
         {/* Feature Modules */}
         {/* Automations */}
@@ -271,27 +271,13 @@ export function SidebarRoot({
         })}
       </div>
 
-      {/* Footer actions: gear and mobile icons on bottom-left corner */}
+      {/* Footer actions: settings trigger row in bottom */}
       <div className={css.footArea}>
         <div className={css.footerActions}>
           {renderSlot('sidebar.footer.action', { wide })}
         </div>
-        <div className={css.footRow}>
-          <div className={css.settingsArea}>
-            {renderSlot('sidebar.settings', { wide })}
-          </div>
-          <Tooltip label={t('nav.mobileRemote')} side={wide ? 'bottom' : 'right'} delayMs={300}>
-            <button
-              type="button"
-              className={css.footIconButton}
-              aria-label={t('nav.mobileRemote')}
-              onClick={() => {
-                window.dispatchEvent(new CustomEvent('const:open-mobile-remote'))
-              }}
-            >
-              <IconMobileOutline16 size={16} />
-            </button>
-          </Tooltip>
+        <div className={css.settingsArea}>
+          {renderSlot('sidebar.settings', { wide })}
         </div>
       </div>
 

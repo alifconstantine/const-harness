@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import type {
   SidebarFooterActionOwnerProps, SidebarRootComponentProps, SidebarSectionOwnerProps,
   SidebarSettingsOwnerProps,
@@ -88,19 +88,18 @@ describe('SidebarRoot shell', () => {
     fireEvent.click(screen.getByRole('button', { name: 'New task' }))
     expect(b.startSession).toHaveBeenCalledTimes(2)
 
-    // Check presence of other top navigation items
-    expect(screen.getByRole('button', { name: 'Search' })).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Automations' })).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Plugin Marketplace' })).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Design' })).toBeTruthy()
-
-    // Check footer Mobile Remote button
-    const mobileBtn = screen.getByRole('button', { name: 'Mobile Remote' })
-    expect(mobileBtn).toBeTruthy()
+    // Check presence of top navigation items
+    const searchBtn = screen.getByRole('button', { name: 'Search' })
+    expect(searchBtn).toBeTruthy()
     const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
-    fireEvent.click(mobileBtn)
-    expect(dispatchSpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'const:open-mobile-remote' }))
+    fireEvent.click(searchBtn)
+    expect(dispatchSpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'const:open-command-palette' }))
     dispatchSpy.mockRestore()
+
+    const nav = screen.getByRole('navigation', { name: 'Main Navigation' })
+    expect(within(nav).getByRole('button', { name: 'Automations' })).toBeTruthy()
+    expect(within(nav).getByRole('button', { name: 'Plugin Marketplace' })).toBeTruthy()
+    expect(within(nav).getByRole('button', { name: 'Design' })).toBeTruthy()
 
     fireEvent.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
     expect(b.toggleSidebar).toHaveBeenCalledOnce()

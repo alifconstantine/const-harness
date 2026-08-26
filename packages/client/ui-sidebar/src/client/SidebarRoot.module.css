@@ -66,8 +66,7 @@
 .railIn .iconButton,
 .railIn .navItem,
 .railIn .newSession,
-.railIn .regionArea,
-.railIn .divider {
+.railIn .regionArea {
   animation: rail-in 150ms var(--ds-ease-in-out) backwards;
 }
 
@@ -93,7 +92,7 @@
   flex: none;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 8px;
   height: 60px;
   padding: 8px 0 8px 4px;
@@ -107,6 +106,13 @@
   padding: 0;
   margin-bottom: 12px;
   justify-content: flex-start;
+}
+
+.logoActions {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 /* Brand group (figma I133:7632): the full wordmark rides the text ink
@@ -241,21 +247,6 @@
   font-weight: 500;
 }
 
-/* Category divider between Core Actions and Feature Modules */
-.divider {
-  flex: none;
-  height: 1px;
-  width: 100%;
-  background: var(--dsw-alias-border-l1, rgba(255, 255, 255, 0.08));
-  margin: 6px 0;
-  box-sizing: border-box;
-}
-
-.collapsed .divider {
-  width: 24px;
-  margin: 6px auto;
-}
-
 .collapsed .navItem,
 .collapsed .newSession {
   align-self: flex-start;
@@ -305,22 +296,6 @@
   display: none;
 }
 
-.shortcutBadge {
-  flex: none;
-  font-size: 11px;
-  font-family: var(--ds-font-mono, monospace);
-  color: var(--dsw-alias-label-tertiary);
-  background: var(--dsw-alias-interactive-bg-subtle, rgba(255, 255, 255, 0.04));
-  padding: 1px 5px;
-  border-radius: 4px;
-  border: 1px solid var(--dsw-alias-border-l1, rgba(255, 255, 255, 0.08));
-  margin-left: 6px;
-}
-
-.collapsed .shortcutBadge {
-  display: none;
-}
-
 /* Region seat: always mounted so the foot never moves. Its trailing margin
    cancels the wide shell inset so the nested scrollbar can sit at the sidebar
    edge; the browser restores that inset inside its own rows. */
@@ -341,7 +316,7 @@
   padding-left: 0;
 }
 
-/* Footer seats: gear and mobile icon buttons in bottom-left corner */
+/* Footer seats: settings trigger row at the bottom */
 .footArea {
   flex: none;
   display: flex;
@@ -355,66 +330,10 @@
   width: 100%;
 }
 
-.footRow {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 4px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
 .settingsArea {
-  flex: none;
-  width: 32px;
-  height: 32px;
-  display: inline-flex;
+  width: 100%;
+  display: flex;
   align-items: center;
-  justify-content: center;
-}
-
-.settingsArea button[aria-haspopup="dialog"] {
-  width: 32px !important;
-  height: 32px !important;
-  min-width: 32px !important;
-  max-width: 32px !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border-radius: 6px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  color: var(--dsw-alias-label-secondary) !important;
-}
-
-.settingsArea button[aria-haspopup="dialog"]:hover {
-  background: var(--dsw-alias-interactive-bg-hover) !important;
-  color: var(--dsw-alias-label-primary) !important;
-}
-
-.settingsArea button[aria-haspopup="dialog"] span {
-  display: none !important;
-}
-
-.footIconButton {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  border: none;
-  background: transparent;
-  color: var(--dsw-alias-label-secondary);
-  cursor: pointer;
-  transition: all 120ms ease;
-}
-
-.footIconButton:hover {
-  background: var(--dsw-alias-interactive-bg-hover);
-  color: var(--dsw-alias-label-primary);
 }
 
 .collapsed .footArea {
@@ -422,25 +341,10 @@
   padding: 6px 0;
 }
 
-.collapsed .footRow {
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-}
-
 .collapsed .settingsArea {
   width: 36px;
   height: 36px;
-}
-
-.collapsed .settingsArea button[aria-haspopup="dialog"],
-.collapsed .footIconButton {
-  width: 36px !important;
-  height: 36px !important;
-  min-width: 36px !important;
-  max-width: 36px !important;
-  border-radius: 50% !important;
-  color: var(--dsw-alias-label-primary) !important;
+  justify-content: center;
 }
 
 @media (prefers-reduced-motion: reduce) {
