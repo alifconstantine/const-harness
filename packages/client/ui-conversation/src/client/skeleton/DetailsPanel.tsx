@@ -20,12 +20,12 @@ import {
   IconTerminalOutline16,
   Menu,
   type MenuEntry,
-} from '@deepseek-ai/dsh-client-ui-primitives'
-import { shallowEqual } from '@deepseek-ai/dsh-client-runtime/client'
+} from '@const-ai/client-ui-primitives'
+import { shallowEqual } from '@const-ai/client-runtime/client'
 import type {
   AssistantMessageNode, ConversationSnapshot, RunningToolCall, ToolCallBlock, ToolResultNode,
-} from '@deepseek-ai/dsh-client-runtime/client'
-import type { TodoItem } from '@deepseek-ai/dsh-tool-todo/client'
+} from '@const-ai/client-runtime/client'
+import type { TodoItem } from '@const-ai/tool-todo/client'
 import type { DetailsSlotProps } from '../contract/slots.ts'
 import type { CompanionTabId } from '../contract/views.ts'
 import { findToolCall } from '../chat/tool-node-reader.ts'
@@ -330,6 +330,17 @@ export function DetailsPanel({
       <div className={css.root}>
         <div className={css.topBar}>
           {searchTabDropdown}
+          <div className={css.tabActionsRight}>
+            <button
+              type="button"
+              className={css.panelActionBtn}
+              onClick={_closeDetails}
+              title={t('details.close')}
+              aria-label={t('details.close')}
+            >
+              <IconChevronDownOutline14 size={14} />
+            </button>
+          </div>
         </div>
 
         <div className={css.chooserContainer}>
@@ -442,6 +453,18 @@ export function DetailsPanel({
           side="bottom"
           align="start"
         />
+
+        <div className={css.tabActionsRight}>
+          <button
+            type="button"
+            className={css.panelActionBtn}
+            onClick={_closeDetails}
+            title={t('details.close')}
+            aria-label={t('details.close')}
+          >
+            <IconChevronDownOutline14 size={14} />
+          </button>
+        </div>
       </div>
 
       {/* Active Tab View Body */}

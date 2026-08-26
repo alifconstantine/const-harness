@@ -1,15 +1,15 @@
 /** Registers the conversation components, shared store, and service callbacks. */
-import type { Context } from '@deepseek-ai/cordis'
-import { resolveSlotLabel, type BoundActions } from '@deepseek-ai/dsh-client-ui-slots'
+import type { Context } from '@const-ai/cordis'
+import { resolveSlotLabel, type BoundActions } from '@const-ai/client-ui-slots'
 import {
   resolveWorkspacePath, type ISessions, type SessionId,
-} from '@deepseek-ai/dsh-client-runtime/client'
+} from '@const-ai/client-runtime/client'
 // Type-only: the ctx.settingsScope Context merge. Cross-plugin collaboration
 // goes through the service, never a value import (client bundle purity gate).
-import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
-import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
+import type {} from '@const-ai/client-ui-settings/client'
+import type {} from '@const-ai/client-ui-layout/client'
 // Type-only: pulls the locale plugin's Context merge (ctx.locale).
-import type {} from '@deepseek-ai/dsh-client-locale/client'
+import type {} from '@const-ai/client-locale/client'
 import type { ViewTab } from './contract/views.ts'
 import type {
   ApprovalWait, ChatNodeTurnDataInjected, ChatScrollPosition, ChatViewInjected, ComposerBarInjected,
@@ -44,7 +44,7 @@ interface SessionLogDownloader {
   download(sessionId: SessionId): Promise<unknown> | void
 }
 
-declare module '@deepseek-ai/dsh-client-ui-slots' {
+declare module '@const-ai/client-ui-slots' {
   interface LocaleNamespaceMap {
     /** The conversation skeleton, chat flow, commands, details, and docks copy. */
     conversation: ConversationKey

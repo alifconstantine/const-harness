@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-client-ui-settings-general",
+  "name": "@const-ai/client-ui-settings-general",
   "description": "Settings ownerless-copy and product onboarding plugin: the General section, shell trigger/header chrome content, settings dictionaries, and the versioned welcome notice",
   "version": "0.1.0-rc.5",
   "publishConfig": {
@@ -32,12 +32,12 @@
   "dsh": {
     "client": {
       "inject": [
-        "@deepseek-ai/dsh-client-runtime",
-        "@deepseek-ai/dsh-client-ui-settings",
-        "@deepseek-ai/dsh-client-locale",
-        "@deepseek-ai/dsh-client-connection",
-        "@deepseek-ai/dsh-api-remotes",
-        "@deepseek-ai/dsh-client-ui-sidebar"
+        "@const-ai/client-runtime",
+        "@const-ai/client-ui-settings",
+        "@const-ai/client-locale",
+        "@const-ai/client-connection",
+        "@const-ai/api-remotes",
+        "@const-ai/client-ui-sidebar"
       ],
       "platform": "web"
     }
@@ -48,37 +48,37 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/dsh-settings": "workspace:^",
-    "@deepseek-ai/schemastery": "workspace:^",
+    "@const-ai/settings": "workspace:^",
+    "@const-ai/schemastery": "workspace:^",
     "clsx": "^2.0.0"
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh-api-remotes": "workspace:^",
-    "@deepseek-ai/dsh-client-connection": "workspace:^",
-    "@deepseek-ai/dsh-client-locale": "workspace:^",
-    "@deepseek-ai/dsh-client-runtime": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-primitives": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-settings": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-sidebar": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-slots": "workspace:^",
-    "@deepseek-ai/dsh-client-web-react": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^",
+    "@const-ai/api-remotes": "workspace:^",
+    "@const-ai/client-connection": "workspace:^",
+    "@const-ai/client-locale": "workspace:^",
+    "@const-ai/client-runtime": "workspace:^",
+    "@const-ai/client-ui-primitives": "workspace:^",
+    "@const-ai/client-ui-settings": "workspace:^",
+    "@const-ai/client-ui-sidebar": "workspace:^",
+    "@const-ai/client-ui-slots": "workspace:^",
+    "@const-ai/client-web-react": "workspace:^",
+    "@const-ai/invariants": "workspace:^",
+    "@const-ai/cordis": "workspace:^",
     "react": "^18.2.0"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-api-remotes": "workspace:^",
-    "@deepseek-ai/dsh-client-connection": "workspace:^",
-    "@deepseek-ai/dsh-client-locale": "workspace:^",
-    "@deepseek-ai/dsh-client-runtime": "workspace:^",
-    "@deepseek-ai/dsh-client-test-runtime": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-primitives": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-settings": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-sidebar": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-slots": "workspace:^",
-    "@deepseek-ai/dsh-client-web-react": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^",
+    "@const-ai/api-remotes": "workspace:^",
+    "@const-ai/client-connection": "workspace:^",
+    "@const-ai/client-locale": "workspace:^",
+    "@const-ai/client-runtime": "workspace:^",
+    "@const-ai/client-test-runtime": "workspace:^",
+    "@const-ai/client-ui-primitives": "workspace:^",
+    "@const-ai/client-ui-settings": "workspace:^",
+    "@const-ai/client-ui-sidebar": "workspace:^",
+    "@const-ai/client-ui-slots": "workspace:^",
+    "@const-ai/client-web-react": "workspace:^",
+    "@const-ai/invariants": "workspace:^",
+    "@const-ai/cordis": "workspace:^",
     "@types/react": "~18.3.1",
     "react": "^18.2.0"
   },

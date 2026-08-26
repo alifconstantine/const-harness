@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-session-projection
+# @const-ai/session-projection
 
 English | [中文](README.zh.md)
 

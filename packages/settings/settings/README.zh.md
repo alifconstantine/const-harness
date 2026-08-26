@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-settings
+# @const-ai/settings
 
 [English](README.md) | 中文
 

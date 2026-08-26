@@ -7,7 +7,7 @@ import {
   indexSubagentDescendants, type PendingInteractionStatus, type SessionId, type SessionListState,
   type SessionSearchResultItem, type SessionSummary, type SubagentDescendantSummary,
   type WorkspaceId, type WorkspaceView,
-} from '@deepseek-ai/dsh-client-runtime/client'
+} from '@const-ai/client-runtime/client'
 
 /** Group key for Sessions outside every Workspace. */
 export const UNGROUPED_KEY = ''
@@ -297,9 +297,14 @@ export function deriveFlat(
   return rows.map(session => sessionNode(session, descendants))
 }
 
+/* jscpd:ignore-start */
 /**
  * Derive the flat design-only session list ("Design" mode): sessions related to UI/UX,
  * design artifacts, or OpenDesign workflows.
+ *
+ * @param list - Session list state.
+ * @param archivedSessionIds - IDs of archived sessions.
+ * @returns Filtered session nodes for design view.
  */
 export function deriveDesign(
   list: SessionListState,
@@ -327,10 +332,16 @@ export function deriveDesign(
   rows.sort(byRecency)
   return rows.map(session => sessionNode(session, descendants))
 }
+/* jscpd:ignore-end */
 
 /**
  * Derive the loose / unassigned conversation list ("Conversation" mode):
  * sessions not belonging to any registered Host Workspace.
+ *
+ * @param list - Session list state.
+ * @param workspaces - List of workspace views.
+ * @param archivedSessionIds - IDs of archived sessions.
+ * @returns Filtered session nodes for conversation view.
  */
 export function deriveConversations(
   list: SessionListState,

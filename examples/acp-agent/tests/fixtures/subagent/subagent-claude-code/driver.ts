@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /** Inspect both public product-provider compositions without invoking them. */
 
-import { boot, resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
-import type {} from '@deepseek-ai/dsh-subagent'
-import type {} from '@deepseek-ai/dsh-tools'
+import { boot, resolveConfigPath } from '@const-ai/app-boot'
+import type {} from '@const-ai/subagent'
+import type {} from '@const-ai/tools'
 
 const configPath = process.argv[2]
 if (configPath === undefined) {

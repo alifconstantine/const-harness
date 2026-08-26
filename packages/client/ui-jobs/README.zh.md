@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-client-ui-jobs
+# @const-ai/client-ui-jobs
 
 [English](README.md) | 中文
 

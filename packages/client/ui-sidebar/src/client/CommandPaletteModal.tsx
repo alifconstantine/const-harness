@@ -12,11 +12,11 @@ import {
   MessageSquare, Palette, PanelLeft, Plus, Rocket,
   Search, Settings, Terminal, X,
 } from 'lucide-react'
-import { Modal } from '@deepseek-ai/dsh-client-ui-primitives'
+import { Modal } from '@const-ai/client-ui-primitives'
 import type {
   SessionId, SessionListState, SessionSearchResultItem, SessionSummary,
   WorkspaceListState,
-} from '@deepseek-ai/dsh-client-runtime/client'
+} from '@const-ai/client-runtime/client'
 import type { SidebarRootComponentProps } from './contract/slots.ts'
 import css from './CommandPaletteModal.module.css'
 

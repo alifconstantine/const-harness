@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-subagent
+# @const-ai/subagent
 
 [English](README.md) | 中文
 

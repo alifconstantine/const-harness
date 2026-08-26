@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-session-log-export",
+  "name": "@const-ai/session-log-export",
   "description": "Web Session-log export command and shared download dialog",
   "version": "0.1.0-rc.5",
   "publishConfig": { "access": "public" },
@@ -22,40 +22,40 @@
   "scripts": { "bundle": "tsdown", "watch": "tsdown --watch" },
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/dsh-client-locale": "workspace:^",
-    "@deepseek-ai/dsh-client-runtime": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-commands": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-conversation": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-primitives": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-slots": "workspace:^",
-    "@deepseek-ai/dsh-commands": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
+    "@const-ai/cordis": "workspace:^",
+    "@const-ai/client-locale": "workspace:^",
+    "@const-ai/client-runtime": "workspace:^",
+    "@const-ai/client-ui-commands": "workspace:^",
+    "@const-ai/client-ui-conversation": "workspace:^",
+    "@const-ai/client-ui-primitives": "workspace:^",
+    "@const-ai/client-ui-slots": "workspace:^",
+    "@const-ai/commands": "workspace:^",
+    "@const-ai/invariants": "workspace:^",
     "react": "^18.2.0"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:^",
-    "@deepseek-ai/dsh-agent": "workspace:^",
-    "@deepseek-ai/dsh-client-locale": "workspace:^",
-    "@deepseek-ai/dsh-client-runtime": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-commands": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-conversation": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-primitives": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-slots": "workspace:^",
-    "@deepseek-ai/dsh-commands": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^",
+    "@const-ai/cordis": "workspace:^",
+    "@const-ai/cordis-plugin-loader": "workspace:^",
+    "@const-ai/agent": "workspace:^",
+    "@const-ai/client-locale": "workspace:^",
+    "@const-ai/client-runtime": "workspace:^",
+    "@const-ai/client-ui-commands": "workspace:^",
+    "@const-ai/client-ui-conversation": "workspace:^",
+    "@const-ai/client-ui-primitives": "workspace:^",
+    "@const-ai/client-ui-slots": "workspace:^",
+    "@const-ai/commands": "workspace:^",
+    "@const-ai/invariants": "workspace:^",
+    "@const-ai/session": "workspace:^",
     "@types/react": "~18.3.1",
     "react": "^18.2.0"
   },
   "dsh": {
     "client": {
       "inject": [
-        "@deepseek-ai/dsh-client-locale",
-        "@deepseek-ai/dsh-client-runtime",
-        "@deepseek-ai/dsh-client-ui-commands",
-        "@deepseek-ai/dsh-client-ui-conversation"
+        "@const-ai/client-locale",
+        "@const-ai/client-runtime",
+        "@const-ai/client-ui-commands",
+        "@const-ai/client-ui-conversation"
       ],
       "platform": "web"
     }

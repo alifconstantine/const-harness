@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/cordis-plugin-group",
+  "name": "@const-ai/cordis-plugin-group",
   "description": "Nested plugin group for cordis",
   "version": "1.0.1",
   "publishConfig": {
@@ -30,7 +30,7 @@
   "author": "Shigma <shigma10826@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis-plugin-loader": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@const-ai/cordis-plugin-loader": "workspace:^",
+    "@const-ai/cordis": "workspace:^"
   }
 }

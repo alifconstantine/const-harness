@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-subprocess
+# @const-ai/subprocess
 
 English | [中文](README.zh.md)
 

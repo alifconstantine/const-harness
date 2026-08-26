@@ -16,3 +16,13 @@ The previous conversation session header displayed a standalone subheader tab ba
    - Introduced a stateful multi-tab system in `DetailsPanel` with tab pills, tab closure (`×`), panel collapse (`⌄`), and an add-tab action (`+`).
    - Added an "Open tab" chooser view when no tabs are active, allowing users to choose between Side conversation, Trajectory, Review, Terminal, and Browser.
    - Added an interactive Terminal console view with PowerShell styling and working directory prompt matching the active session's `cwd`.
+
+## Consequences
+
+- The header provides a compact, information-dense single row with instant access to project context and session actions.
+- The companion side panel supports multi-tab workflows, allowing developers to switch between trajectory logs, code reviews, and live terminals without leaving the primary conversation.
+
+## Alternatives considered
+
+- **Retaining subheader tab bar** — rejected because it consumed vertical screen real estate without providing flexible side-by-side inspection workflows.
+- **Fixed three-tab layout** — rejected because it prevented developers from opening multiple concurrent auxiliary tools (such as terminal alongside code review).

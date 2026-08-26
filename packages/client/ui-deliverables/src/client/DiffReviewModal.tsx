@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Modal, DiffBlock } from '@deepseek-ai/dsh-client-ui-primitives'
+import { Modal, DiffBlock } from '@const-ai/client-ui-primitives'
 import { FileIcon } from './FileIcon.tsx'
 import { basename } from './turn-deliverables.ts'
 import type { ProducedFileItem } from './turn-deliverables.ts'

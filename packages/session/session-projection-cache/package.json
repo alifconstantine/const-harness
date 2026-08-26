@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-session-projection-cache",
+  "name": "@const-ai/session-projection-cache",
   "description": "Persisted projection cache (ctx.sessionProjectionCache): durable per-session projection checkpoints over the domain data form, throttled write-behind, and the cold-read ladder (cache row + persistence tail replay)",
   "version": "0.1.0-rc.5",
   "publishConfig": {
@@ -32,24 +32,24 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:^",
+    "@const-ai/schemastery": "workspace:^",
     "zod": "^4.4.3"
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^",
-    "@deepseek-ai/dsh-session-persistence": "workspace:^",
-    "@deepseek-ai/dsh-session-projection": "workspace:^",
-    "@deepseek-ai/dsh-storage-domain": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@const-ai/invariants": "workspace:^",
+    "@const-ai/session": "workspace:^",
+    "@const-ai/session-persistence": "workspace:^",
+    "@const-ai/session-projection": "workspace:^",
+    "@const-ai/storage-domain": "workspace:^",
+    "@const-ai/cordis": "workspace:^"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^",
-    "@deepseek-ai/dsh-session-persistence": "workspace:^",
-    "@deepseek-ai/dsh-session-projection": "workspace:^",
-    "@deepseek-ai/dsh-storage": "workspace:^",
-    "@deepseek-ai/dsh-storage-domain": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@const-ai/invariants": "workspace:^",
+    "@const-ai/session": "workspace:^",
+    "@const-ai/session-persistence": "workspace:^",
+    "@const-ai/session-projection": "workspace:^",
+    "@const-ai/storage": "workspace:^",
+    "@const-ai/storage-domain": "workspace:^",
+    "@const-ai/cordis": "workspace:^"
   }
 }

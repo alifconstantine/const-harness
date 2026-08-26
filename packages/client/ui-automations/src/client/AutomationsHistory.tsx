@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import type { AutomationItem, AutomationRunHistory } from '@deepseek-ai/dsh-host-apiproxy/api'
+import type { AutomationItem, AutomationRunHistory } from '@const-ai/host-apiproxy/api'
 import styles from './Automations.module.css'
 
 export interface AutomationsHistoryProps {
@@ -103,7 +103,7 @@ export function AutomationsHistory({
             <button
               type="button"
               className={styles.iconButton}
-              onClick={() => onRunNow(task.id)}
+              onClick={() => { onRunNow(task.id) }}
               title="Run Now"
             >
               <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
@@ -225,7 +225,7 @@ export function AutomationsHistory({
                     type="button"
                     className={styles.paginationButton}
                     disabled={currentPage <= 1}
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    onClick={() =>{  setCurrentPage(p => Math.max(1, p - 1)) }}
                   >
                     <span>&larr; Previous</span>
                   </button>
@@ -236,7 +236,7 @@ export function AutomationsHistory({
                         key={p}
                         type="button"
                         className={`${styles.paginationPageNum} ${p === currentPage ? styles.paginationPageNumActive : ''}`}
-                        onClick={() => setCurrentPage(p)}
+                        onClick={() =>{  setCurrentPage(p) }}
                       >
                         {p}
                       </button>
@@ -247,7 +247,7 @@ export function AutomationsHistory({
                     type="button"
                     className={styles.paginationButton}
                     disabled={currentPage >= totalPages}
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    onClick={() =>{  setCurrentPage(p => Math.min(totalPages, p + 1)) }}
                   >
                     <span>Next &rarr;</span>
                   </button>

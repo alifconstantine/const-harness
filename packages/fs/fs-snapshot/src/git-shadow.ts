@@ -3,7 +3,7 @@
  * calculating structured diffs, and restoring files without polluting
  * the user's primary project repository.
  *
- * @module @deepseek-ai/dsh-fs-snapshot/git-shadow
+ * @module @const-ai/fs-snapshot/git-shadow
  */
 
 import { createHash, randomUUID } from 'node:crypto'
@@ -11,7 +11,7 @@ import { execFile } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { isAbsolute, join, relative, resolve } from 'node:path'
-import { constHomePath } from '@deepseek-ai/dsh-home-paths'
+import { constHomePath } from '@const-ai/home-paths'
 
 /** Per-file diff metadata and statistics produced by comparing snapshots. */
 export interface FileDiffStat {
@@ -29,6 +29,7 @@ export interface FileDiffStat {
   patch?: string
 }
 
+/** Configuration options for initializing a ShadowGit instance. */
 export interface ShadowGitOptions {
   /** Target workspace / project worktree directory. */
   worktree: string
@@ -84,7 +85,9 @@ function runGit(
  * Shadow Git Repository instance managing snapshots for a single worktree.
  */
 export class ShadowGit {
+  /** Absolute path to the user workspace root. */
   readonly worktree: string
+  /** Absolute path to the shadow git directory repository. */
   readonly gitDir: string
 
   constructor(options: ShadowGitOptions) {
@@ -100,7 +103,9 @@ export class ShadowGit {
   }
 
   /**
-   * Ensure the shadow git repository is initialized and seeded from primary repo if available.
+   * Ensure the shadow git repository is initialized.
+   *
+   * @param signal - Optional cancellation signal.
    */
   async ensureRepo(signal?: AbortSignal): Promise<void> {
     if (!existsSync(join(this.gitDir, 'HEAD'))) {
@@ -160,7 +165,9 @@ export class ShadowGit {
 
   /**
    * Capture the current state of the workspace as an immutable Git Tree object.
-   * Returns the 40-character tree SHA (`treeId`).
+   *
+   * @param signal - Optional cancellation signal.
+   * @returns The 40-character tree SHA (`treeId`).
    */
   async capture(signal?: AbortSignal): Promise<string> {
     await this.ensureRepo(signal)
@@ -193,6 +200,11 @@ export class ShadowGit {
 
   /**
    * Compute structured file diffs between two snapshot tree IDs.
+   *
+   * @param fromTree - Starting snapshot tree ID.
+   * @param toTree - Target snapshot tree ID.
+   * @param options - Optional diff options including context lines and signal.
+   * @returns Array of structured file diff statistics.
    */
   async diff(
     fromTree: string,
@@ -255,6 +267,10 @@ export class ShadowGit {
    * Restore files in the worktree from a given snapshot tree ID.
    * If `paths` is omitted or empty, restores all changed files from the tree.
    * Files that were created after treeId (i.e. did not exist in treeId) are deleted.
+   *
+   * @param treeId - Snapshot tree ID to restore.
+   * @param paths - Optional list of specific paths to restore.
+   * @param signal - Optional cancellation signal.
    */
   async restore(
     treeId: string,
@@ -321,6 +337,10 @@ export class ShadowGit {
 
   /**
    * List all files in a captured tree.
+   *
+   * @param treeId - Snapshot tree ID to inspect.
+   * @param signal - Optional cancellation signal.
+   * @returns Array of file relative paths.
    */
   async files(treeId: string, signal?: AbortSignal): Promise<string[]> {
     await this.ensureRepo(signal)

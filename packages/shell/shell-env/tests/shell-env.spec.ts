@@ -1,5 +1,5 @@
 /**
- * Registry tests for `@deepseek-ai/dsh-shell-env`: built-in facts, contributor
+ * Registry tests for `@const-ai/shell-env`: built-in facts, contributor
  * ownership and validation, collection ordering, effect-scoped disposal, and
  * the explicit disposer contract.
  */
@@ -7,12 +7,12 @@
 import { homedir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import { CallId } from '@deepseek-ai/dsh-llm'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import type { ToolExecution } from '@deepseek-ai/dsh-tools'
-import { ShellEnvRegistry } from '@deepseek-ai/dsh-shell-env'
-import * as BashEnvPlugin from '@deepseek-ai/dsh-shell-env'
+import { Context } from '@const-ai/cordis'
+import { CallId } from '@const-ai/llm'
+import type { Agent } from '@const-ai/agent'
+import type { ToolExecution } from '@const-ai/tools'
+import { ShellEnvRegistry } from '@const-ai/shell-env'
+import * as BashEnvPlugin from '@const-ai/shell-env'
 
 const testToolSignal = new AbortController().signal
 
@@ -55,7 +55,7 @@ describe('ShellEnvRegistry', () => {
 
     vi.stubEnv('DSH_HOME', undefined)
     const fromDefault = new ShellEnvRegistry(new Context())
-    expect(fromDefault.collect(execution()).DSH_HOME).toBe(join(homedir(), '.dsh'))
+    expect(fromDefault.collect(execution()).DSH_HOME).toBe(join(homedir(), '.const'))
   })
 
   it('collects declared contributor variables and omits unavailable values', () => {

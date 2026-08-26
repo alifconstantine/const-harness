@@ -7,15 +7,15 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import { createScope } from '@deepseek-ai/dsh-scope'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import { CodeRuntime } from '@deepseek-ai/dsh-code-runtime'
-import type { CodeRunRequest, CodeRunResult } from '@deepseek-ai/dsh-code-runtime'
-import ToolRuntime, { RUN_CODE_NAME, defineTool } from '@deepseek-ai/dsh-tools'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import { apply, Config, inject, name } from '@deepseek-ai/dsh-agent-tool-presentation'
+import { Context } from '@const-ai/cordis'
+import { createScope } from '@const-ai/scope'
+import SystemPrompt from '@const-ai/system-prompt'
+import { CodeRuntime } from '@const-ai/code-runtime'
+import type { CodeRunRequest, CodeRunResult } from '@const-ai/code-runtime'
+import ToolRuntime, { RUN_CODE_NAME, defineTool } from '@const-ai/tools'
+import type { Agent } from '@const-ai/agent'
+import { SessionId } from '@const-ai/session'
+import { apply, Config, inject, name } from '@const-ai/agent-tool-presentation'
 
 /** A runtime that never runs anything: presentation never dispatches. */
 class StubRuntime extends CodeRuntime {

@@ -8,8 +8,8 @@ import { useId } from 'react'
 import type { ReactNode, RefObject } from 'react'
 import {
   ConstLogo, IconChevronDownOutline14, IconFolderClose16, IconFolderOpen16,
-} from '@deepseek-ai/dsh-client-ui-primitives'
-import { workspaceTitleOf } from '@deepseek-ai/dsh-client-runtime/client'
+} from '@const-ai/client-ui-primitives'
+import { workspaceTitleOf } from '@const-ai/client-runtime/client'
 import type { ConversationSlotProps } from '../contract/slots.ts'
 import css from './HeroShell.module.css'
 

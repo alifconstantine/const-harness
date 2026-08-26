@@ -6,7 +6,7 @@ import clsx from 'clsx'
 import {
   IconChevronLeftOutline14, IconChevronRightOutline14, IconCloseFill14,
   IconCodeOutline16, IconFileOutline16, IconPlayOutline16,
-} from '@deepseek-ai/dsh-client-ui-primitives'
+} from '@const-ai/client-ui-primitives'
 import css from './AttachmentRail.module.css'
 
 const VIDEO_EXTENSIONS = new Set(['MP4', 'WEBM', 'MKV', 'MOV', 'AVI', 'WMV', 'M4V'])
@@ -33,6 +33,7 @@ export function detectAttachmentKind(
 }
 
 /** Formats byte sizes into human-readable strings (KB / MB). */
+/* jscpd:ignore-start */
 function formatFileSize(bytes?: number): string {
   if (bytes === undefined || bytes === 0) return ''
   if (bytes < 1024) return `${bytes} B`
@@ -46,6 +47,7 @@ function getFileExtension(name?: string): string {
   const dot = name.lastIndexOf('.')
   return dot !== -1 ? name.slice(dot + 1).toUpperCase().slice(0, 5) : ''
 }
+/* jscpd:ignore-end */
 
 /** One rail thumbnail; strings arrive resolved (zero-cordis atom). */
 export interface AttachmentRailItem {

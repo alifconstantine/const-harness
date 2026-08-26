@@ -18,12 +18,12 @@ export type {
   CredentialsApi, CredentialView, ConfigurableProviderView, DiscoveredModelView, LlmApi,
   SubagentsApi, SubagentAddress, SubagentCatalog, SubagentListEntry, SubagentPromptReceipt,
   JobView,
-} from '@deepseek-ai/dsh-host-apiproxy/api'
-export type { ToolCallView, ToolResultView } from '@deepseek-ai/dsh-tools/presentation'
+} from '@const-ai/host-apiproxy/api'
+export type { ToolCallView, ToolResultView } from '@const-ai/tools/presentation'
 export type {
   RpcRequest, RpcResponse, RpcResult, RpcError, RpcErrorCode,
   ClientRequest, ServerResponse, ServerRequest, ClientResponse, RpcMessage, RpcReceipt,
-} from '@deepseek-ai/dsh-host-apiproxy/api'
+} from '@const-ai/host-apiproxy/api'
 // transportError lives in the apiproxy api layer (beside RpcResult, its
 // subject); re-exported here so connection consumers keep one contract
 // entry point.
@@ -31,17 +31,17 @@ export {
   RpcId,
   SESSION_SEARCH_RESULT_LIMIT,
   transportError,
-} from '@deepseek-ai/dsh-host-apiproxy/api'
-export { AbstractApiClient } from '@deepseek-ai/dsh-host-apiproxy/client'
-export type { IApiClient } from '@deepseek-ai/dsh-host-apiproxy/client'
-export type { SessionId, SessionEvent } from '@deepseek-ai/dsh-session/types'
-export type { MessageId } from '@deepseek-ai/dsh-llm/brand'
-export type { ContentBlock, StreamChunk } from '@deepseek-ai/dsh-llm/types'
+} from '@const-ai/host-apiproxy/api'
+export { AbstractApiClient } from '@const-ai/host-apiproxy/client'
+export type { IApiClient } from '@const-ai/host-apiproxy/client'
+export type { SessionId, SessionEvent } from '@const-ai/session/types'
+export type { MessageId } from '@const-ai/llm/brand'
+export type { ContentBlock, StreamChunk } from '@const-ai/llm/types'
 
 /** Successful value returned by the connection-generation host handshake. */
-export type HostDescription = import('@deepseek-ai/dsh-host-apiproxy/api').ResponseValue<'host.describe'>
+export type HostDescription = import('@const-ai/host-apiproxy/api').ResponseValue<'host.describe'>
 
-import type { RpcResponse, RpcResult } from '@deepseek-ai/dsh-host-apiproxy/api'
+import type { RpcResponse, RpcResult } from '@const-ai/host-apiproxy/api'
 
 /**
  * Unwrap a unary response: RpcResponse<T> -> RpcResult<T> (business code only

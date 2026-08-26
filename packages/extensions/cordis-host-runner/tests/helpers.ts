@@ -1,12 +1,12 @@
-import { Context } from '@deepseek-ai/cordis'
-import Timer from '@deepseek-ai/cordis-plugin-timer'
-import { CallId } from '@deepseek-ai/dsh-llm'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRegistry from '@deepseek-ai/dsh-tools'
-import type { ToolDefinition, ToolExecutionResult } from '@deepseek-ai/dsh-tools'
+import { Context } from '@const-ai/cordis'
+import Timer from '@const-ai/cordis-plugin-timer'
+import { CallId } from '@const-ai/llm'
+import SystemPrompt from '@const-ai/system-prompt'
+import ToolRegistry from '@const-ai/tools'
+import type { ToolDefinition, ToolExecutionResult } from '@const-ai/tools'
 import type { CordisDynamicPluginId } from '../src/types.ts'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import type { Agent } from '@const-ai/agent'
+import type { SessionId } from '@const-ai/session/types'
 import DynamicCordisRunnerService from '../src/index.ts'
 import type { Config } from '../src/index.ts'
 
@@ -57,8 +57,8 @@ export async function setup(config?: Config): Promise<Harness> {
   await ctx.plugin(SystemPrompt)
   await ctx.plugin(ToolRegistry)
   const gateway: Gateway = { events: [] }
-  ctx.on('cordis/request-run', (request) => {
-    gateway.events.push(['cordis/request-run', request])
+  ctx.on('@const-ai/cordis/request-run', (request) => {
+    gateway.events.push(['@const-ai/cordis/request-run', request])
     // The fake browser: a request reaches it, and it answers the way the real
     // client runner does — nothing here is a shortcut through the host's own
     // verbs, so the round trip under test is the real one.
@@ -95,7 +95,7 @@ export async function setup(config?: Config): Promise<Harness> {
       })
     })
   })
-  for (const name of ['cordis/request-run-resolved', 'cordis/dynamic-package', 'cordis/dynamic-retract'] as const) {
+  for (const name of ['@const-ai/cordis/request-run-resolved', '@const-ai/cordis/dynamic-package', '@const-ai/cordis/dynamic-retract'] as const) {
     ctx.on(name, (payload: unknown) => { gateway.events.push([name, payload]) })
   }
   await ctx.plugin(DynamicCordisRunnerService, config)

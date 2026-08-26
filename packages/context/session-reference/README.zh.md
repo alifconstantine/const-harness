@@ -1,4 +1,4 @@
-# `@deepseek-ai/dsh-session-reference`
+# `@const-ai/session-reference`
 
 [English](README.md) | 中文
 

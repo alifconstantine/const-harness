@@ -13,8 +13,8 @@ import {
   Menu,
   Modal,
   type MenuEntry,
-} from '@deepseek-ai/dsh-client-ui-primitives'
-import type { SessionId } from '@deepseek-ai/dsh-client-runtime/client'
+} from '@const-ai/client-ui-primitives'
+import type { SessionId } from '@const-ai/client-runtime/client'
 import css from './SessionHeaderMenu.module.css'
 
 export interface SessionHeaderMenuProps {

@@ -1,6 +1,6 @@
 import { memo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { IconChevronRightOutline14 } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconChevronRightOutline14 } from '@const-ai/client-ui-primitives'
 import type { ChatViewSlotProps } from '../contract/slots.ts'
 import { formatRunDuration } from './message-chrome.ts'
 import css from './TurnWorkDisclosure.module.css'

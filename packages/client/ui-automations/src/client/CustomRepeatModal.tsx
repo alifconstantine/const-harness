@@ -48,7 +48,7 @@ export function CustomRepeatModal({
 
   return (
     <div className={styles.modalBackdrop} onClick={onClose}>
-      <div className={styles.customRepeatModal} onClick={e => e.stopPropagation()}>
+      <div className={styles.customRepeatModal} onClick={(e) =>{  e.stopPropagation() }}>
         {/* Modal Header */}
         <div className={styles.customRepeatHeader}>
           <h3 className={styles.customRepeatTitle}>Custom Repeat</h3>
@@ -77,12 +77,12 @@ export function CustomRepeatModal({
                 min={1}
                 max={365}
                 value={frequency}
-                onChange={e => setFrequency(Number.parseInt(e.target.value, 10) || 1)}
+                onChange={(e) =>{  setFrequency(Number.parseInt(e.target.value, 10) || 1) }}
               />
               <CustomDropdown
                 value={unit}
                 options={unitOptions}
-                onChange={val => setUnit(val as typeof unit)}
+                onChange={(val) =>{  setUnit(val as typeof unit) }}
                 className={styles.repeatUnitDropdown}
               />
             </div>
@@ -97,7 +97,7 @@ export function CustomRepeatModal({
                   type="radio"
                   name="repeatEnds"
                   checked={endsNever}
-                  onChange={() => setEndsNever(true)}
+                  onChange={() =>{  setEndsNever(true) }}
                 />
                 <span>Never ends</span>
               </label>
@@ -107,7 +107,7 @@ export function CustomRepeatModal({
                   type="radio"
                   name="repeatEnds"
                   checked={!endsNever}
-                  onChange={() => setEndsNever(false)}
+                  onChange={() =>{  setEndsNever(false) }}
                 />
                 <span>Ends on date</span>
               </label>
@@ -118,7 +118,7 @@ export function CustomRepeatModal({
                     type="date"
                     className={styles.input}
                     value={endDate}
-                    onChange={e => setEndDate(e.target.value)}
+                    onChange={(e) =>{  setEndDate(e.target.value) }}
                   />
                 </div>
               )}

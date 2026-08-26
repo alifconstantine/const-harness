@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
-import { Modal } from '@deepseek-ai/dsh-client-ui-primitives'
+import { Modal } from '@const-ai/client-ui-primitives'
 import css from './OnboardingModal.module.css'
 
 const ignoreImplicitDismiss = (): void => {}
@@ -41,7 +41,7 @@ export function OnboardingModal({
       title={title}
       onClose={ignoreImplicitDismiss}
       headless
-      className={css.dialog as string}
+      className={css.dialog}
     >
       <div className={css.content}>
         <h2 ref={titleRef} className={css.title} tabIndex={focusTitle ? -1 : undefined}>{title}</h2>

@@ -5,17 +5,24 @@
  */
 import type {
   ConversationNodeDefinition, ToolResultNode,
-} from '@deepseek-ai/dsh-client-runtime/client'
-import { isAppendSurfaceEvent } from '@deepseek-ai/dsh-client-runtime/client'
-import type { MarkdownFileMentions } from '@deepseek-ai/dsh-client-ui-primitives'
-import type { TurnTailOwnerProps } from '@deepseek-ai/dsh-client-ui-conversation/client'
+} from '@const-ai/client-runtime/client'
+import { isAppendSurfaceEvent } from '@const-ai/client-runtime/client'
+import type { MarkdownFileMentions } from '@const-ai/client-ui-primitives'
+import type { TurnTailOwnerProps } from '@const-ai/client-ui-conversation/client'
 
+/** Represents a produced or modified file entry with diff statistics. */
 export interface ProducedFileItem {
+  /** Sequential message index within the turn. */
   readonly seq: number
+  /** Absolute or relative file path. */
   readonly path: string
+  /** Number of lines added. */
   readonly additions: number
+  /** Number of lines deleted. */
   readonly deletions: number
+  /** Modification status classification. */
   readonly status: 'added' | 'deleted' | 'modified'
+  /** Optional file diff chunks. */
   readonly diffs?: readonly { path: string; oldText: string | null; newText: string }[]
 }
 
@@ -24,7 +31,7 @@ export interface DeliverablesTurnData {
   readonly produced: readonly ProducedFileItem[]
 }
 
-declare module '@deepseek-ai/dsh-client-runtime/client' {
+declare module '@const-ai/client-runtime/client' {
   interface ConversationTurnDataMap {
     /** Successful mutation paths and diff stats accumulated in this Turn. */
     deliverables: DeliverablesTurnData
@@ -134,6 +141,10 @@ function producedEntries(view: ToolResultNode['callView'], seq: number): readonl
 
 /**
  * Files produced by one Turn data value for the closing assistant seq.
+ *
+ * @param data - Turn deliverables data.
+ * @param seq - Sequence number upper bound.
+ * @returns List of produced file items up to seq.
  */
 export function producedForClosing(
   data: Readonly<DeliverablesTurnData> | undefined,
@@ -152,6 +163,9 @@ export function producedForClosing(
 
 /**
  * Claim the turn-tail chain only when its closing turn produced files.
+ *
+ * @param owner - Turn tail owner props.
+ * @returns Array of produced file items, or null if none.
  */
 export function selectProducedFiles(owner: TurnTailOwnerProps): readonly ProducedFileItem[] | null {
   const items = producedForClosing(owner.turn.data.get('deliverables'), owner.seq)
@@ -203,6 +217,9 @@ export const deliverablesDefinition: ConversationNodeDefinition<DeliverablesStat
 
 /**
  * Trailing path segment, the part that identifies the file at a glance.
+ *
+ * @param path - Input file path.
+ * @returns Base name component.
  */
 export function basename(path: string): string {
   const at = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'))
@@ -211,6 +228,9 @@ export function basename(path: string): string {
 
 /**
  * Directory path segment for display.
+ *
+ * @param path - Input file path.
+ * @returns Directory path or empty string.
  */
 export function dirname(path: string): string {
   const at = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'))
@@ -219,6 +239,10 @@ export function dirname(path: string): string {
 
 /**
  * Truncate long directory path with ellipsis in front.
+ *
+ * @param path - File path to truncate.
+ * @param maxLength - Maximum display character length.
+ * @returns Truncated string representation.
  */
 export function truncatePath(path: string, maxLength = 55): string {
   if (path.length <= maxLength) return path
@@ -227,6 +251,11 @@ export function truncatePath(path: string, maxLength = 55): string {
 
 /**
  * File-mention vocabulary over one turn's produced paths.
+ *
+ * @param paths - Produced file paths.
+ * @param openFile - Callback to open a file.
+ * @param label - Formatter for mention label.
+ * @returns Markdown file mentions resolver.
  */
 export function producedFileMentions(
   paths: readonly string[],

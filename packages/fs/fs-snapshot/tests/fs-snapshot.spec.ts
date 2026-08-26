@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { mkdtemp, rm, writeFile, readFile, unlink } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@const-ai/cordis'
 import { apply as applySnapshot, SnapshotService, ShadowGit } from '../src/index.ts'
 import { apply as applyInvariant } from '../src/invariant.ts'
 
@@ -161,7 +161,7 @@ describe('fs-snapshot engine & service', () => {
       register: (pkg: string) => { registered.push(pkg); return () => {} },
     } as never)
     const dispose = await applyInvariant(ctx)
-    expect(registered).toEqual(['@deepseek-ai/dsh-fs-snapshot'])
+    expect(registered).toEqual(['@const-ai/fs-snapshot'])
     expect(dispose).toBeTypeOf('function')
     dispose()
   })

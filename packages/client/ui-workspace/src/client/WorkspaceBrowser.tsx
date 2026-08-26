@@ -15,10 +15,10 @@ import {
   Button, IconArchiveOutline16, IconArchiveOutline20, IconChevronDownOutline14, IconCloseFill14,
   IconEllipsisOutline16, IconPersonalizationOutline16,
   IconProjectAddOutline16, IconSearchOutline16, IconTrashOutline16, Menu, Modal, Tooltip,
-} from '@deepseek-ai/dsh-client-ui-primitives'
+} from '@const-ai/client-ui-primitives'
 import type {
   SessionId, SessionListState, SessionSearchResultItem, WorkspaceId, WorkspaceView,
-} from '@deepseek-ai/dsh-client-runtime/client'
+} from '@const-ai/client-runtime/client'
 import type { WorkspaceBrowserProps } from './contract/slots.ts'
 import type { SessionNode, SessionOrderBy } from './tree.ts'
 import { deriveConversations, deriveDesign, deriveFlat, deriveGroups, deriveSearchResults, UNGROUPED_KEY } from './tree.ts'
@@ -1086,8 +1086,8 @@ export function WorkspaceBrowser({
 
   useEffect(() => {
     const handleFilterMode = (e: Event) => {
-      const custom = e as CustomEvent<{ mode: SessionGroupBy }>
-      if (custom.detail.mode !== undefined) {
+      const custom = e as CustomEvent<{ mode?: SessionGroupBy } | undefined>
+      if (custom.detail?.mode !== undefined) {
         actions.setGroupBy(custom.detail.mode)
       }
     }

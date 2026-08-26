@@ -2,11 +2,12 @@
  * Automations (Scheduled Tasks / Cron Jobs) domain contract.
  * Wire projection of scheduled automations and their execution history.
  *
- * @module @deepseek-ai/dsh-host-apiproxy/api/automations
+ * @module @const-ai/host-apiproxy/api/automations
  */
 
 import type { RpcRequest, RpcResponse } from './rpc.ts'
 
+/** Supported schedule trigger frequencies. */
 export type AutomationScheduleKind =
   | 'hourly'
   | 'daily'
@@ -15,6 +16,7 @@ export type AutomationScheduleKind =
   | 'monthly'
   | 'custom'
 
+/** Structured recurrence schedule definition for an automation item. */
 export interface AutomationSchedule {
   kind: AutomationScheduleKind
   time?: string
@@ -25,6 +27,7 @@ export interface AutomationSchedule {
   intervalSeconds?: number
 }
 
+/** Configured scheduled automation task record. */
 export interface AutomationItem {
   id: string
   title: string
@@ -41,6 +44,7 @@ export interface AutomationItem {
   runCount: number
 }
 
+/** Historical record of an automation execution run. */
 export interface AutomationRunHistory {
   id: string
   automationId: string
@@ -52,6 +56,7 @@ export interface AutomationRunHistory {
   error?: string
 }
 
+/** Automations RPC API surface. */
 export interface AutomationsApi {
   list(request: RpcRequest<Record<string, never>>): Promise<RpcResponse<{ items: AutomationItem[] }>>
   create(request: RpcRequest<{

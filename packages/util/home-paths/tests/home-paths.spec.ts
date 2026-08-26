@@ -25,7 +25,7 @@ import {
   expandHomePath,
   resolveConstHome,
   resolveDshHome,
-} from '@deepseek-ai/dsh-home-paths'
+} from '@const-ai/home-paths'
 
 afterEach(() => {
   vi.unstubAllEnvs()

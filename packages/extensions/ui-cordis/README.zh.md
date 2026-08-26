@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-client-ui-cordis
+# @const-ai/client-ui-cordis
 
 [English](README.md) | 中文
 

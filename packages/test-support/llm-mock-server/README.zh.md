@@ -1,4 +1,4 @@
-# `@deepseek-ai/dsh-llm-mock-server`
+# `@const-ai/llm-mock-server`
 
 [English](README.md) | 中文
 

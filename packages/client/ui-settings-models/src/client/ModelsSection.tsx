@@ -14,9 +14,9 @@
 
 import { useState } from 'react'
 import type { ReactNode } from 'react'
-import type { IApiClient } from '@deepseek-ai/dsh-api-remotes/client'
-import { Button, IconPlusOutline16, Modal } from '@deepseek-ai/dsh-client-ui-primitives'
-import type { SnapshotSelectorHook } from '@deepseek-ai/dsh-client-web-react'
+import type { IApiClient } from '@const-ai/api-remotes/client'
+import { Button, IconPlusOutline16, Modal } from '@const-ai/client-ui-primitives'
+import type { SnapshotSelectorHook } from '@const-ai/client-web-react'
 import { CustomProviderCard } from './CustomProviderCard.tsx'
 import { deriveKeyRef, messageOf, protocolChoices, providerUsable } from './store.ts'
 import type { ModelsSettingsState, ModelsSettingsStore, ProviderRow } from './store.ts'
@@ -499,7 +499,7 @@ function Loaded({ injected }: { injected: ModelsSectionInjected }): ReactNode {
               : t('deleteDescriptionWithCredential'),
             deleteTarget,
           )}
-        className={styles['deleteDialog'] as string}
+        className={styles['deleteDialog']}
         footer={(
           <>
             <Button variant="outline" autoFocus disabled={deleting} onClick={closeDelete}>

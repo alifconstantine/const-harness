@@ -2,17 +2,17 @@
 # a config patch cannot target an entry behind a nested include, then restates
 # the goal overlay while replacing the live model with keyless replay.
 - id: base
-  name: '@deepseek-ai/cordis-plugin-include'
+  name: '@const-ai/cordis-plugin-include'
   config:
     path: ./cordis.yml
     patches:
       - id: llm-deepseek
-        name: '@deepseek-ai/dsh-llm-deepseek'
+        name: '@const-ai/llm-deepseek'
         disabled: true
       - insert:
           - id: goal
-            name: '@deepseek-ai/dsh-goal'
+            name: '@const-ai/goal'
           - id: tool-goal
-            name: '@deepseek-ai/dsh-tool-goal'
+            name: '@const-ai/tool-goal'
           - id: llm-replay
-            name: '@deepseek-ai/dsh-llm-replay'
+            name: '@const-ai/llm-replay'

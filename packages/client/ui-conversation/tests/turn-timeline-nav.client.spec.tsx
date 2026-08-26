@@ -3,7 +3,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render } from '@testing-library/react'
 import { createRef } from 'react'
-import type { ChatNodeStore, ConversationTimelineSnapshot } from '@deepseek-ai/dsh-client-runtime/client'
+import type { ChatNodeStore, ConversationTimelineSnapshot } from '@const-ai/client-runtime/client'
 import { TurnTimelineNav } from '../src/client/chat/TurnTimelineNav.tsx'
 import type { ChatNode } from '../src/client/contract/chat-nodes.ts'
 

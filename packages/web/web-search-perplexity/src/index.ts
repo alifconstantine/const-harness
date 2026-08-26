@@ -1,16 +1,16 @@
 /**
- * `@deepseek-ai/dsh-web-search-perplexity`: registers a Perplexity-backed
+ * `@const-ai/web-search-perplexity`: registers a Perplexity-backed
  * `WebSearchProvider` with `ctx.web`. A function/namespace plugin (NOT a
  * default-export service): it registers INTO the seam's provider registry, like
- * `@deepseek-ai/dsh-llm-deepseek` registers an adapter into `ctx.llm`.
+ * `@const-ai/llm-deepseek` registers an adapter into `ctx.llm`.
  *
- * @module @deepseek-ai/dsh-web-search-perplexity
+ * @module @const-ai/web-search-perplexity
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import { launchEnvironmentOf } from '@deepseek-ai/dsh-launch-environment'
-import z from '@deepseek-ai/schemastery'
-import type {} from '@deepseek-ai/dsh-web'
+import type { Context } from '@const-ai/cordis'
+import { launchEnvironmentOf } from '@const-ai/launch-environment'
+import z from '@const-ai/schemastery'
+import type {} from '@const-ai/web'
 import { PerplexitySearchProvider, PERPLEXITY_DEFAULT_BASE_URL, PERPLEXITY_DEFAULT_MAX_TOKENS, PERPLEXITY_DEFAULT_MODEL } from './provider.ts'
 
 export {
