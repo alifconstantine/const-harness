@@ -14,7 +14,7 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type {
-  ChatConversationViewNode, ChatNodeStore, ConversationTimelineSnapshot,
+  ChatConversationViewNode, ChatNodeStore, ConversationTimelineSnapshot, TurnLocation,
 } from '@deepseek-ai/dsh-client-runtime/client'
 import { IconChevronDownOutline14 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ChatViewSlotProps } from '../contract/slots.ts'
@@ -160,7 +160,7 @@ function isWorkNodeKind(kind: string | undefined): boolean {
 }
 
 function calculateTurnDuration(
-  turnObj: { start?: { time: number }; end?: { time: number } } | undefined,
+  turnObj: TurnLocation | undefined,
   nodes: readonly (ChatConversationViewNode | undefined)[],
 ): number | undefined {
   if (turnObj?.start !== undefined && turnObj.end !== undefined) {
@@ -170,8 +170,9 @@ function calculateTurnDuration(
   let maxTime: number | undefined
   for (const node of nodes) {
     if (node === undefined) continue
-    const time = 'time' in node.data && typeof node.data.time === 'number'
-      ? node.data.time
+    const data = node.data
+    const time = typeof data === 'object' && data !== null && 'time' in data && typeof data.time === 'number'
+      ? data.time
       : undefined
     if (time !== undefined && time > 0) {
       if (minTime === undefined || time < minTime) minTime = time
