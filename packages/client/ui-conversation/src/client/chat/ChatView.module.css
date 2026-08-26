@@ -21,10 +21,9 @@
 }
 
 :global([data-conversation-scroll]) .root {
-  flex: 1 0 auto;
-  min-height: 100%;
+  flex: 0 0 auto;
+  min-height: auto;
   height: auto;
-  position: relative;
 }
 
 :global([data-conversation-scroll]) .scroll {
@@ -179,8 +178,7 @@
   z-index: 8;
   height: 0;
   display: flex;
-  justify-content: flex-end;
-  padding-right: max(0px, calc((100% - var(--dsh-chat-content-width)) / 2));
+  justify-content: center;
   pointer-events: none;
 }
 

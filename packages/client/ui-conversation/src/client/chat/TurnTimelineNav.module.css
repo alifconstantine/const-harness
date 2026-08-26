@@ -1,26 +1,10 @@
-/* TurnTimelineNav: vertical mini-timeline on the left of chat */
-
-.slot {
-  position: sticky;
-  top: 50%;
-  left: 0;
-  z-index: 9;
-  height: 0;
-  width: 0;
-  display: flex;
-  align-items: center;
-  pointer-events: none;
-}
-
-:global([data-conversation-scroll]) .slot {
-  top: 50%;
-}
+/* TurnTimelineNav: fixed vertical mini-timeline on the left of chat */
 
 .track {
-  position: absolute;
-  left: 18px;
-  top: 0;
+  position: fixed;
+  top: 50%;
   transform: translateY(-50%);
+  z-index: 9;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -133,7 +117,7 @@
 }
 
 @media (max-width: 800px) {
-  .slot {
+  .track {
     display: none;
   }
 }

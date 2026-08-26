@@ -45,8 +45,10 @@ function extractAssistantText(node: ChatNode<'assistant-step'>): string {
   const data = node.data
   const parts: string[] = []
   const blocks = data.finalNode?.blocks ?? data.blocks
-  for (const b of blocks) {
-    if (b.kind === 'text' && typeof b.text === 'string') parts.push(b.text)
+  if (blocks !== undefined) {
+    for (const b of blocks) {
+      if (b.kind === 'text' && typeof b.text === 'string') parts.push(b.text)
+    }
   }
   return cleanPreviewText(parts.join(' '))
 }
@@ -67,7 +69,7 @@ function deriveTurnNavEntries(
       ? node.location.turn.turn
       : entries.length + 1
 
-    const userText = extractUserText(node.data.content)
+    const userText = extractUserText(node.data.content as readonly unknown[])
     const turnObj = timeline.turns.get(turnCoord)
     const isRunning = turnObj?.status === 'open'
 
@@ -127,6 +129,7 @@ export const TurnTimelineNav = memo(function TurnTimelineNav({
   const entries = useMemo(() => deriveTurnNavEntries(order, nodeStore, timeline), [order, nodeStore, timeline])
   const [hoveredTurn, setHoveredTurn] = useState<number | null>(null)
   const [activeTurn, setActiveTurn] = useState<number | null>(null)
+  const [leftPos, setLeftPos] = useState<number | null>(null)
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const rafRef = useRef<number | null>(null)
 
@@ -165,6 +168,27 @@ export const TurnTimelineNav = memo(function TurnTimelineNav({
       } else if (typeof target.scrollIntoView === 'function') {
         target.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }
+    }
+  }, [listRef])
+
+  // Track left position relative to conversation scroller
+  useEffect(() => {
+    const local = listRef.current
+    if (local === null) return
+    const el = scrollerOf(local)
+
+    const updateLeft = () => {
+      const rect = el.getBoundingClientRect()
+      setLeftPos(rect.left + 18)
+    }
+
+    updateLeft()
+    window.addEventListener('resize', updateLeft)
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(updateLeft) : null
+    ro?.observe(el)
+    return () => {
+      window.removeEventListener('resize', updateLeft)
+      ro?.disconnect()
     }
   }, [listRef])
 
@@ -236,49 +260,51 @@ export const TurnTimelineNav = memo(function TurnTimelineNav({
   }
 
   return (
-    <div className={css.slot} aria-label="Conversation Timeline Navigator">
-      <nav className={css.track} aria-label="Turns">
-        {entries.map((entry) => {
-          const isHovered = hoveredTurn === entry.turn
-          const isActive = activeTurn === entry.turn
+    <nav
+      className={css.track}
+      style={leftPos !== null ? { left: leftPos } : undefined}
+      aria-label="Conversation Turns"
+    >
+      {entries.map((entry) => {
+        const isHovered = hoveredTurn === entry.turn
+        const isActive = activeTurn === entry.turn
 
-          return (
-            <div
-              key={entry.anchorKey}
-              className={css.itemWrapper}
-              onPointerEnter={() => { handlePointerEnter(entry.turn) }}
-              onPointerLeave={handlePointerLeave}
+        return (
+          <div
+            key={entry.anchorKey}
+            className={css.itemWrapper}
+            onPointerEnter={() => { handlePointerEnter(entry.turn) }}
+            onPointerLeave={handlePointerLeave}
+          >
+            <button
+              type="button"
+              className={css.dashBtn}
+              data-active={isActive || undefined}
+              aria-label={`Jump to turn: ${entry.userText}`}
+              onClick={() => { scrollToTurn(entry.anchorKey) }}
             >
-              <button
-                type="button"
-                className={css.dashBtn}
-                data-active={isActive || undefined}
-                aria-label={`Jump to turn: ${entry.userText}`}
+              <div className={css.dash} />
+            </button>
+
+            {isHovered && (
+              <div
+                className={css.previewCard}
+                role="tooltip"
                 onClick={() => { scrollToTurn(entry.anchorKey) }}
               >
-                <div className={css.dash} />
-              </button>
-
-              {isHovered && (
-                <div
-                  className={css.previewCard}
-                  role="tooltip"
-                  onClick={() => { scrollToTurn(entry.anchorKey) }}
-                >
-                  <div className={css.previewTitle}>{entry.userText}</div>
-                  {entry.assistantText ? (
-                    <div className={css.previewSnippet}>{entry.assistantText}</div>
-                  ) : entry.isRunning ? (
-                    <div className={css.previewEmpty}>Sedang memproses respons...</div>
-                  ) : (
-                    <div className={css.previewEmpty}>Eksekusi selesai</div>
-                  )}
-                </div>
-              )}
-            </div>
-          )
-        })}
-      </nav>
-    </div>
+                <div className={css.previewTitle}>{entry.userText}</div>
+                {entry.assistantText ? (
+                  <div className={css.previewSnippet}>{entry.assistantText}</div>
+                ) : entry.isRunning ? (
+                  <div className={css.previewEmpty}>Sedang memproses respons...</div>
+                ) : (
+                  <div className={css.previewEmpty}>Eksekusi selesai</div>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </nav>
   )
 })
