@@ -22,7 +22,7 @@ import {
   IconAutomationsOutline16, IconDesignOutline16,
   IconNewChatOutline16, IconPanelLeftOutline16, IconSearchOutline16,
   Tooltip,
-} from '@deepseek-ai/dsh-client-ui-primitives'
+} from '@const-ai/client-ui-primitives'
 import type { SidebarRootComponentProps } from './contract/slots.ts'
 import { CommandPaletteModal } from './CommandPaletteModal.tsx'
 import css from './SidebarRoot.module.css'

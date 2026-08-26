@@ -1,17 +1,17 @@
 /**
  * Cordis Snapshot Service providing shadow git snapshots and file rollback (ctx.snapshot).
  *
- * @module @deepseek-ai/dsh-fs-snapshot
+ * @module @const-ai/fs-snapshot
  */
 
-import { Context, Service } from '@deepseek-ai/cordis'
-import type { Session, SessionEvent } from '@deepseek-ai/dsh-session'
+import { Context, Service } from '@const-ai/cordis'
+import type { Session, SessionEvent } from '@const-ai/session'
 import { ShadowGit, type FileDiffStat, type ShadowGitOptions } from './git-shadow.ts'
 
 export type { FileDiffStat, ShadowGitOptions }
 export { ShadowGit }
 
-declare module '@deepseek-ai/cordis' {
+declare module '@const-ai/cordis' {
   interface Context {
     /** The Shadow Git Snapshot and Rollback Service. */
     snapshot: SnapshotService
@@ -41,9 +41,10 @@ export class SnapshotService extends Service {
 
   /**
    * Get or create a ShadowGit instance for a given workspace path.
-   * @param worktree - target workspace path.
-   * @param projectId - optional project identifier.
-   * @returns the ShadowGit instance.
+   *
+   * @param worktree - Workspace directory path.
+   * @param projectId - Optional project identifier.
+   * @returns ShadowGit instance.
    */
   getShadow(worktree: string, projectId?: string): ShadowGit {
     const key = `${worktree}::${projectId ?? ''}`
@@ -60,10 +61,11 @@ export class SnapshotService extends Service {
 
   /**
    * Capture a snapshot of a worktree directory.
-   * @param worktree - target workspace path.
-   * @param projectId - optional project identifier.
-   * @param signal - optional abort signal.
-   * @returns the captured snapshot git tree ID.
+   *
+   * @param worktree - Workspace directory path.
+   * @param projectId - Optional project identifier.
+   * @param signal - Optional abort signal.
+   * @returns Git tree sha of captured snapshot.
    */
   async capture(worktree: string, projectId?: string, signal?: AbortSignal): Promise<string> {
     const shadow = this.getShadow(worktree, projectId)
@@ -72,11 +74,12 @@ export class SnapshotService extends Service {
 
   /**
    * Compute structured file diffs between two snapshot tree IDs.
-   * @param worktree - target workspace path.
-   * @param fromTree - base tree ID.
-   * @param toTree - target tree ID.
-   * @param options - diff options including context lines, project ID, and abort signal.
-   * @returns array of file diff statistics.
+   *
+   * @param worktree - Workspace directory path.
+   * @param fromTree - Starting snapshot tree ID.
+   * @param toTree - Target snapshot tree ID.
+   * @param options - Optional diff configuration options.
+   * @returns Array of file diff statistics.
    */
   async diff(
     worktree: string,
@@ -90,10 +93,11 @@ export class SnapshotService extends Service {
 
   /**
    * Restore files in a worktree from a snapshot tree ID.
-   * @param worktree - target workspace path.
-   * @param treeId - snapshot tree ID to restore from.
-   * @param options - restore options including specific paths, project ID, and abort signal.
-   * @returns completion promise.
+   *
+   * @param worktree - Workspace directory path.
+   * @param treeId - Snapshot tree ID to restore from.
+   * @param options - Optional restore options and path filtering.
+   * @returns Resolves when files are restored.
    */
   async restore(
     worktree: string,
@@ -106,7 +110,8 @@ export class SnapshotService extends Service {
 
   /**
    * Record a completed turn's snapshot boundary.
-   * @param record - turn snapshot record containing session ID, turn number, and tree IDs.
+   *
+   * @param record - Turn snapshot record to store.
    */
   recordTurnSnapshot(record: TurnSnapshotRecord): void {
     let sessionMap = this.turnSnapshots.get(record.sessionId)
@@ -119,9 +124,10 @@ export class SnapshotService extends Service {
 
   /**
    * Retrieve snapshot metadata for a turn.
-   * @param sessionId - session identifier.
-   * @param turn - turn number.
-   * @returns the snapshot record for the turn, or undefined if not found.
+   *
+   * @param sessionId - Session identifier.
+   * @param turn - Turn number.
+   * @returns Turn snapshot record if found, undefined otherwise.
    */
   getTurnSnapshot(sessionId: string, turn: number): TurnSnapshotRecord | undefined {
     return this.turnSnapshots.get(sessionId)?.get(turn)
@@ -129,11 +135,12 @@ export class SnapshotService extends Service {
 
   /**
    * Rollback the workspace to the exact state before a turn executed.
-   * @param sessionId - session identifier.
-   * @param turn - turn number to rollback.
-   * @param worktree - workspace directory path.
-   * @param projectId - optional project identifier.
-   * @returns result indicating success, restored file paths, and optional error message.
+   *
+   * @param sessionId - Session identifier.
+   * @param turn - Turn number to rollback.
+   * @param worktree - Workspace directory path.
+   * @param projectId - Optional project identifier.
+   * @returns Rollback result with list of restored files.
    */
   async rollbackTurn(
     sessionId: string,

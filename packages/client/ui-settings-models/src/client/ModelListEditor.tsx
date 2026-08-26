@@ -16,8 +16,8 @@
 
 import { useState } from 'react'
 import type { ReactNode } from 'react'
-import type { DiscoveredModelView, IApiClient } from '@deepseek-ai/dsh-api-remotes/client'
-import { Button, Modal } from '@deepseek-ai/dsh-client-ui-primitives'
+import type { DiscoveredModelView, IApiClient } from '@const-ai/api-remotes/client'
+import { Button, Modal } from '@const-ai/client-ui-primitives'
 import { formatCapacity, parseCapacity } from './DeepSeekModelsEditor.tsx'
 import type { DeepSeekModelDraft } from './DeepSeekModelsEditor.tsx'
 import { messageOf } from './store.ts'
@@ -437,7 +437,7 @@ export function ModelListEditor(props: ModelListEditorProps): ReactNode {
         title={t('fetchTitle')}
         closeLabel={t('close')}
         description={t('fetchDescription')}
-        className={styles['fetchDialog'] as string}
+        className={styles['fetchDialog']}
         footer={(
           <>
             <Button variant="outline" onClick={closePicker}>{t('cancel')}</Button>

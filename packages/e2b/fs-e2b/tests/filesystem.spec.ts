@@ -1,18 +1,18 @@
 import { Buffer } from 'node:buffer'
 import { dirname, posix } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@const-ai/cordis'
 import {
   CommandExitError,
   FileNotFoundError,
   FileType,
   type EntryInfo,
   type Sandbox,
-} from '@deepseek-ai/dsh-e2b'
-import type E2BRuntime from '@deepseek-ai/dsh-e2b'
-import { FsTargetKey, FsVersion } from '@deepseek-ai/dsh-fs'
-import E2BFileSystem from '@deepseek-ai/dsh-fs-e2b'
+} from '@const-ai/e2b'
+import type E2BRuntime from '@const-ai/e2b'
+import { FsTargetKey, FsVersion } from '@const-ai/fs'
+import E2BFileSystem from '@const-ai/fs-e2b'
 import * as E2BFsInvariant from '../src/invariant.ts'
-import InvariantRegistry from '@deepseek-ai/dsh-invariants'
+import InvariantRegistry from '@const-ai/invariants'
 import { describe, expect, it, vi } from 'vitest'
 
 interface RemoteNode {

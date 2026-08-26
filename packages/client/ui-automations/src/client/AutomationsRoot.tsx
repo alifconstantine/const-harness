@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
-import type { ConnectionHandle } from '@deepseek-ai/dsh-client-connection/client'
-import type { AutomationItem, AutomationRunHistory, WorkspaceView } from '@deepseek-ai/dsh-host-apiproxy/api'
-import type { SessionId } from '@deepseek-ai/dsh-session'
+import type { ClientContext } from '@const-ai/client-runtime/client'
+import type { ConnectionHandle } from '@const-ai/client-connection/client'
+import type { AutomationItem, AutomationRunHistory, WorkspaceView } from '@const-ai/host-apiproxy/api'
+import type { SessionId } from '@const-ai/session'
 import { AutomationsDashboard, type StarterTemplate } from './AutomationsDashboard.tsx'
 import { AutomationsForm, type FormSubmitData } from './AutomationsForm.tsx'
 import { AutomationsHistory } from './AutomationsHistory.tsx'
@@ -274,8 +274,8 @@ export function AutomationsRoot({ ctx }: AutomationsRootProps): React.JSX.Elemen
           }}
           onSelectTemplate={handleSelectTemplate}
           onSelectTask={handleSelectTask}
-          onRunNow={handleRunNow}
-          onRefresh={refreshTasks}
+          onRunNow={(id) => { void handleRunNow(id) }}
+          onRefresh={() => { void refreshTasks() }}
         />
       )}
 
@@ -285,8 +285,8 @@ export function AutomationsRoot({ ctx }: AutomationsRootProps): React.JSX.Elemen
           workspaces={workspaces}
           availableModels={availableModels}
           isEditing={false}
-          onSubmit={handleCreateSubmit}
-          onCancel={() => setView('dashboard')}
+          onSubmit={(vals) => { void handleCreateSubmit(vals) }}
+          onCancel={() => { setView('dashboard') }}
         />
       )}
 
@@ -296,12 +296,12 @@ export function AutomationsRoot({ ctx }: AutomationsRootProps): React.JSX.Elemen
           workspaces={workspaces}
           availableModels={availableModels}
           isEditing={true}
-          onSubmit={handleUpdateSubmit}
+          onSubmit={(vals) => { void handleUpdateSubmit(vals) }}
           onCancel={() => {
             setView('dashboard')
             setSelectedTask(null)
           }}
-          onSwitchToHistory={() => setView('history')}
+          onSwitchToHistory={() => { setView('history') }}
         />
       )}
 
@@ -309,15 +309,15 @@ export function AutomationsRoot({ ctx }: AutomationsRootProps): React.JSX.Elemen
         <AutomationsHistory
           task={selectedTask}
           historyList={historyList}
-          onRunNow={handleRunNow}
-          onDeleteTask={handleDeleteTask}
-          onOpenSession={handleOpenSession}
-          onDeleteRun={handleDeleteRun}
+          onRunNow={(id) => { void handleRunNow(id) }}
+          onDeleteTask={(id) => { void handleDeleteTask(id) }}
+          onOpenSession={(id) => { handleOpenSession(id) }}
+          onDeleteRun={(runId) => { void handleDeleteRun(runId) }}
           onBack={() => {
             setView('dashboard')
             setSelectedTask(null)
           }}
-          onSwitchToSettings={() => setView('settings')}
+          onSwitchToSettings={() => { setView('settings') }}
         />
       )}
     </div>

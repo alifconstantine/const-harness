@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-client-ui-primitives
+# @const-ai/client-ui-primitives
 
 [English](README.md) | 中文
 

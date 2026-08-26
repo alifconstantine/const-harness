@@ -15,8 +15,8 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type {
   ChatConversationViewNode, ChatNodeStore, ConversationTimelineSnapshot, TurnLocation,
-} from '@deepseek-ai/dsh-client-runtime/client'
-import { IconChevronDownOutline14 } from '@deepseek-ai/dsh-client-ui-primitives'
+} from '@const-ai/client-runtime/client'
+import { IconChevronDownOutline14 } from '@const-ai/client-ui-primitives'
 import type { ChatViewSlotProps } from '../contract/slots.ts'
 import { PendingSteeringBubble } from './MessageItem.tsx'
 import { ChatNodeSeat } from './ChatNodeSeat.tsx'
@@ -177,7 +177,7 @@ function isWorkNode(node: ChatConversationViewNode | undefined): boolean {
   if (node.kind === 'context') {
     const data = node.data as { provenance?: { label?: string }; form?: string } | undefined
     const label = data?.provenance?.label
-    if (label === 'time-context' || (label === '@deepseek-ai/dsh-system-prompt' && data?.form !== 'snapshot')) {
+    if (label === 'time-context' || (label === '@const-ai/system-prompt' && data?.form !== 'snapshot')) {
       return false
     }
     return true
@@ -579,56 +579,39 @@ export function ChatView({
               </button>
             </div>
           )}
-          {flowItems.map((item) => {
-            if (item.kind === 'single') {
-              return (
-                <ChatNodeSeat
-                  key={item.key}
-                  nodeKey={item.key}
-                  useSession={useSession}
-                  selectedCallId={selectedCallId}
-                  cwd={cwd}
-                  openFile={openFile}
-                  inspectCall={inspectCall}
-                  forkAt={forkAt}
-                  undoTurn={undoTurn}
-                  editTurn={editTurn}
-                  loadImage={loadImage}
-                  fileMentions={fileMentions}
-                  renderSlot={renderSlot}
-                  t={t}
-                />
-              )
-            }
-            return (
-              <TurnWorkDisclosure
-                key={item.key}
-                turn={item.turn}
-                durationMs={item.durationMs}
-                summary={item.summary}
+          {(() => {
+            const renderNode = (nodeKey: string) => (
+              <ChatNodeSeat
+                key={nodeKey}
+                nodeKey={nodeKey}
+                useSession={useSession}
+                selectedCallId={selectedCallId}
+                cwd={cwd}
+                openFile={openFile}
+                inspectCall={inspectCall}
+                forkAt={forkAt}
+                undoTurn={undoTurn}
+                editTurn={editTurn}
+                loadImage={loadImage}
+                fileMentions={fileMentions}
+                renderSlot={renderSlot}
                 t={t}
-              >
-                {item.keys.map(nodeKey => (
-                  <ChatNodeSeat
-                    key={nodeKey}
-                    nodeKey={nodeKey}
-                    useSession={useSession}
-                    selectedCallId={selectedCallId}
-                    cwd={cwd}
-                    openFile={openFile}
-                    inspectCall={inspectCall}
-                    forkAt={forkAt}
-                    undoTurn={undoTurn}
-                    editTurn={editTurn}
-                    loadImage={loadImage}
-                    fileMentions={fileMentions}
-                    renderSlot={renderSlot}
-                    t={t}
-                  />
-                ))}
-              </TurnWorkDisclosure>
+              />
             )
-          })}
+            return flowItems.map(item => item.kind === 'single'
+              ? renderNode(item.key)
+              : (
+                <TurnWorkDisclosure
+                  key={item.key}
+                  turn={item.turn}
+                  durationMs={item.durationMs}
+                  summary={item.summary}
+                  t={t}
+                >
+                  {item.keys.map(renderNode)}
+                </TurnWorkDisclosure>
+              ))
+          })()}
           {/* No pending placeholders: questions (ui-user-questions) and approvals
               (ApprovalPanel) both take over the composer, so a flow card would
               double-render the same wait. */}

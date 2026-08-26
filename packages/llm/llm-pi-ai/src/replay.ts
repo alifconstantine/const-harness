@@ -8,8 +8,8 @@
  * @module dsh-llm-pi-ai/replay
  */
 
-import { LlmError } from '@deepseek-ai/dsh-llm'
-import type { Message, ModelMessageSource } from '@deepseek-ai/dsh-llm'
+import { LlmError } from '@const-ai/llm'
+import type { Message, ModelMessageSource } from '@const-ai/llm'
 import type { Api, AssistantMessage, Usage as PiUsage } from '@earendil-works/pi-ai'
 
 type PiAiReplayBlock =

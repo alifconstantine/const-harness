@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-fs-snapshot",
+  "name": "@const-ai/fs-snapshot",
   "description": "Shadow Git snapshot engine and file rollback service for Const Harness (ctx.snapshot)",
   "version": "0.1.0-rc.5",
   "publishConfig": {
@@ -13,26 +13,36 @@
       "types": "./lib/types/index.d.ts",
       "default": "./lib/index.js"
     },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "directory": "packages/fs/fs-snapshot"
+  },
   "files": [
     "lib/index.js",
+    "lib/invariant.js",
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/dsh-home-paths": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^"
+    "@const-ai/home-paths": "workspace:^",
+    "@const-ai/session": "workspace:^"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/dsh-home-paths": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^"
+    "@const-ai/cordis": "workspace:^",
+    "@const-ai/home-paths": "workspace:^",
+    "@const-ai/invariants": "workspace:^",
+    "@const-ai/session": "workspace:^"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/dsh-home-paths": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^"
+    "@const-ai/cordis": "workspace:^",
+    "@const-ai/invariants": "workspace:^"
   }
 }

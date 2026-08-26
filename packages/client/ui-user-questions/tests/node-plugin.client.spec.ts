@@ -1,8 +1,8 @@
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@const-ai/cordis'
 import { afterEach, describe, expect, it } from 'vitest'
-import ToolRuntime from '@deepseek-ai/dsh-tools'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import UserQuestionService from '@deepseek-ai/dsh-user-questions'
+import ToolRuntime from '@const-ai/tools'
+import SystemPrompt from '@const-ai/system-prompt'
+import UserQuestionService from '@const-ai/user-questions'
 import { apply } from '../src/index.ts'
 
 let ctx: Context | undefined

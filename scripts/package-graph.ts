@@ -8,11 +8,11 @@
 import { globSync, readFileSync } from 'node:fs'
 import { dirname, resolve, sep } from 'node:path'
 
-const SCOPE = '@deepseek-ai/dsh-'
+const SCOPE = '@const-ai/'
 
 /** One harness package and its in-repo peer-dependency edges. */
 export interface PackageGraphNode {
-  /** Package name with the `@deepseek-ai/dsh-` prefix removed. */
+  /** Package name with the `@const-ai/` prefix removed. */
   short: string
   /** Full npm package name. */
   name: string
@@ -32,18 +32,26 @@ export interface PackageGraphNode {
  * @returns package nodes ordered after all of their in-repo dependencies.
  */
 export function collectPackageGraph(root: string, groupOrder: readonly string[], gate: string): PackageGraphNode[] {
-  const packages: PackageGraphNode[] = []
+  const rawEntries: { rel: string; json: { name: string; peerDependencies?: Record<string, string> } }[] = []
+  const knownShorts = new Set<string>()
   for (const rel of globSync('packages/*/*/package.json', { cwd: root }).map(path => path.split(sep).join('/')).sort()) {
     const json = JSON.parse(readFileSync(resolve(root, rel), 'utf8')) as {
       name: string
       peerDependencies?: Record<string, string>
     }
     if (!json.name.startsWith(SCOPE)) continue
+    rawEntries.push({ rel, json })
+    knownShorts.add(json.name.slice(SCOPE.length))
+  }
+
+  const packages: PackageGraphNode[] = []
+  for (const { rel, json } of rawEntries) {
     const [, group, leaf] = rel.split('/')
     if (group === undefined || leaf === undefined) throw new Error(`${gate}: unexpected package path ${rel}`)
     const deps = Object.keys(json.peerDependencies ?? {})
       .filter(dep => dep.startsWith(SCOPE))
       .map(dep => dep.slice(SCOPE.length))
+      .filter(short => knownShorts.has(short))
       .sort()
     packages.push({
       short: json.name.slice(SCOPE.length),

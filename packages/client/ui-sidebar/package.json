@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-client-ui-sidebar",
+  "name": "@const-ai/client-ui-sidebar",
   "description": "Sidebar plugin: session multi-level tree, search, grouping, state dots",
   "version": "0.1.0-rc.5",
   "publishConfig": {
@@ -32,9 +32,9 @@
   "dsh": {
     "client": {
       "inject": [
-        "@deepseek-ai/dsh-client-runtime",
-        "@deepseek-ai/dsh-client-ui-layout",
-        "@deepseek-ai/dsh-client-locale"
+        "@const-ai/client-runtime",
+        "@const-ai/client-ui-layout",
+        "@const-ai/client-locale"
       ],
       "platform": "web"
     }
@@ -49,23 +49,23 @@
     "lucide-react": "^1.34.0"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/dsh-client-locale": "workspace:^",
-    "@deepseek-ai/dsh-client-runtime": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-primitives": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-slots": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
+    "@const-ai/cordis": "workspace:^",
+    "@const-ai/client-locale": "workspace:^",
+    "@const-ai/client-runtime": "workspace:^",
+    "@const-ai/client-ui-primitives": "workspace:^",
+    "@const-ai/client-ui-slots": "workspace:^",
+    "@const-ai/invariants": "workspace:^",
     "react": "^18.2.0"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/dsh-client-locale": "workspace:^",
-    "@deepseek-ai/dsh-client-runtime": "workspace:^",
-    "@deepseek-ai/dsh-client-test-runtime": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-layout": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-primitives": "workspace:^",
-    "@deepseek-ai/dsh-client-ui-slots": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
+    "@const-ai/cordis": "workspace:^",
+    "@const-ai/client-locale": "workspace:^",
+    "@const-ai/client-runtime": "workspace:^",
+    "@const-ai/client-test-runtime": "workspace:^",
+    "@const-ai/client-ui-layout": "workspace:^",
+    "@const-ai/client-ui-primitives": "workspace:^",
+    "@const-ai/client-ui-slots": "workspace:^",
+    "@const-ai/invariants": "workspace:^",
     "@types/react": "~18.3.1",
     "react": "^18.2.0"
   },

@@ -1,8 +1,8 @@
 import React from 'react'
-import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
-import type {} from '@deepseek-ai/dsh-client-ui-slots'
-import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
-import type {} from '@deepseek-ai/dsh-client-connection/client'
+import type { ClientContext } from '@const-ai/client-runtime/client'
+import type {} from '@const-ai/client-ui-slots'
+import type {} from '@const-ai/client-ui-layout/client'
+import type {} from '@const-ai/client-connection/client'
 import { AutomationsRoot } from './AutomationsRoot.tsx'
 
 export { AutomationsRoot } from './AutomationsRoot.tsx'

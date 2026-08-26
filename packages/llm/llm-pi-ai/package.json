@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-llm-pi-ai",
+  "name": "@const-ai/llm-pi-ai",
   "description": "pi-ai-backed DeepSeek adapter for the DeepSeek Harness LLM seam (design-verification twin of dsh-llm-deepseek)",
   "version": "0.1.0-rc.5",
   "publishConfig": {
@@ -32,28 +32,28 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-attachment": "workspace:^",
-    "@deepseek-ai/dsh-credentials": "workspace:^",
-    "@deepseek-ai/dsh-launch-environment": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-llm": "workspace:^",
-    "@deepseek-ai/dsh-settings": "workspace:^",
-    "@deepseek-ai/dsh-timeout": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@const-ai/attachment": "workspace:^",
+    "@const-ai/credentials": "workspace:^",
+    "@const-ai/launch-environment": "workspace:^",
+    "@const-ai/invariants": "workspace:^",
+    "@const-ai/llm": "workspace:^",
+    "@const-ai/settings": "workspace:^",
+    "@const-ai/timeout": "workspace:^",
+    "@const-ai/cordis": "workspace:^"
   },
   "dependencies": {
     "@earendil-works/pi-ai": "^0.82.1",
-    "@deepseek-ai/schemastery": "workspace:^"
+    "@const-ai/schemastery": "workspace:^"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-attachment": "workspace:^",
-    "@deepseek-ai/dsh-credentials": "workspace:^",
-    "@deepseek-ai/dsh-launch-environment": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-llm": "workspace:^",
-    "@deepseek-ai/dsh-llm-deepseek": "workspace:^",
-    "@deepseek-ai/dsh-settings": "workspace:^",
-    "@deepseek-ai/dsh-timeout": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@const-ai/attachment": "workspace:^",
+    "@const-ai/credentials": "workspace:^",
+    "@const-ai/launch-environment": "workspace:^",
+    "@const-ai/invariants": "workspace:^",
+    "@const-ai/llm": "workspace:^",
+    "@const-ai/llm-deepseek": "workspace:^",
+    "@const-ai/settings": "workspace:^",
+    "@const-ai/timeout": "workspace:^",
+    "@const-ai/cordis": "workspace:^"
   }
 }

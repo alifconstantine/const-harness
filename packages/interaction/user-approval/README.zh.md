@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-user-approval
+# @const-ai/user-approval
 
 [English](README.md) | 中文
 

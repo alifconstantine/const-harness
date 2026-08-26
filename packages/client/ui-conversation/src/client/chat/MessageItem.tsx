@@ -7,12 +7,12 @@ import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import type {
   ModelRetryNode, TurnErrorNode, UserMessageNode,
-} from '@deepseek-ai/dsh-client-runtime/client'
+} from '@const-ai/client-runtime/client'
 import {
   IconCloseOutline16, IconPlusOutline16, JsonBlock, MessageText, StateDot, Tooltip,
-} from '@deepseek-ai/dsh-client-ui-primitives'
+} from '@const-ai/client-ui-primitives'
 import type { ChatNodeViewProps, ChatViewSlotProps } from '../contract/slots.ts'
-import { ImageGallery, type ImageLoader } from '@deepseek-ai/dsh-client-ui-attachment'
+import { ImageGallery, type ImageLoader } from '@const-ai/client-ui-attachment'
 import { messageImageLabels } from '../image-labels.ts'
 import { CompactionItem } from './CompactionItem.tsx'
 import { ContextInjectionRow } from './ContextInjectionRow.tsx'
@@ -426,7 +426,7 @@ export const UserMessageNodeView = memo(function UserMessageNodeView({
 /** Injected-context keyed Chat renderer. */
 export const ContextMessageNodeView = memo(function ContextMessageNodeView({ node, t }: ChatNodeViewProps<'context'>) {
   const data = node.data
-  if (data.provenance.label === 'time-context' || (data.provenance.label === '@deepseek-ai/dsh-system-prompt' && data.form !== 'snapshot')) {
+  if (data.provenance.label === 'time-context' || (data.provenance.label === '@const-ai/system-prompt' && data.form !== 'snapshot')) {
     return null
   }
   return (

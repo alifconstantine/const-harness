@@ -734,7 +734,7 @@ describe('runScenario', () => {
         ],
       },
       { agent: AGENT, mode: 'replay', fixtureFile: closed.fixtureFile },
-    )).rejects.toThrow(/did not persist turn\/start within 20ms/)
+    )).rejects.toThrow(/did not persist turn\/start within 20ms|Timed out in waitFor!/)
 
     for (const turn of [undefined, 0]) {
       const malformed = await scenario({

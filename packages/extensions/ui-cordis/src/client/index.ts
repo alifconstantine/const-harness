@@ -1,11 +1,11 @@
 /** Cordis dynamic-plugin cards, inventory panel, business-view host, and `@pluginId` source. */
 
-import type { ClientContext, SessionId } from '@deepseek-ai/dsh-client-runtime/client'
-import type {} from '@deepseek-ai/dsh-client-ui-tool/client'
-import type {} from '@deepseek-ai/dsh-client-locale/client'
-import type {} from '@deepseek-ai/dsh-client-ui-sidebar/client'
-import type {} from '@deepseek-ai/dsh-api-remotes/client'
-import type { InputTriggerService, InputTriggerSource } from '@deepseek-ai/dsh-client-ui-input-trigger/client'
+import type { ClientContext, SessionId } from '@const-ai/client-runtime/client'
+import type {} from '@const-ai/client-ui-tool/client'
+import type {} from '@const-ai/client-locale/client'
+import type {} from '@const-ai/client-ui-sidebar/client'
+import type {} from '@const-ai/api-remotes/client'
+import type { InputTriggerService, InputTriggerSource } from '@const-ai/client-ui-input-trigger/client'
 import type {} from './events.ts'
 import { CordisActionRow } from './CordisActionRow.tsx'
 import { CordisDefineRow } from './CordisDefineRow.tsx'
@@ -70,12 +70,12 @@ export function apply(ctx: ClientContext): void {
     if (snapshot.read) runner.reconcileApprovals(snapshot.rows)
   }), 'ui-cordis: reconcile pending approvals')
 
-  ctx.remote.$on('cordis/dynamic-package', () => { inventory.refresh() })
-  ctx.remote.$on('cordis/dynamic-retract', () => { inventory.refresh() })
-  ctx.remote.$on('cordis/request-run', (request) => {
+  ctx.remote.$on('@const-ai/cordis/dynamic-package', () => { inventory.refresh() })
+  ctx.remote.$on('@const-ai/cordis/dynamic-retract', () => { inventory.refresh() })
+  ctx.remote.$on('@const-ai/cordis/request-run', (request) => {
     if (!inventory.getSnapshot().rows.some(row => row.pluginId === request.pluginId)) inventory.refresh()
   })
-  ctx.remote.$on('cordis/request-run-resolved', () => { inventory.refresh() })
+  ctx.remote.$on('@const-ai/cordis/request-run-resolved', () => { inventory.refresh() })
   ctx.on('connection/reset', () => {
     inventory.reset()
     inventory.refresh()
@@ -146,7 +146,7 @@ export function apply(ctx: ClientContext): void {
     .filter(row => row.agentId === sessionId && String(row.pluginId).includes(query))
   const source: InputTriggerSource = {
     trigger: '@',
-    name: 'cordis',
+    name: '@const-ai/cordis',
     order: 1,
     candidates(session, { query }) {
       const rows = rowsOf(session.sessionId, query)

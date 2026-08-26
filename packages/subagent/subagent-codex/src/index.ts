@@ -3,12 +3,12 @@
  * official `codex app-server --stdio` process in the delegating Session's
  * workspace and publishes only after an ephemeral thread exists.
  *
- * @module @deepseek-ai/dsh-subagent-codex
+ * @module @const-ai/subagent-codex
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
+import type { Context } from '@const-ai/cordis'
+import z from '@const-ai/schemastery'
+import { MAX_TIMER_DELAY_MS } from '@const-ai/timeout'
 import {
   assertPositiveFinite,
   NO_START_CAPABILITIES,
@@ -16,7 +16,7 @@ import {
   type ResolvedSubagentStartRequest,
   type SubagentCapabilities,
   type SubagentProvider,
-} from '@deepseek-ai/dsh-subagent'
+} from '@const-ai/subagent'
 import {
   DEFAULT_DISPOSE_GRACE_MS,
   startCodexRun,

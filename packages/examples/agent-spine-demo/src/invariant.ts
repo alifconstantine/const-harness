@@ -1,13 +1,13 @@
 /**
- * Package-owned invariant companion for `@deepseek-ai/dsh-agent-spine-demo`.
- * @module @deepseek-ai/dsh-agent-spine-demo/invariant
+ * Package-owned invariant companion for `@const-ai/agent-spine-demo`.
+ * @module @const-ai/agent-spine-demo/invariant
  */
 
 /* jscpd:ignore-start */
-import type { Context } from '@deepseek-ai/cordis'
-import type { InvariantInstaller } from '@deepseek-ai/dsh-invariants'
+import type { Context } from '@const-ai/cordis'
+import type { InvariantInstaller } from '@const-ai/invariants'
 
-const PACKAGE_NAME = '@deepseek-ai/dsh-agent-spine-demo'
+const PACKAGE_NAME = '@const-ai/agent-spine-demo'
 
 /** Cordis companion plugin name. */
 export const name = 'agent-spine-demo-invariant'

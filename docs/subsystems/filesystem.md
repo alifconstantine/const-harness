@@ -202,7 +202,7 @@ The policy plugin needs just enough execution context to derive the observed-sta
 ```ts type-equiv
 /**
  * Minimal structural view of a tool execution the policy plugin needs to derive
- * an observed-state owner. `@deepseek-ai/dsh-tools`' `ToolExecution` contains
+ * an observed-state owner. `@const-ai/tools`' `ToolExecution` contains
  * these fields, so the tool passes its `exec` straight through as the opaque
  * `object` actor on the `fs/*` events; this plugin narrows that actor to
  * `FsObservationActor` without importing `dsh-tools`, `dsh-agent`, or `dsh-session`.
@@ -271,7 +271,7 @@ type FsErrorCode =
 
 ## No timeouts on file IO
 
-`read`/`write`/`edit` take **no** `timeoutMs`, and the provider contract arms no deadline — unlike bash and web (which consume [`@deepseek-ai/dsh-timeout`](../../packages/util/timeout/README.md)) and the subprocess-backed `glob`/`grep` (whose declared `timeoutMs` is enforced by `@deepseek-ai/dsh-tool-call-timeout-policy`): those are process-backed, where a deadline can really kill the work. A local syscall is best-effort-abortable at most — a timeout could not force an in-progress `fsync`/`rename` to stop, so a `timeoutMs` here would be a deadline the seam cannot enforce, and an implicit default in the exact place explicit-over-implicit forbids. Cancellation still propagates through the tool-execution signal for best-effort abort at syscall boundaries.
+`read`/`write`/`edit` take **no** `timeoutMs`, and the provider contract arms no deadline — unlike bash and web (which consume [`@const-ai/timeout`](../../packages/util/timeout/README.md)) and the subprocess-backed `glob`/`grep` (whose declared `timeoutMs` is enforced by `@const-ai/tool-call-timeout-policy`): those are process-backed, where a deadline can really kill the work. A local syscall is best-effort-abortable at most — a timeout could not force an in-progress `fsync`/`rename` to stop, so a `timeoutMs` here would be a deadline the seam cannot enforce, and an implicit default in the exact place explicit-over-implicit forbids. Cancellation still propagates through the tool-execution signal for best-effort abort at syscall boundaries.
 
 ## The service and the plugin
 
@@ -438,61 +438,68 @@ Snapshot Service for capturing worktree states and managing rollbacks.
 ```ts cordis-catalog
 /**
  * Get or create a ShadowGit instance for a given workspace path.
- * @param worktree - target workspace path.
- * @param projectId - optional project identifier.
- * @returns the ShadowGit instance.
+ *
+ * @param worktree - Workspace directory path.
+ * @param projectId - Optional project identifier.
+ * @returns ShadowGit instance.
  */
 getShadow(worktree: string, projectId?: string): ShadowGit
 
 /**
  * Capture a snapshot of a worktree directory.
- * @param worktree - target workspace path.
- * @param projectId - optional project identifier.
- * @param signal - optional abort signal.
- * @returns the captured snapshot git tree ID.
+ *
+ * @param worktree - Workspace directory path.
+ * @param projectId - Optional project identifier.
+ * @param signal - Optional abort signal.
+ * @returns Git tree sha of captured snapshot.
  */
 async capture(worktree: string, projectId?: string, signal?: AbortSignal): Promise<string>
 
 /**
  * Compute structured file diffs between two snapshot tree IDs.
- * @param worktree - target workspace path.
- * @param fromTree - base tree ID.
- * @param toTree - target tree ID.
- * @param options - diff options including context lines, project ID, and abort signal.
- * @returns array of file diff statistics.
+ *
+ * @param worktree - Workspace directory path.
+ * @param fromTree - Starting snapshot tree ID.
+ * @param toTree - Target snapshot tree ID.
+ * @param options - Optional diff configuration options.
+ * @returns Array of file diff statistics.
  */
 async diff( worktree: string, fromTree: string, toTree: string, options?: { context?: number; projectId?: string; signal?: AbortSignal }, ): Promise<FileDiffStat[]>
 
 /**
  * Restore files in a worktree from a snapshot tree ID.
- * @param worktree - target workspace path.
- * @param treeId - snapshot tree ID to restore from.
- * @param options - restore options including specific paths, project ID, and abort signal.
- * @returns completion promise.
+ *
+ * @param worktree - Workspace directory path.
+ * @param treeId - Snapshot tree ID to restore from.
+ * @param options - Optional restore options and path filtering.
+ * @returns Resolves when files are restored.
  */
 async restore( worktree: string, treeId: string, options?: { paths?: readonly string[]; projectId?: string; signal?: AbortSignal }, ): Promise<void>
 
 /**
  * Record a completed turn's snapshot boundary.
- * @param record - turn snapshot record containing session ID, turn number, and tree IDs.
+ *
+ * @param record - Turn snapshot record to store.
  */
 recordTurnSnapshot(record: TurnSnapshotRecord): void
 
 /**
  * Retrieve snapshot metadata for a turn.
- * @param sessionId - session identifier.
- * @param turn - turn number.
- * @returns the snapshot record for the turn, or undefined if not found.
+ *
+ * @param sessionId - Session identifier.
+ * @param turn - Turn number.
+ * @returns Turn snapshot record if found, undefined otherwise.
  */
 getTurnSnapshot(sessionId: string, turn: number): TurnSnapshotRecord | undefined
 
 /**
  * Rollback the workspace to the exact state before a turn executed.
- * @param sessionId - session identifier.
- * @param turn - turn number to rollback.
- * @param worktree - workspace directory path.
- * @param projectId - optional project identifier.
- * @returns result indicating success, restored file paths, and optional error message.
+ *
+ * @param sessionId - Session identifier.
+ * @param turn - Turn number to rollback.
+ * @param worktree - Workspace directory path.
+ * @param projectId - Optional project identifier.
+ * @returns Rollback result with list of restored files.
  */
 async rollbackTurn( sessionId: string, turn: number, worktree: string, projectId?: string, ): Promise<{ success: boolean; restoredFiles: string[]; error?: string }>
 ```

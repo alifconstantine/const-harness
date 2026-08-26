@@ -1,10 +1,10 @@
 /**
  * Client-safe wire vocabulary of the dynamic Cordis plugin runner.
- * @module @deepseek-ai/dsh-cordis-host-runner/types
+ * @module @const-ai/cordis-host-runner/types
  */
 
-import type { Branded } from '@deepseek-ai/dsh-brand'
-import type { JsonValue, SessionId } from '@deepseek-ai/dsh-session/types'
+import type { Branded } from '@const-ai/brand'
+import type { JsonValue, SessionId } from '@const-ai/session/types'
 
 /** Stable identity of one dynamic plugin instance. */
 export type CordisDynamicPluginId = Branded<'CordisDynamicPluginId'>
@@ -357,43 +357,43 @@ export type DynamicCordisInvokeResult =
   | { ok: true; value: JsonValue }
   | ({ ok: false; code: 'plugin-not-running' | 'stale-run' | 'method-not-found' | 'handler-error' } & CordisErrorDetails)
 
-declare module '@deepseek-ai/cordis' {
+declare module '@const-ai/cordis' {
   interface Events {
     /**
      * A Client-bearing activation needs a browser page, and may require a user decision.
      * @param request - correlation identity, owner, target version, mode, and approval requirement.
      * @mode emit
      */
-    'cordis/request-run'(request: DynamicCordisRunRequest): void
+    '@const-ai/cordis/request-run'(request: DynamicCordisRunRequest): void
     /**
      * A pending Client activation request left the answerable state.
      * @param resolved - request identity and outcome.
      * @mode emit
      */
-    'cordis/request-run-resolved'(resolved: DynamicCordisRequestResolved): void
+    '@const-ai/cordis/request-run-resolved'(resolved: DynamicCordisRequestResolved): void
     /**
      * One exact Plugin/Package activation is now live in the Host.
      * @param pkg - stable plugin, immutable package, run identity, and label.
      * @mode emit
      */
-    'cordis/dynamic-package'(pkg: DynamicCordisPackage): void
+    '@const-ai/cordis/dynamic-package'(pkg: DynamicCordisPackage): void
     /**
      * One exact activation was withdrawn.
      * @param retracted - plugin, package, and run identity.
      * @mode emit
      */
-    'cordis/dynamic-retract'(retracted: DynamicCordisRetracted): void
+    '@const-ai/cordis/dynamic-retract'(retracted: DynamicCordisRetracted): void
     /**
      * Request a live read-only query from the Client inspect registry.
      * @param request - correlation, Session, provider, method, and JSON input.
      * @mode emit
      */
-    'cordis/inspect-query'(request: CordisInspectQueryRequest): void
+    '@const-ai/cordis/inspect-query'(request: CordisInspectQueryRequest): void
     /**
      * Notify every Client that an inspect query has settled or been cancelled.
      * @param resolved - exact query identity that is no longer answerable.
      * @mode emit
      */
-    'cordis/inspect-query-resolved'(resolved: CordisInspectQueryResolved): void
+    '@const-ai/cordis/inspect-query-resolved'(resolved: CordisInspectQueryResolved): void
   }
 }

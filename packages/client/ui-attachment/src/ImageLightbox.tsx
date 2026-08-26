@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import {
   IconCloseOutline16, IconCodeOutline16, IconDownloadOutline16, IconFileOutline16,
-} from '@deepseek-ai/dsh-client-ui-primitives'
+} from '@const-ai/client-ui-primitives'
 import { detectAttachmentKind } from './AttachmentRail.tsx'
 import css from './ImageLightbox.module.css'
 

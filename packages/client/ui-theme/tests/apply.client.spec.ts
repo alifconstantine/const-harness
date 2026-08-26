@@ -1,14 +1,14 @@
 /** ui-theme apply wiring: service provision, settings dictionaries riding the
  * locale service, declaration-aware Appearance row registration, snapshot
  * projection into the row store, and HMR collapse recovery. */
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@const-ai/cordis'
 import { describe, expect, it, vi } from 'vitest'
-import { SlotRegistry } from '@deepseek-ai/dsh-client-runtime/client'
-import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
-import { TestRemote, usePinnedBrowserLanguages } from '@deepseek-ai/dsh-client-test-runtime'
-import { SettingsScopeBinder } from '@deepseek-ai/dsh-client-ui-settings/client'
-import { apply, inject, SETTINGS_NS } from '@deepseek-ai/dsh-client-ui-theme/client'
-import type { AppearanceRowInjected, ThemeRuntime } from '@deepseek-ai/dsh-client-ui-theme/client'
+import { SlotRegistry } from '@const-ai/client-runtime/client'
+import { LocaleRuntime } from '@const-ai/client-locale/client'
+import { TestRemote, usePinnedBrowserLanguages } from '@const-ai/client-test-runtime'
+import { SettingsScopeBinder } from '@const-ai/client-ui-settings/client'
+import { apply, inject, SETTINGS_NS } from '@const-ai/client-ui-theme/client'
+import type { AppearanceRowInjected, ThemeRuntime } from '@const-ai/client-ui-theme/client'
 import { THEME_SETTINGS_NAMESPACE, ThemeSettingsSchema } from '../src/theme-settings.ts'
 import { AppearanceRow } from '../src/client/AppearanceRow.tsx'
 import type { createAppearanceRowStore } from '../src/client/settings-store.ts'

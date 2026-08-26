@@ -1,13 +1,13 @@
 /**
- * Package-owned invariant companion for `@deepseek-ai/dsh-fs-snapshot`.
- * @module @deepseek-ai/dsh-fs-snapshot/invariant
+ * Package-owned invariant companion for `@const-ai/fs-snapshot`.
+ * @module @const-ai/fs-snapshot/invariant
  */
 
 /* jscpd:ignore-start */
-import type { Context } from '@deepseek-ai/cordis'
-import type { InvariantInstaller } from '@deepseek-ai/dsh-invariants'
+import type { Context } from '@const-ai/cordis'
+import type { InvariantInstaller } from '@const-ai/invariants'
 
-const PACKAGE_NAME = '@deepseek-ai/dsh-fs-snapshot'
+const PACKAGE_NAME = '@const-ai/fs-snapshot'
 
 /** Cordis companion plugin name. */
 export const name = 'fs-snapshot-invariant'
@@ -15,7 +15,7 @@ export const name = 'fs-snapshot-invariant'
 export const inject = ['invariants']
 
 /**
- * Invariant installer for fs-snapshot.
+ * No runtime invariant: this package provides shadow git snapshot operations; it owns no event stream or mutable cross-session state.
  */
 const install: InvariantInstaller = () => {}
 

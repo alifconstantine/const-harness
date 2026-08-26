@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-commands",
+  "name": "@const-ai/commands",
   "description": "Plugin-owned human command registry for DeepSeek Harness UIs",
   "version": "0.1.0-rc.5",
   "publishConfig": {
@@ -53,24 +53,24 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-agent": "workspace:^",
-    "@deepseek-ai/dsh-brand": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-scope": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^",
-    "@deepseek-ai/dsh-typert-protocol": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@const-ai/agent": "workspace:^",
+    "@const-ai/brand": "workspace:^",
+    "@const-ai/invariants": "workspace:^",
+    "@const-ai/scope": "workspace:^",
+    "@const-ai/session": "workspace:^",
+    "@const-ai/typert-protocol": "workspace:^",
+    "@const-ai/cordis": "workspace:^"
   },
   "dependencies": {
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-agent": "workspace:^",
-    "@deepseek-ai/dsh-brand": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-scope": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^",
-    "@deepseek-ai/dsh-typert-protocol": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@const-ai/agent": "workspace:^",
+    "@const-ai/brand": "workspace:^",
+    "@const-ai/invariants": "workspace:^",
+    "@const-ai/scope": "workspace:^",
+    "@const-ai/session": "workspace:^",
+    "@const-ai/typert-protocol": "workspace:^",
+    "@const-ai/cordis": "workspace:^"
   }
 }

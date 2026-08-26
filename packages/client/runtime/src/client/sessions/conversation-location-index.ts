@@ -1,4 +1,4 @@
-import type { SessionEvent } from '@deepseek-ai/dsh-session/types'
+import type { SessionEvent } from '@const-ai/session/types'
 import type {
   ConversationEventInput, ConversationLocation, ConversationLocationData,
   ConversationLocationDataStore, ConversationStepDataMap, ConversationTimelineSnapshot,
@@ -373,6 +373,7 @@ export class ConversationLocationIndex {
   /**
    * Append one Turn/Step boundary while revisiting only the owning Turn.
    * @param event - contiguous tail boundary event.
+   * @param inputs - optional input event map for location coordinate derivation.
    * @returns seqs whose immutable Location reference changed.
    */
   appendBoundary(

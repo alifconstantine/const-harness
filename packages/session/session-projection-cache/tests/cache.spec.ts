@@ -7,24 +7,24 @@
  */
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@const-ai/cordis'
 import { z } from 'zod'
-import Storage from '@deepseek-ai/dsh-storage'
-import { DomainFacility } from '@deepseek-ai/dsh-storage-domain'
-import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
-import type { Session, SessionEvent } from '@deepseek-ai/dsh-session'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import type { ProjectionDefinition } from '@deepseek-ai/dsh-session-projection'
+import Storage from '@const-ai/storage'
+import { DomainFacility } from '@const-ai/storage-domain'
+import SessionStore, { SessionId } from '@const-ai/session'
+import type { Session, SessionEvent } from '@const-ai/session'
+import SessionProjectionRegistry from '@const-ai/session-projection'
+import type { ProjectionDefinition } from '@const-ai/session-projection'
 import { MemoryMediaPool, MemoryStorageBackend } from '../../../storage/storage-domain/tests/helpers/memory-backend.ts'
 import SessionProjectionCache from '../src/index.ts'
 
-declare module '@deepseek-ai/dsh-session-projection/types' {
+declare module '@const-ai/session-projection/types' {
   interface SessionProjectionMap {
     'cache-test/marks': { marks: string[] }
   }
 }
 
-declare module '@deepseek-ai/dsh-session/types' {
+declare module '@const-ai/session/types' {
   interface SessionEventMap {
     'cache-test/mark': { marks: string[] }
   }

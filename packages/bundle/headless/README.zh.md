@@ -1,4 +1,4 @@
-# `@deepseek-ai/dsh-headless`
+# `@const-ai/headless`
 
 [English](README.md) | 中文
 

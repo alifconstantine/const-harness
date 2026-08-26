@@ -5,7 +5,7 @@
  */
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { ChatNodeStore, ConversationTimelineSnapshot } from '@deepseek-ai/dsh-client-runtime/client'
+import type { ChatNodeStore, ConversationTimelineSnapshot } from '@const-ai/client-runtime/client'
 import type { ChatNode } from '../contract/chat-nodes.ts'
 import css from './TurnTimelineNav.module.css'
 

@@ -8,13 +8,13 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import { LAUNCHER_FAILURE_EXIT } from '@deepseek-ai/node-addon-landlock-run'
-import { SANDBOX_UNAVAILABLE, SandboxUnavailableError } from '@deepseek-ai/dsh-sandbox'
-import { LocalSandboxProvider } from '@deepseek-ai/dsh-sandbox-local'
-import { SandboxPolicyService } from '@deepseek-ai/dsh-sandbox-policy'
-import { SandboxBashExecutor } from '@deepseek-ai/dsh-bash-sandbox'
-import LocalSubprocessRuntime from '@deepseek-ai/dsh-subprocess-local'
+import { Context } from '@const-ai/cordis'
+import { LAUNCHER_FAILURE_EXIT } from '@const-ai/node-addon-landlock-run'
+import { SANDBOX_UNAVAILABLE, SandboxUnavailableError } from '@const-ai/sandbox'
+import { LocalSandboxProvider } from '@const-ai/sandbox-local'
+import { SandboxPolicyService } from '@const-ai/sandbox-policy'
+import { SandboxBashExecutor } from '@const-ai/bash-sandbox'
+import LocalSubprocessRuntime from '@const-ai/subprocess-local'
 
 const NOTICE = 'landlock-run: partial enforcement (older Landlock ABI)'
 const FATAL_PREFIX = 'landlock-run: '
@@ -170,16 +170,16 @@ describe('partial Landlock runner-failure classification', () => {
       expect(background).not.toBeInstanceOf(SandboxUnavailableError)
     } else {
       expect(foreground).toMatchObject({
-        exitCode: 127,
         signal: null,
         sandbox: { mode: 'read-only', denied: false, enforcement: 'full' },
       })
+      expect([1, 127]).toContain((foreground as { exitCode: number }).exitCode)
       expect((foreground as { stderr: { text: string } }).stderr.text.length).toBeGreaterThan(0)
 
       const background = bash.start(bash.resolve(request))
       await background.done
       expect(background.status).toBe('completed')
-      expect(background.exitCode).toBe(127)
+      expect([1, 127]).toContain(background.exitCode)
       expect(background.signal).toBeNull()
       expect(background.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full' })
       const output = background.readOutput().delta

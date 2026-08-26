@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-llm-retry",
+  "name": "@const-ai/llm-retry",
   "description": "Provider-routed LLM request retry policy for the DeepSeek Harness",
   "version": "0.1.0-rc.5",
   "publishConfig": {
@@ -36,34 +36,34 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-brand": "workspace:^",
-    "@deepseek-ai/dsh-agent": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-llm": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^",
-    "@deepseek-ai/dsh-timeout": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@const-ai/brand": "workspace:^",
+    "@const-ai/agent": "workspace:^",
+    "@const-ai/invariants": "workspace:^",
+    "@const-ai/llm": "workspace:^",
+    "@const-ai/session": "workspace:^",
+    "@const-ai/timeout": "workspace:^",
+    "@const-ai/cordis": "workspace:^"
   },
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:^"
+    "@const-ai/schemastery": "workspace:^"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-brand": "workspace:^",
-    "@deepseek-ai/cordis-plugin-include": "workspace:^",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:^",
-    "@deepseek-ai/dsh-agent": "workspace:^",
-    "@deepseek-ai/dsh-agent-loop": "workspace:^",
-    "@deepseek-ai/dsh-agent-loop-testkit": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-llm": "workspace:^",
-    "@deepseek-ai/dsh-llm-deepseek": "workspace:^",
-    "@deepseek-ai/dsh-llm-mock-server": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^",
-    "@deepseek-ai/dsh-session-persistence-jsonl": "workspace:^",
-    "@deepseek-ai/dsh-session-persistence-sqlite": "workspace:^",
-    "@deepseek-ai/dsh-system-prompt": "workspace:^",
-    "@deepseek-ai/dsh-timeout": "workspace:^",
-    "@deepseek-ai/dsh-tools": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@const-ai/brand": "workspace:^",
+    "@const-ai/cordis-plugin-include": "workspace:^",
+    "@const-ai/cordis-plugin-loader": "workspace:^",
+    "@const-ai/agent": "workspace:^",
+    "@const-ai/agent-loop": "workspace:^",
+    "@const-ai/agent-loop-testkit": "workspace:^",
+    "@const-ai/invariants": "workspace:^",
+    "@const-ai/llm": "workspace:^",
+    "@const-ai/llm-deepseek": "workspace:^",
+    "@const-ai/llm-mock-server": "workspace:^",
+    "@const-ai/session": "workspace:^",
+    "@const-ai/session-persistence-jsonl": "workspace:^",
+    "@const-ai/session-persistence-sqlite": "workspace:^",
+    "@const-ai/system-prompt": "workspace:^",
+    "@const-ai/timeout": "workspace:^",
+    "@const-ai/tools": "workspace:^",
+    "@const-ai/cordis": "workspace:^"
   }
 }

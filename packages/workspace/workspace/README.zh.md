@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-workspace
+# @const-ai/workspace
 
 [English](README.md) | 中文
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import type { AutomationItem, AutomationSchedule } from '@deepseek-ai/dsh-host-apiproxy/api'
+import type { AutomationItem, AutomationSchedule } from '@const-ai/host-apiproxy/api'
 import styles from './Automations.module.css'
 
 export interface StarterTemplate {
@@ -172,7 +172,7 @@ export function AutomationsDashboard({
         <button
           type="button"
           className={`${styles.switchTrack} ${keepAwake ? styles.switchTrackActive : ''}`}
-          onClick={() => setKeepAwake(!keepAwake)}
+          onClick={() =>{  setKeepAwake(!keepAwake) }}
           aria-label="Toggle keep awake"
         >
           <div className={`${styles.switchThumb} ${keepAwake ? styles.switchThumbActive : ''}`} />
@@ -201,18 +201,18 @@ export function AutomationsDashboard({
                 <div
                   key={task.id}
                   className={styles.taskCard}
-                  onClick={() => onSelectTask(task)}
+                  onClick={() => { onSelectTask(task) }}
                 >
                   <div className={styles.taskCardTop}>
                     <h3 className={styles.taskCardTitle}>{task.title}</h3>
                     <div
                       className={styles.taskCardActions}
-                      onClick={e => e.stopPropagation()}
+                      onClick={(e) => { e.stopPropagation() }}
                     >
                       <button
                         type="button"
                         className={styles.runNowButton}
-                        onClick={() => onRunNow(task.id)}
+                        onClick={() => { onRunNow(task.id) }}
                         title="Run this task right now"
                       >
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
@@ -255,7 +255,7 @@ export function AutomationsDashboard({
             <div
               key={tmpl.title}
               className={styles.templateCard}
-              onClick={() => onSelectTemplate(tmpl)}
+              onClick={() => { onSelectTemplate(tmpl) }}
             >
               <div className={styles.templateCardHeader}>
                 <span className={styles.templateIcon}>

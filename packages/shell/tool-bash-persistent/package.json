@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-tool-bash-persistent",
+  "name": "@const-ai/tool-bash-persistent",
   "description": "Model-facing owner-scoped persistent Bash tool backed by the Harness PTY service",
   "version": "0.1.0-rc.5",
   "publishConfig": {
@@ -31,31 +31,31 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-agent": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-terminal": "workspace:^",
-    "@deepseek-ai/dsh-timeout": "workspace:^",
-    "@deepseek-ai/dsh-tools": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@const-ai/agent": "workspace:^",
+    "@const-ai/invariants": "workspace:^",
+    "@const-ai/terminal": "workspace:^",
+    "@const-ai/timeout": "workspace:^",
+    "@const-ai/tools": "workspace:^",
+    "@const-ai/cordis": "workspace:^"
   },
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:^"
+    "@const-ai/schemastery": "workspace:^"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis-plugin-include": "workspace:^",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:^",
-    "@deepseek-ai/dsh-agent": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-llm": "workspace:^",
-    "@deepseek-ai/dsh-terminal": "workspace:^",
-    "@deepseek-ai/dsh-terminal-bash": "workspace:^",
-    "@deepseek-ai/dsh-sandbox": "workspace:^",
-    "@deepseek-ai/dsh-sandbox-policy": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^",
-    "@deepseek-ai/dsh-subprocess-local": "workspace:^",
-    "@deepseek-ai/dsh-system-prompt": "workspace:^",
-    "@deepseek-ai/dsh-timeout": "workspace:^",
-    "@deepseek-ai/dsh-tools": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@const-ai/cordis-plugin-include": "workspace:^",
+    "@const-ai/cordis-plugin-loader": "workspace:^",
+    "@const-ai/agent": "workspace:^",
+    "@const-ai/invariants": "workspace:^",
+    "@const-ai/llm": "workspace:^",
+    "@const-ai/terminal": "workspace:^",
+    "@const-ai/terminal-bash": "workspace:^",
+    "@const-ai/sandbox": "workspace:^",
+    "@const-ai/sandbox-policy": "workspace:^",
+    "@const-ai/session": "workspace:^",
+    "@const-ai/subprocess-local": "workspace:^",
+    "@const-ai/system-prompt": "workspace:^",
+    "@const-ai/timeout": "workspace:^",
+    "@const-ai/tools": "workspace:^",
+    "@const-ai/cordis": "workspace:^"
   }
 }

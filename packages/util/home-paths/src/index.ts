@@ -1,7 +1,7 @@
 /**
  * Shared filesystem path helpers for Const Harness user data.
  *
- * @module @deepseek-ai/dsh-home-paths
+ * @module @const-ai/home-paths
  */
 
 import { mkdir, opendir, realpath } from 'node:fs/promises'

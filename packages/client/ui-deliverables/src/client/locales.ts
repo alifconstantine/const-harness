@@ -38,7 +38,7 @@ export const en: Record<DeliverablesKey, string> = {
 /** Union of this namespace's dictionary keys. */
 export type DeliverablesKey = keyof typeof zh
 
-declare module '@deepseek-ai/dsh-client-ui-slots' {
+declare module '@const-ai/client-ui-slots' {
   interface LocaleNamespaceMap {
     /** Produced-files row copy. */
     'deliverables': DeliverablesKey

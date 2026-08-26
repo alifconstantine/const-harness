@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-shell-env",
+  "name": "@const-ai/shell-env",
   "description": "Tool-independent managed DSH_* shell environment registry",
   "version": "0.1.0-rc.5",
   "publishConfig": {
@@ -32,24 +32,24 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-shell": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-home-paths": "workspace:^",
-    "@deepseek-ai/dsh-session-persistence": "workspace:^",
-    "@deepseek-ai/dsh-tools": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@const-ai/shell": "workspace:^",
+    "@const-ai/invariants": "workspace:^",
+    "@const-ai/home-paths": "workspace:^",
+    "@const-ai/session-persistence": "workspace:^",
+    "@const-ai/tools": "workspace:^",
+    "@const-ai/cordis": "workspace:^"
   },
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:^"
+    "@const-ai/schemastery": "workspace:^"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-agent": "workspace:^",
-    "@deepseek-ai/dsh-shell": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-llm": "workspace:^",
-    "@deepseek-ai/dsh-home-paths": "workspace:^",
-    "@deepseek-ai/dsh-session-persistence": "workspace:^",
-    "@deepseek-ai/dsh-tools": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@const-ai/agent": "workspace:^",
+    "@const-ai/shell": "workspace:^",
+    "@const-ai/invariants": "workspace:^",
+    "@const-ai/llm": "workspace:^",
+    "@const-ai/home-paths": "workspace:^",
+    "@const-ai/session-persistence": "workspace:^",
+    "@const-ai/tools": "workspace:^",
+    "@const-ai/cordis": "workspace:^"
   }
 }

@@ -3,19 +3,19 @@
  * ui-deliverables browser half: tests for File Change Summary, additions/deletions,
  * Review diff modal, and produced file mentions.
  */
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@const-ai/cordis'
 import { cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   ConversationNodeAssembler,
-} from '@deepseek-ai/dsh-client-runtime/client'
+} from '@const-ai/client-runtime/client'
 import type {
   ConversationEventInput, ConversationLocationDataStore, ConversationNodeDefinition,
   ConversationTimelineSnapshot, ConversationTurnDataMap, ConversationViewDefinition,
   ConversationViewNode, ToolResultNode, TurnLocation,
-} from '@deepseek-ai/dsh-client-runtime/client'
-import type { TurnTailOwnerProps } from '@deepseek-ai/dsh-client-ui-conversation/client'
-import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
+} from '@const-ai/client-runtime/client'
+import type { TurnTailOwnerProps } from '@const-ai/client-ui-conversation/client'
+import { makeTranslate } from '@const-ai/client-test-runtime'
 import { FileIcon } from '../src/client/FileIcon.tsx'
 import { DiffReviewModal } from '../src/client/DiffReviewModal.tsx'
 import { ProducedFiles } from '../src/client/ProducedFiles.tsx'
@@ -497,7 +497,7 @@ describe('Plugin Registration & Package shells', () => {
       register: (pkg: string) => { registered.push(pkg); return () => {} },
     } as never)
     const dispose = await applyInvariant(ctx)
-    expect(registered).toEqual(['@deepseek-ai/dsh-client-ui-deliverables'])
+    expect(registered).toEqual(['@const-ai/client-ui-deliverables'])
     expect(dispose).toBeTypeOf('function')
     dispose()
   })

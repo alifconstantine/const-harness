@@ -1,15 +1,15 @@
 // Sessions remain resident after creation so they continue consuming mux frames off-screen.
 
-import type { Context } from '@deepseek-ai/cordis'
-import type { AttachmentIdType, ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
-import type { SessionEvent } from '@deepseek-ai/dsh-session/types'
+import type { Context } from '@const-ai/cordis'
+import type { AttachmentIdType, ImageAttachmentRef } from '@const-ai/attachment'
+import type { SessionEvent } from '@const-ai/session/types'
 import type {
   HistoryEntry, IApiClient, MessageId, MuxFrame, PromptContentPart, QueueAction, RpcError,
   RpcId, RpcResponse, RpcResult, SessionId, SubagentAddress, ToolEventView,
-} from '@deepseek-ai/dsh-api-remotes/client'
+} from '@const-ai/api-remotes/client'
 // Value import from the inline-safe wire layer (not the connection plugin):
 // plugin-to-plugin value imports are a bundle purity error.
-import { transportError } from '@deepseek-ai/dsh-host-apiproxy/api'
+import { transportError } from '@const-ai/host-apiproxy/api'
 import type { SessionFace } from '../contract/session.ts'
 import { ConversationNodeAssembler } from './conversation-assembler.ts'
 import type { ConversationRuntime } from './conversation-assembler.ts'
@@ -21,7 +21,7 @@ import { EMPTY_CHAT_SNAPSHOT } from './conversation.ts'
 import type { PendingInteraction } from './pending.ts'
 import { PendingWait } from './pending.ts'
 import { Notifier } from './notifier.ts'
-import type { RemoteResult } from '@deepseek-ai/dsh-typert-protocol'
+import type { RemoteResult } from '@const-ai/typert-protocol'
 import type { SessionRemotes } from './remotes.ts'
 import { ProjectionValueStore } from './projection-store.ts'
 import type { ProjectionsBaseline } from './projection-store.ts'
@@ -372,6 +372,7 @@ export class Session implements SessionFace {
     let userPrompt: string | undefined
     const userImages: string[] = []
 
+    /* jscpd:ignore-start -- Mirror of host-side turn extraction logic */
     function isHumanUserMessage(event: SessionEvent | undefined): boolean {
       if (!event) return false
       if (event.type === 'user/message') {
@@ -413,6 +414,7 @@ export class Session implements SessionFace {
         break
       }
     }
+    /* jscpd:ignore-end */
 
     // Call host RPC to rollback snapshot files on disk
     let restoredFiles: string[] = []

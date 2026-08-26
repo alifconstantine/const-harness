@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-client-runtime
+# @const-ai/client-runtime
 
 English | [中文](README.zh.md)
 

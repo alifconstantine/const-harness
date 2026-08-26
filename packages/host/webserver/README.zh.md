@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-host-webserver
+# @const-ai/host-webserver
 
 [English](README.md) | 中文
 

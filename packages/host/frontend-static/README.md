@@ -1,4 +1,4 @@
-# `@deepseek-ai/dsh-host-frontend-static`
+# `@const-ai/host-frontend-static`
 
 English | [中文](README.zh.md)
 

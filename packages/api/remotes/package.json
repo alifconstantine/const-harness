@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-api-remotes",
+  "name": "@const-ai/api-remotes",
   "description": "Remote BFF assembly and Host Agent/Session lookup policy",
   "version": "0.1.0-rc.5",
   "publishConfig": {
@@ -36,7 +36,7 @@
   "dsh": {
     "client": {
       "inject": [
-        "@deepseek-ai/dsh-api-gateway"
+        "@const-ai/api-gateway"
       ],
       "platform": "web",
       "immediately": true
@@ -55,42 +55,42 @@
     "lib/types/**/*.d.ts"
   ],
   "dependencies": {
-    "@deepseek-ai/dsh-typert-protocol": "workspace:^"
+    "@const-ai/typert-protocol": "workspace:^"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/dsh-agent": "workspace:^",
-    "@deepseek-ai/dsh-api-gateway": "workspace:^",
-    "@deepseek-ai/dsh-commands": "workspace:^",
-    "@deepseek-ai/dsh-credentials": "workspace:^",
-    "@deepseek-ai/dsh-goal": "workspace:^",
-    "@deepseek-ai/dsh-cordis-host-runner": "workspace:^",
-    "@deepseek-ai/dsh-host-plugin-inventory": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-agent-presets": "workspace:^",
-    "@deepseek-ai/dsh-llm": "workspace:^",
-    "@deepseek-ai/dsh-message-feedback": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^",
-    "@deepseek-ai/dsh-session-persistence": "workspace:^",
-    "@deepseek-ai/dsh-settings": "workspace:^",
-    "@deepseek-ai/dsh-typert-registry": "workspace:^"
+    "@const-ai/cordis": "workspace:^",
+    "@const-ai/agent": "workspace:^",
+    "@const-ai/api-gateway": "workspace:^",
+    "@const-ai/commands": "workspace:^",
+    "@const-ai/credentials": "workspace:^",
+    "@const-ai/goal": "workspace:^",
+    "@const-ai/cordis-host-runner": "workspace:^",
+    "@const-ai/host-plugin-inventory": "workspace:^",
+    "@const-ai/invariants": "workspace:^",
+    "@const-ai/agent-presets": "workspace:^",
+    "@const-ai/llm": "workspace:^",
+    "@const-ai/message-feedback": "workspace:^",
+    "@const-ai/session": "workspace:^",
+    "@const-ai/session-persistence": "workspace:^",
+    "@const-ai/settings": "workspace:^",
+    "@const-ai/typert-registry": "workspace:^"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-agent": "workspace:^",
-    "@deepseek-ai/dsh-api-gateway": "workspace:^",
-    "@deepseek-ai/dsh-commands": "workspace:^",
-    "@deepseek-ai/dsh-credentials": "workspace:^",
-    "@deepseek-ai/dsh-goal": "workspace:^",
-    "@deepseek-ai/dsh-cordis-host-runner": "workspace:^",
-    "@deepseek-ai/dsh-host-plugin-inventory": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-agent-presets": "workspace:^",
-    "@deepseek-ai/dsh-llm": "workspace:^",
-    "@deepseek-ai/dsh-message-feedback": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^",
-    "@deepseek-ai/dsh-session-persistence": "workspace:^",
-    "@deepseek-ai/dsh-settings": "workspace:^",
-    "@deepseek-ai/dsh-typert-registry": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@const-ai/agent": "workspace:^",
+    "@const-ai/api-gateway": "workspace:^",
+    "@const-ai/commands": "workspace:^",
+    "@const-ai/credentials": "workspace:^",
+    "@const-ai/goal": "workspace:^",
+    "@const-ai/cordis-host-runner": "workspace:^",
+    "@const-ai/host-plugin-inventory": "workspace:^",
+    "@const-ai/invariants": "workspace:^",
+    "@const-ai/agent-presets": "workspace:^",
+    "@const-ai/llm": "workspace:^",
+    "@const-ai/message-feedback": "workspace:^",
+    "@const-ai/session": "workspace:^",
+    "@const-ai/session-persistence": "workspace:^",
+    "@const-ai/settings": "workspace:^",
+    "@const-ai/typert-registry": "workspace:^",
+    "@const-ai/cordis": "workspace:^"
   }
 }

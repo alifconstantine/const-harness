@@ -1,5 +1,6 @@
+/* jscpd:ignore-start */
 import React, { useState } from 'react'
-import type { AutomationItem, AutomationSchedule, AutomationScheduleKind } from '@deepseek-ai/dsh-host-apiproxy/api'
+import type { AutomationItem, AutomationSchedule, AutomationScheduleKind } from '@const-ai/host-apiproxy/api'
 import { CustomDropdown } from './CustomDropdown.tsx'
 import { TimePicker } from './TimePicker.tsx'
 import { DayPickerGrid } from './DayPickerGrid.tsx'
@@ -192,7 +193,7 @@ export function AutomationsForm({
             <button
               type="button"
               className={`${styles.segmentedTab} ${activeSubTab === 'settings' ? styles.segmentedTabActive : ''}`}
-              onClick={() => setActiveSubTab('settings')}
+              onClick={() =>{  setActiveSubTab('settings') }}
             >
               Settings
             </button>
@@ -223,7 +224,7 @@ export function AutomationsForm({
               <button
                 type="button"
                 className={styles.primaryButton}
-                onClick={() => handleSubmit()}
+                onClick={() =>{  handleSubmit() }}
                 disabled={!title.trim() || !instructions.trim()}
               >
                 {isEditing ? 'Save changes' : 'Create scheduled task'}
@@ -248,7 +249,7 @@ export function AutomationsForm({
                 className={styles.input}
                 placeholder="Untitled Automation"
                 value={title}
-                onChange={e => setTitle(e.target.value)}
+                onChange={(e) =>{  setTitle(e.target.value) }}
                 required
               />
             </div>
@@ -259,7 +260,7 @@ export function AutomationsForm({
               {!hasSchedule ? (
                 <div
                   className={styles.scheduleEmptyBar}
-                  onClick={() => setHasSchedule(true)}
+                  onClick={() =>{  setHasSchedule(true) }}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <line x1="12" y1="5" x2="12" y2="19" />
@@ -287,7 +288,7 @@ export function AutomationsForm({
                       <button
                         type="button"
                         className={styles.scheduleBarButton}
-                        onClick={() => setShowCustomModal(true)}
+                        onClick={() => { setShowCustomModal(true) }}
                       >
                         <span>Every {customConfig.frequency} {customConfig.unit}</span>
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -303,7 +304,7 @@ export function AutomationsForm({
                         <CustomDropdown
                           value={String(scheduleDayOfWeek)}
                           options={weekDayOptions}
-                          onChange={val => setScheduleDayOfWeek(Number.parseInt(val, 10))}
+                          onChange={(val) =>{  setScheduleDayOfWeek(Number.parseInt(val, 10)) }}
                         />
                       </>
                     )}
@@ -340,7 +341,7 @@ export function AutomationsForm({
                   <button
                     type="button"
                     className={styles.scheduleTrashButton}
-                    onClick={() => setHasSchedule(false)}
+                    onClick={() =>{  setHasSchedule(false) }}
                     title="Remove schedule"
                   >
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -360,7 +361,7 @@ export function AutomationsForm({
                   className={styles.instructionsTextarea}
                   placeholder="e.g. Review commits from the last 24 hours and summarize likely bugs and fixes"
                   value={instructions}
-                  onChange={e => setInstructions(e.target.value)}
+                  onChange={(e) =>{  setInstructions(e.target.value) }}
                   required
                 />
 
@@ -388,7 +389,7 @@ export function AutomationsForm({
                       }
                       value={permissionPreset}
                       options={permissionOptions}
-                      onChange={val => setPermissionPreset(val as typeof permissionPreset)}
+                      onChange={(val) =>{  setPermissionPreset(val as typeof permissionPreset) }}
                     />
                   </div>
 
@@ -421,9 +422,11 @@ export function AutomationsForm({
             setCustomConfig(cfg)
             setShowCustomModal(false)
           }}
-          onClose={() => setShowCustomModal(false)}
+          onClose={() =>{  setShowCustomModal(false) }}
         />
       )}
     </>
   )
 }
+
+/* jscpd:ignore-end */

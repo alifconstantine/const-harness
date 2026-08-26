@@ -1,13 +1,13 @@
 /**
- * Package-owned invariant companion for `@deepseek-ai/dsh-fs-e2b`.
- * @module @deepseek-ai/dsh-fs-e2b/invariant
+ * Package-owned invariant companion for `@const-ai/fs-e2b`.
+ * @module @const-ai/fs-e2b/invariant
  */
 
 /* jscpd:ignore-start */
-import type { Context } from '@deepseek-ai/cordis'
-import type { InvariantInstaller } from '@deepseek-ai/dsh-invariants'
+import type { Context } from '@const-ai/cordis'
+import type { InvariantInstaller } from '@const-ai/invariants'
 
-const PACKAGE_NAME = '@deepseek-ai/dsh-fs-e2b'
+const PACKAGE_NAME = '@const-ai/fs-e2b'
 
 /** Cordis companion plugin name. */
 export const name = 'fs-e2b-invariant'

@@ -3,13 +3,13 @@
  * Displays total files changed with +add/-del stats, collapsible list of files with
  * language badges, Review button opening the interactive Diff Review Modal, and Undo.
  *
- * @module @deepseek-ai/dsh-client-ui-deliverables
+ * @module @const-ai/client-ui-deliverables
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { HostDescriptionSource } from '@deepseek-ai/dsh-client-connection/client'
-import type { InjectFace, PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
-import type { TurnTailOwnerProps } from '@deepseek-ai/dsh-client-ui-conversation/client'
+import type { HostDescriptionSource } from '@const-ai/client-connection/client'
+import type { InjectFace, PropsLocale } from '@const-ai/client-ui-slots'
+import type { TurnTailOwnerProps } from '@const-ai/client-ui-conversation/client'
 import { FileIcon } from './FileIcon.tsx'
 import { DiffReviewModal } from './DiffReviewModal.tsx'
 import { basename, dirname, truncatePath, type ProducedFileItem } from './turn-deliverables.ts'

@@ -12,11 +12,11 @@ import type { ReactNode, RefObject } from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import {
   Button, IconFolderClose16, IconNewChatOutline16, IconPlusOutline16, Menu, Modal, type MenuEntry,
-} from '@deepseek-ai/dsh-client-ui-primitives'
+} from '@const-ai/client-ui-primitives'
 import type {
   WorkspaceId, WorkspaceListState, WorkspaceView,
-} from '@deepseek-ai/dsh-client-runtime/client'
-import type { SnapshotSelectorHook } from '@deepseek-ai/dsh-client-ui-slots'
+} from '@const-ai/client-runtime/client'
+import type { SnapshotSelectorHook } from '@const-ai/client-ui-slots'
 import type { DirectoryFlowOwnerProps, WorkspacePickerProps } from './contract/slots.ts'
 import css from './WorkspacePicker.module.css'
 
@@ -102,12 +102,12 @@ export function WorkspacePickFlow({
   useEffect(() => {
     if (flowOpen && !flowAvailable) setFlowOpen(false)
   }, [flowOpen, flowAvailable])
-  const addEntries: MenuEntry[] = [
-    ...(flowAvailable
-      ? [{ id: ADD_WORKSPACE, label: t('menu.addWorkspace'), icon: <IconPlusOutline16 size={16} />, disabled: flowBusy }]
-      : []),
-    { id: OUTSIDE_PROJECT, label: t('menu.outsideProject'), icon: <IconNewChatOutline16 size={16} />, disabled: flowBusy },
-  ]
+  const addEntries: MenuEntry[] = flowAvailable
+    ? [
+      { id: ADD_WORKSPACE, label: t('menu.addWorkspace'), icon: <IconPlusOutline16 size={16} />, disabled: flowBusy },
+      { id: OUTSIDE_PROJECT, label: t('menu.outsideProject'), icon: <IconNewChatOutline16 size={16} />, disabled: flowBusy },
+    ]
+    : []
   // With workspaces listed, the add action pins below the scroll region
   // (divider + always visible); otherwise it IS the menu.
   const pinAdd = !addOnly && workspaces.length > 0
@@ -156,7 +156,7 @@ export function WorkspacePickFlow({
   // loading status instead of jumping into a flow the arriving list would have
   // made unnecessary; the add-only surface lists nothing and never waits.
   const listSettled = addOnly || workspaceSnapshot.phase === 'ready'
-  const addIsTheOnlyEntry = (!wide && addOnly) || (!pinAdd && listSettled && addEntries.length === 1)
+  const addIsTheOnlyEntry = flowAvailable && ((!wide && addOnly) || (!pinAdd && listSettled && addEntries.length === 1))
   // `flowBusy` gates this exactly as it disables the equivalent menu entry: a
   // pick still being adopted owns the surface until it settles.
   useEffect(() => {

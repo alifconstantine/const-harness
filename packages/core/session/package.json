@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-session",
+  "name": "@const-ai/session",
   "description": "Event-sourced session store for the DeepSeek Harness",
   "version": "0.1.0-rc.5",
   "publishConfig": {
@@ -41,20 +41,20 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-brand": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-llm": "workspace:^",
-    "@deepseek-ai/dsh-scope": "workspace:^",
-    "@deepseek-ai/dsh-typert-protocol": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@const-ai/brand": "workspace:^",
+    "@const-ai/invariants": "workspace:^",
+    "@const-ai/llm": "workspace:^",
+    "@const-ai/scope": "workspace:^",
+    "@const-ai/typert-protocol": "workspace:^",
+    "@const-ai/cordis": "workspace:^"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-brand": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-llm": "workspace:^",
-    "@deepseek-ai/dsh-scope": "workspace:^",
-    "@deepseek-ai/dsh-typert-protocol": "workspace:^",
-    "@deepseek-ai/dsh-typert-registry": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@const-ai/brand": "workspace:^",
+    "@const-ai/invariants": "workspace:^",
+    "@const-ai/llm": "workspace:^",
+    "@const-ai/scope": "workspace:^",
+    "@const-ai/typert-protocol": "workspace:^",
+    "@const-ai/typert-registry": "workspace:^",
+    "@const-ai/cordis": "workspace:^"
   }
 }

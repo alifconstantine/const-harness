@@ -256,13 +256,13 @@ Types: [Agent](core.md)
 
 Source: [`packages/extensions/cordis-host-runner/src/index.ts:124`](../../packages/extensions/cordis-host-runner/src/index.ts)
 
-<a id="cordis-events"></a>
+<a id="const-ai-events"></a>
 
-### `cordis/*` events
+### `@const-ai/*` events
 
-<a id="cordisdynamic-package--emit"></a>
+<a id="const-aicordisdynamic-package--emit"></a>
 
-#### `cordis/dynamic-package` — emit
+#### `@const-ai/cordis/dynamic-package` — emit
 
 One exact Plugin/Package activation is now live in the Host.
 
@@ -272,14 +272,14 @@ One exact Plugin/Package activation is now live in the Host.
  * @param pkg - stable plugin, immutable package, run identity, and label.
  * @mode emit
  */
-'cordis/dynamic-package'(pkg: DynamicCordisPackage): void
+'@const-ai/cordis/dynamic-package'(pkg: DynamicCordisPackage): void
 ```
 
 Source: [`packages/extensions/cordis-host-runner/src/types.ts:379`](../../packages/extensions/cordis-host-runner/src/types.ts)
 
-<a id="cordisdynamic-retract--emit"></a>
+<a id="const-aicordisdynamic-retract--emit"></a>
 
-#### `cordis/dynamic-retract` — emit
+#### `@const-ai/cordis/dynamic-retract` — emit
 
 One exact activation was withdrawn.
 
@@ -289,14 +289,14 @@ One exact activation was withdrawn.
  * @param retracted - plugin, package, and run identity.
  * @mode emit
  */
-'cordis/dynamic-retract'(retracted: DynamicCordisRetracted): void
+'@const-ai/cordis/dynamic-retract'(retracted: DynamicCordisRetracted): void
 ```
 
 Source: [`packages/extensions/cordis-host-runner/src/types.ts:385`](../../packages/extensions/cordis-host-runner/src/types.ts)
 
-<a id="cordisinspect-query--emit"></a>
+<a id="const-aicordisinspect-query--emit"></a>
 
-#### `cordis/inspect-query` — emit
+#### `@const-ai/cordis/inspect-query` — emit
 
 Request a live read-only query from the Client inspect registry.
 
@@ -306,14 +306,14 @@ Request a live read-only query from the Client inspect registry.
  * @param request - correlation, Session, provider, method, and JSON input.
  * @mode emit
  */
-'cordis/inspect-query'(request: CordisInspectQueryRequest): void
+'@const-ai/cordis/inspect-query'(request: CordisInspectQueryRequest): void
 ```
 
 Source: [`packages/extensions/cordis-host-runner/src/types.ts:391`](../../packages/extensions/cordis-host-runner/src/types.ts)
 
-<a id="cordisinspect-query-resolved--emit"></a>
+<a id="const-aicordisinspect-query-resolved--emit"></a>
 
-#### `cordis/inspect-query-resolved` — emit
+#### `@const-ai/cordis/inspect-query-resolved` — emit
 
 Notify every Client that an inspect query has settled or been cancelled.
 
@@ -323,14 +323,14 @@ Notify every Client that an inspect query has settled or been cancelled.
  * @param resolved - exact query identity that is no longer answerable.
  * @mode emit
  */
-'cordis/inspect-query-resolved'(resolved: CordisInspectQueryResolved): void
+'@const-ai/cordis/inspect-query-resolved'(resolved: CordisInspectQueryResolved): void
 ```
 
 Source: [`packages/extensions/cordis-host-runner/src/types.ts:397`](../../packages/extensions/cordis-host-runner/src/types.ts)
 
-<a id="cordisrequest-run--emit"></a>
+<a id="const-aicordisrequest-run--emit"></a>
 
-#### `cordis/request-run` — emit
+#### `@const-ai/cordis/request-run` — emit
 
 A Client-bearing activation needs a browser page, and may require a user decision.
 
@@ -340,14 +340,14 @@ A Client-bearing activation needs a browser page, and may require a user decisio
  * @param request - correlation identity, owner, target version, mode, and approval requirement.
  * @mode emit
  */
-'cordis/request-run'(request: DynamicCordisRunRequest): void
+'@const-ai/cordis/request-run'(request: DynamicCordisRunRequest): void
 ```
 
 Source: [`packages/extensions/cordis-host-runner/src/types.ts:367`](../../packages/extensions/cordis-host-runner/src/types.ts)
 
-<a id="cordisrequest-run-resolved--emit"></a>
+<a id="const-aicordisrequest-run-resolved--emit"></a>
 
-#### `cordis/request-run-resolved` — emit
+#### `@const-ai/cordis/request-run-resolved` — emit
 
 A pending Client activation request left the answerable state.
 
@@ -357,7 +357,7 @@ A pending Client activation request left the answerable state.
  * @param resolved - request identity and outcome.
  * @mode emit
  */
-'cordis/request-run-resolved'(resolved: DynamicCordisRequestResolved): void
+'@const-ai/cordis/request-run-resolved'(resolved: DynamicCordisRequestResolved): void
 ```
 
 Source: [`packages/extensions/cordis-host-runner/src/types.ts:373`](../../packages/extensions/cordis-host-runner/src/types.ts)

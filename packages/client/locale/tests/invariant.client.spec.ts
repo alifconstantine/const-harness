@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import { apply as nodeApply } from '@deepseek-ai/dsh-client-locale'
-import { apply as clientApply, COMMON_NS, LocaleRuntime, inject } from '@deepseek-ai/dsh-client-locale/client'
-import * as LocaleInvariant from '@deepseek-ai/dsh-client-locale/invariant'
-import { SlotRegistry } from '@deepseek-ai/dsh-client-runtime/client'
-import InvariantRegistry from '@deepseek-ai/dsh-invariants'
-import { stubSettingsScope } from '@deepseek-ai/dsh-client-test-runtime'
+import { Context } from '@const-ai/cordis'
+import { apply as nodeApply } from '@const-ai/client-locale'
+import { apply as clientApply, COMMON_NS, LocaleRuntime, inject } from '@const-ai/client-locale/client'
+import * as LocaleInvariant from '@const-ai/client-locale/invariant'
+import { SlotRegistry } from '@const-ai/client-runtime/client'
+import InvariantRegistry from '@const-ai/invariants'
+import { stubSettingsScope } from '@const-ai/client-test-runtime'
 
 describe('invariant companion', () => {
   it('registers under the package name with an empty installer', async () => {

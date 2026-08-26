@@ -4,8 +4,8 @@ import { useEffect, useSyncExternalStore } from 'react'
 import clsx from 'clsx'
 import {
   IconFolderClose16, IconPanelRightOutline16, IconTerminalOutline16, Tooltip,
-} from '@deepseek-ai/dsh-client-ui-primitives'
-import type { SessionId, SessionListState, SessionSummary } from '@deepseek-ai/dsh-client-runtime/client'
+} from '@const-ai/client-ui-primitives'
+import type { SessionId, SessionListState, SessionSummary } from '@const-ai/client-runtime/client'
 import type {
   ConversationSessionHeaderSlotProps, ConversationSessionSlotProps,
 } from '../contract/slots.ts'

@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-command-compact",
+  "name": "@const-ai/command-compact",
   "description": "Human-facing slash command for explicit session compaction",
   "version": "0.1.0-rc.5",
   "publishConfig": {
@@ -32,20 +32,20 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-commands": "workspace:^",
-    "@deepseek-ai/dsh-compaction": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@const-ai/commands": "workspace:^",
+    "@const-ai/compaction": "workspace:^",
+    "@const-ai/invariants": "workspace:^",
+    "@const-ai/cordis": "workspace:^"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis-plugin-include": "workspace:^",
-    "@deepseek-ai/cordis-plugin-loader": "workspace:^",
-    "@deepseek-ai/dsh-agent": "workspace:^",
-    "@deepseek-ai/dsh-commands": "workspace:^",
-    "@deepseek-ai/dsh-compaction": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-llm": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@const-ai/cordis-plugin-include": "workspace:^",
+    "@const-ai/cordis-plugin-loader": "workspace:^",
+    "@const-ai/agent": "workspace:^",
+    "@const-ai/commands": "workspace:^",
+    "@const-ai/compaction": "workspace:^",
+    "@const-ai/invariants": "workspace:^",
+    "@const-ai/llm": "workspace:^",
+    "@const-ai/session": "workspace:^",
+    "@const-ai/cordis": "workspace:^"
   }
 }

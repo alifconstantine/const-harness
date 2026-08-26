@@ -3,19 +3,19 @@
  * Manages automations and execution history under ~/.const/storages/automations/
  * and runs scheduled tasks in dedicated sessions.
  *
- * @module @deepseek-ai/dsh-host-apiproxy/automations-service
+ * @module @const-ai/host-apiproxy/automations-service
  */
 
 import { randomUUID } from 'node:crypto'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import type { Context } from '@deepseek-ai/cordis'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import { dshHomePath } from '@deepseek-ai/dsh-home-paths'
-import { createUserMessage } from '@deepseek-ai/dsh-llm'
-import type { SessionId } from '@deepseek-ai/dsh-session'
-import { defineTool } from '@deepseek-ai/dsh-tools'
-import type { WorkspaceId } from '@deepseek-ai/dsh-workspace'
+import type { Context } from '@const-ai/cordis'
+import type { Agent } from '@const-ai/agent'
+import { dshHomePath } from '@const-ai/home-paths'
+import { createUserMessage } from '@const-ai/llm'
+import type { SessionId } from '@const-ai/session'
+import { defineTool } from '@const-ai/tools'
+import type { WorkspaceId } from '@const-ai/workspace'
 import type {
   AutomationItem,
   AutomationRunHistory,
@@ -24,7 +24,7 @@ import type {
 } from './api/automations.ts'
 import type { RpcError, RpcRequest, RpcResponse } from './api/rpc.ts'
 
-declare module '@deepseek-ai/dsh-session' {
+declare module '@const-ai/session' {
   interface SessionEventMap {
     'permission/preset': { preset: string }
   }
@@ -40,6 +40,10 @@ function err<T>(request: RpcRequest<unknown>, error: RpcError): RpcResponse<T> {
 
 /**
  * Calculate the next ISO timestamp for a given schedule configuration.
+ *
+ * @param schedule - Schedule configuration.
+ * @param fromMs - Reference timestamp in milliseconds.
+ * @returns Next run ISO timestamp string.
  */
 export function calculateNextRunAt(schedule: AutomationSchedule, fromMs: number = Date.now()): string {
   if (schedule.kind === 'hourly') {
@@ -115,16 +119,22 @@ export function calculateNextRunAt(schedule: AutomationSchedule, fromMs: number 
     return target.toISOString()
   }
   return new Date(fromMs + intervalMinutes * 60 * 1000).toISOString()
-
-  return new Date(fromMs + 24 * 3600 * 1000).toISOString()
 }
 
+/** Dependencies required to initialize the AutomationsManager. */
 export interface AutomationsManagerDeps {
+  /** Session creation and resolution callback. */
   ensureSession: (sessionId: SessionId, cwd: string) => Promise<Agent>
+  /** Default current working directory for runs without an assigned workspace. */
   defaultCwd: string
+  /** Optional model assignment callback for automation agents. */
   setModel?: ((agent: Agent, model: string) => void) | undefined
 }
 
+/**
+ * Automations (Scheduled Tasks / Cron) Manager.
+ * Handles storage, schedule evaluation, session execution, and RPC API projection.
+ */
 export class AutomationsManager {
   private automations: AutomationItem[] = []
   private historyList: AutomationRunHistory[] = []
@@ -177,6 +187,9 @@ export class AutomationsManager {
     }
   }
 
+  /**
+   * Start the scheduler ticker and register automation tools.
+   */
   start(): void {
     if (this.timer) return
     void this.ensureLoaded()
@@ -186,6 +199,9 @@ export class AutomationsManager {
     this.registerTools()
   }
 
+  /**
+   * Stop the scheduler ticker.
+   */
   stop(): void {
     if (this.timer) {
       clearInterval(this.timer)
@@ -193,11 +209,22 @@ export class AutomationsManager {
     }
   }
 
+  /**
+   * List all configured automation items.
+   *
+   * @returns Array of automation items.
+   */
   async listAutomations(): Promise<AutomationItem[]> {
     await this.ensureLoaded()
     return [...this.automations]
   }
 
+  /**
+   * Create a new scheduled automation item.
+   *
+   * @param data - Automation creation parameters.
+   * @returns Created automation item.
+   */
   async createAutomation(data: {
     title: string
     instructions: string
@@ -229,6 +256,12 @@ export class AutomationsManager {
     return item
   }
 
+  /**
+   * Delete an automation item by its identifier.
+   *
+   * @param id - Automation ID to remove.
+   * @returns True if deleted, false if not found.
+   */
   async deleteAutomation(id: string): Promise<boolean> {
     await this.ensureLoaded()
     const idx = this.automations.findIndex(a => a.id === id)
@@ -411,6 +444,13 @@ export class AutomationsManager {
     }
   }
 
+  /**
+   * Execute an automation run session.
+   *
+   * @param id - Automation ID to execute.
+   * @param source - Trigger source (scheduled or manual).
+   * @returns Execution result with session ID or error message.
+   */
   async executeAutomation(
     id: string,
     source: 'scheduled' | 'manual',
@@ -527,6 +567,11 @@ export class AutomationsManager {
     }
   }
 
+  /**
+   * Project the manager into the typed AutomationsApi RPC handler table.
+   *
+   * @returns RPC API object implementation.
+   */
   asApi(): AutomationsApi {
     return {
       list: async (req) => {
