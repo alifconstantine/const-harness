@@ -104,9 +104,10 @@ export function ConversationRoot({
   //   5. list still loading → cwd folder name bridges so the title does not
   //      flash on refresh (empty cwd → placeholder);
   const isOutside = pendingOutside
-    || (sessionId !== undefined && sessionWorkspace === undefined)
+    || (sessionId !== undefined && cwd === undefined)
     || isDefaultWorkspacePath(cwd)
-  const chipTitle = pendingWorkspace?.title
+  const chipTitle = (pendingOutside ? t('hero.outsideProject') : undefined)
+    ?? pendingWorkspace?.title
     ?? sessionWorkspace?.title
     ?? (isOutside
       ? t('hero.outsideProject')

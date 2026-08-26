@@ -91,6 +91,27 @@
   animation: dsh-turn-status-shimmer 1.8s linear infinite;
 }
 
+.turnStatusDot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--dsw-static-deepseek-500);
+  margin-right: 8px;
+  animation: dsh-turn-status-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes dsh-turn-status-pulse {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
 .turnStatusClock {
   margin-left: 8px;
   font: var(--dsw-font-xs-13);

@@ -875,7 +875,7 @@ describe('ChatView', () => {
     const view = render(<h.ChatView {...h.props} />)
     expect(view.getByTestId('tool-seat-r1')).toBeTruthy()
     expect(h.toolOwners[0]?.block).toMatchObject({ callId: 'r1', argsRaw: '{"command":"cmd-r1"}' })
-    expect(view.getByRole('status').textContent).toBe('Deep diving...')
+    expect(view.getByRole('status').textContent).toBe('正在处理…')
   })
 
   it('keeps the Tool renderer mounted when a running call settles into log order', () => {
@@ -935,7 +935,7 @@ describe('ChatView', () => {
     const view = render(<h.ChatView {...h.props} />)
     // Freshly mounted (as after a reload) yet already past the 15s gate.
     const status = view.getByRole('status')
-    expect(status.textContent).toMatch(/^Deep diving\.\.\.2分0\d秒$/)
+    expect(status.textContent).toMatch(/^正在处理…2分0\d秒$/)
     expect(status.querySelector('[aria-hidden="true"]')).not.toBeNull()
     act(() => {
       h.set({ queue: [{
@@ -947,7 +947,7 @@ describe('ChatView', () => {
         text: 'also',
       }] })
     })
-    expect(status.textContent).toMatch(/^Deep diving\.\.\.2分0\d秒$/)
+    expect(status.textContent).toMatch(/^正在处理…2分0\d秒$/)
   })
 
   it('hands each ordered root call to the keyed business-node slot', () => {
@@ -1353,5 +1353,63 @@ describe('ChatView', () => {
     const failedView = render(<failed.ChatView {...failed.props} />)
     expect(failedView.getByText('Compaction cancelled.')).toBeTruthy()
     expect(failedView.container.querySelector('[data-state="error"]')).not.toBeNull()
+  })
+
+  it('groups contiguous context nodes of completed turn into collapsible TurnWorkDisclosure', () => {
+    const startTime = 1_000
+    const endTime = 13_000
+    const ctx1: ConversationNode = {
+      kind: 'context', seq: 2, time: 2_000, content: [], source: null,
+      provenance: { role: 'inject', label: 'AGENTS.md' },
+      form: null,
+      turn: 1,
+    } as never
+    const ctx2: ConversationNode = {
+      kind: 'context', seq: 3, time: 3_000, content: [], source: null,
+      provenance: { role: 'inject', label: 'skill-catalog' },
+      form: null,
+      turn: 1,
+    } as never
+    const h = makeHarness({
+      nodes: [user(1, 'help'), ctx1, ctx2, assistant(4, 'Hello!')],
+      turnTimings: new Map([[1, { startTime, endTime }]]),
+      turnEnds: new Map([[1, 4]]),
+      running: false,
+    })
+    const view = render(<h.ChatView {...h.props} />)
+    const disclosure = view.container.querySelector('[data-turn-work-disclosure]')
+    expect(disclosure).toBeTruthy()
+    const button = within(disclosure as HTMLElement).getByRole('button')
+    expect(button.textContent).toContain('12秒')
+    expect(button.textContent).toContain('2 contexts')
+    expect(button.getAttribute('aria-expanded')).toBe('false')
+
+    expect(view.queryByText('AGENTS.md')).toBeNull()
+
+    fireEvent.click(button)
+    expect(button.getAttribute('aria-expanded')).toBe('true')
+    expect(view.getByText('AGENTS.md')).toBeTruthy()
+    expect(view.getByText('skill-catalog')).toBeTruthy()
+
+    fireEvent.click(button)
+    expect(button.getAttribute('aria-expanded')).toBe('false')
+    expect(view.queryByText('AGENTS.md')).toBeNull()
+  })
+
+  it('renders context nodes directly without disclosure during active running turn', () => {
+    const ctx1: ConversationNode = {
+      kind: 'context', seq: 2, time: 2_000, content: [], source: null,
+      provenance: { role: 'inject', label: 'AGENTS.md' },
+      form: null,
+      turn: 1,
+    } as never
+    const h = makeHarness({
+      nodes: [user(1, 'help'), ctx1],
+      turnTimings: new Map([[1, { startTime: 1_000 }]]),
+      running: true,
+    })
+    const view = render(<h.ChatView {...h.props} />)
+    expect(view.container.querySelector('[data-turn-work-disclosure]')).toBeNull()
+    expect(view.getByText('AGENTS.md')).toBeTruthy()
   })
 })

@@ -13,11 +13,12 @@
 // lifecycle updates replace only their own row without remounting it.
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import type { ConversationTimelineSnapshot } from '@deepseek-ai/dsh-client-runtime/client'
+import type { ChatNodeStore, ConversationTimelineSnapshot } from '@deepseek-ai/dsh-client-runtime/client'
 import { IconChevronDownOutline14 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ChatViewSlotProps } from '../contract/slots.ts'
 import { PendingSteeringBubble } from './MessageItem.tsx'
 import { ChatNodeSeat } from './ChatNodeSeat.tsx'
+import { TurnWorkDisclosure } from './TurnWorkDisclosure.tsx'
 import { formatRunDuration } from './message-chrome.ts'
 import css from './ChatView.module.css'
 
@@ -129,7 +130,8 @@ function TurnStatus({ startTime, t }: {
   const showClock = elapsedMs >= 15_000
   return (
     <div className={css.turnStatus} role="status" aria-live="polite">
-      Deep diving...
+      <span className={css.turnStatusDot} aria-hidden />
+      {t('chat.working')}
       {showClock && (
         <span className={css.turnStatusClock} aria-hidden>
           {formatRunDuration(elapsedMs, t)}
@@ -137,6 +139,85 @@ function TurnStatus({ startTime, t }: {
       )}
     </div>
   )
+}
+
+type FlowItem =
+  | { readonly kind: 'single'; readonly key: string }
+  | {
+    readonly kind: 'work-group'
+    readonly key: string
+    readonly turn: number
+    readonly durationMs: number | undefined
+    readonly summary: string | undefined
+    readonly keys: readonly string[]
+  }
+
+function isWorkNodeKind(kind: string | undefined): boolean {
+  return kind === 'context'
+}
+
+function formatWorkSummary(contexts: number, tools: number): string | undefined {
+  const parts: string[] = []
+  if (contexts > 0) parts.push(`${contexts} context${contexts > 1 ? 's' : ''}`)
+  if (tools > 0) parts.push(`${tools} tool${tools > 1 ? 's' : ''}`)
+  return parts.length > 0 ? parts.join(' · ') : undefined
+}
+
+function groupFlowNodes(
+  order: readonly string[],
+  nodeStore: ChatNodeStore,
+  timeline: ConversationTimelineSnapshot,
+  running: boolean,
+): readonly FlowItem[] {
+  const items: FlowItem[] = []
+  for (let i = 0; i < order.length; i++) {
+    const key = order[i]
+    if (key === undefined) continue
+    const node = nodeStore.get(key)
+    const turnCoord = node?.location.kind === 'turn' || node?.location.kind === 'step'
+      ? node.location.turn.turn
+      : undefined
+    const turnObj = turnCoord !== undefined ? timeline.turns.get(turnCoord) : undefined
+    const isTurnClosed = turnObj?.status === 'closed' || (turnCoord !== undefined && !running)
+
+    if (node !== undefined && isWorkNodeKind(node.kind) && turnCoord !== undefined && isTurnClosed) {
+      const workKeys: string[] = [key]
+      let contexts = node.kind === 'context' ? 1 : 0
+      let tools = node.kind === 'tool-call' ? 1 : 0
+      let j = i + 1
+      while (j < order.length) {
+        const nextKey = order[j]
+        if (nextKey === undefined) break
+        const nextNode = nodeStore.get(nextKey)
+        const nextTurnCoord = nextNode?.location.kind === 'turn' || nextNode?.location.kind === 'step'
+          ? nextNode.location.turn.turn
+          : undefined
+        if (nextTurnCoord === turnCoord && nextNode !== undefined && isWorkNodeKind(nextNode.kind)) {
+          workKeys.push(nextKey)
+          if (nextNode.kind === 'context') contexts += 1
+          if (nextNode.kind === 'tool-call') tools += 1
+          j += 1
+        } else {
+          break
+        }
+      }
+      const durationMs = turnObj?.start !== undefined && turnObj.end !== undefined
+        ? Math.max(0, turnObj.end.time - turnObj.start.time)
+        : undefined
+      items.push({
+        kind: 'work-group',
+        key: `work-group:${turnCoord}:${key}`,
+        turn: turnCoord,
+        durationMs,
+        summary: formatWorkSummary(contexts, tools),
+        keys: workKeys,
+      })
+      i = j - 1
+    } else {
+      items.push({ kind: 'single', key })
+    }
+  }
+  return items
 }
 
 /**
@@ -165,6 +246,10 @@ export function ChatView({
     [inbox],
   )
   const runningTurnStart = useMemo(() => runningTurnStartTime(timeline), [timeline])
+  const flowItems = useMemo(
+    () => groupFlowNodes(order, nodeStore, timeline, running),
+    [order, nodeStore, timeline, running],
+  )
 
   const listRef = useRef<HTMLDivElement | null>(null)
   const columnRef = useRef<HTMLDivElement | null>(null)
@@ -379,22 +464,52 @@ export function ChatView({
               </button>
             </div>
           )}
-          {order.map(nodeKey => (
-            <ChatNodeSeat
-              key={nodeKey}
-              nodeKey={nodeKey}
-              useSession={useSession}
-              selectedCallId={selectedCallId}
-              cwd={cwd}
-              openFile={openFile}
-              inspectCall={inspectCall}
-              forkAt={forkAt}
-              loadImage={loadImage}
-              fileMentions={fileMentions}
-              renderSlot={renderSlot}
-              t={t}
-            />
-          ))}
+          {flowItems.map((item) => {
+            if (item.kind === 'single') {
+              return (
+                <ChatNodeSeat
+                  key={item.key}
+                  nodeKey={item.key}
+                  useSession={useSession}
+                  selectedCallId={selectedCallId}
+                  cwd={cwd}
+                  openFile={openFile}
+                  inspectCall={inspectCall}
+                  forkAt={forkAt}
+                  loadImage={loadImage}
+                  fileMentions={fileMentions}
+                  renderSlot={renderSlot}
+                  t={t}
+                />
+              )
+            }
+            return (
+              <TurnWorkDisclosure
+                key={item.key}
+                turn={item.turn}
+                durationMs={item.durationMs}
+                summary={item.summary}
+                t={t}
+              >
+                {item.keys.map(nodeKey => (
+                  <ChatNodeSeat
+                    key={nodeKey}
+                    nodeKey={nodeKey}
+                    useSession={useSession}
+                    selectedCallId={selectedCallId}
+                    cwd={cwd}
+                    openFile={openFile}
+                    inspectCall={inspectCall}
+                    forkAt={forkAt}
+                    loadImage={loadImage}
+                    fileMentions={fileMentions}
+                    renderSlot={renderSlot}
+                    t={t}
+                  />
+                ))}
+              </TurnWorkDisclosure>
+            )
+          })}
           {/* No pending placeholders: questions (ui-user-questions) and approvals
               (ApprovalPanel) both take over the composer, so a flow card would
               double-render the same wait. */}
