@@ -1092,6 +1092,7 @@ export function WorkspaceBrowser({
       }
     }
     const handleOpenSearch = () => {
+      expandSidebar()
       setSearchExpanded(true)
       setTimeout(() => { searchInput.current?.focus() }, 50)
     }
@@ -1101,7 +1102,7 @@ export function WorkspaceBrowser({
       window.removeEventListener('const:filter-mode', handleFilterMode)
       window.removeEventListener('const:open-search', handleOpenSearch)
     }
-  }, [actions])
+  }, [actions, expandSidebar])
 
   return (
     <div className={clsx(css.root, !wide && css.rail)}>
@@ -1114,21 +1115,6 @@ export function WorkspaceBrowser({
           />
         )}
         <div className={css.headerActions}>
-          {!wide && (
-            <Tooltip label={t('search.sessions.aria')} side="right" delayMs={500}>
-              <button
-                type="button"
-                className={clsx(css.iconButton, css.searchButton)}
-                aria-label={t('search.sessions.aria')}
-                onClick={() => {
-                  expandSidebar()
-                  setSearchExpanded(true)
-                }}
-              >
-                <IconSearchOutline16 size={18} />
-              </button>
-            </Tooltip>
-          )}
           {wide && (
             <ViewOptionsMenu
               groupBy={groupBy}

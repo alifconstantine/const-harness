@@ -63,14 +63,7 @@ export function SidebarRoot({
   }, [collapsed])
   const wide = !collapsed || !settled
 
-  const currentSessionId = useSessions(state => state.current)
-  const workspaceItems = useWorkspaces(state => state.items)
-  const activeWorkspace = currentSessionId !== undefined && Array.isArray(workspaceItems)
-    ? workspaceItems.find(w => w.sessionIds.includes(currentSessionId))
-    : undefined
-  const newTaskTooltip = activeWorkspace?.title
-    ? `${t('nav.newTask')} (${activeWorkspace.title})`
-    : t('nav.newTask')
+  const newTaskTooltip = wide ? t('nav.newTask') : `${t('nav.newTask')} (Ctrl+N)`
 
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   useEffect(() => {
@@ -175,7 +168,7 @@ export function SidebarRoot({
         )}
         {/* Rail resting state is the whale mark; hovering swaps in the panel
             icon (the expand affordance, figma sidebar-hover flow). */}
-        <Tooltip label={collapsed ? t('toggle.open') : t('toggle.collapse')} delayMs={500}>
+        <Tooltip label={collapsed ? t('toggle.open') : t('toggle.collapse')} side={wide ? 'bottom' : 'right'} delayMs={300}>
           <button
             type="button"
             className={clsx(css.iconButton, css.toggle)}
@@ -191,13 +184,11 @@ export function SidebarRoot({
 
       {/* Top action navigation list matching requirement #1 and Image 1 */}
       <nav className={css.topNav} aria-label="Main Navigation">
-        {/* New task / New session */}
-        <Tooltip label={newTaskTooltip} delayMs={500} disabled={wide}>
+        <Tooltip label={newTaskTooltip} side={wide ? 'bottom' : 'right'} delayMs={300}>
           <button
             type="button"
             className={clsx(css.navItem, css.newSession)}
             aria-label={t('nav.newTask')}
-            title={activeWorkspace?.title ? `${t('nav.newTask')} (${activeWorkspace.title})` : undefined}
             onClick={() => { startSession() }}
           >
             <IconNewChatOutline16 size={wide ? 16 : 18} />
@@ -207,7 +198,7 @@ export function SidebarRoot({
         </Tooltip>
 
         {/* Search */}
-        <Tooltip label={t('nav.search')} delayMs={500} disabled={wide}>
+        <Tooltip label={wide ? t('nav.search') : `${t('nav.search')} (Ctrl+K)`} side={wide ? 'bottom' : 'right'} delayMs={300}>
           <button
             type="button"
             className={css.navItem}
@@ -222,8 +213,11 @@ export function SidebarRoot({
           </button>
         </Tooltip>
 
+        <div className={css.divider} role="separator" aria-orientation="horizontal" />
+
+        {/* Feature Modules */}
         {/* Automations */}
-        <Tooltip label={t('nav.automations')} delayMs={500} disabled={wide}>
+        <Tooltip label={t('nav.automations')} side={wide ? 'bottom' : 'right'} delayMs={300}>
           <button
             type="button"
             className={css.navItem}
@@ -238,7 +232,7 @@ export function SidebarRoot({
         </Tooltip>
 
         {/* Plugin Marketplace */}
-        <Tooltip label={t('nav.plugins')} delayMs={500} disabled={wide}>
+        <Tooltip label={t('nav.plugins')} side={wide ? 'bottom' : 'right'} delayMs={300}>
           <button
             type="button"
             className={css.navItem}
@@ -253,7 +247,7 @@ export function SidebarRoot({
         </Tooltip>
 
         {/* Design (OpenDesign Studio) */}
-        <Tooltip label={t('nav.design')} delayMs={500} disabled={wide}>
+        <Tooltip label={t('nav.design')} side={wide ? 'bottom' : 'right'} delayMs={300}>
           <button
             type="button"
             className={css.navItem}
@@ -286,7 +280,7 @@ export function SidebarRoot({
           <div className={css.settingsArea}>
             {renderSlot('sidebar.settings', { wide })}
           </div>
-          <Tooltip label={t('nav.mobileRemote')} delayMs={500}>
+          <Tooltip label={t('nav.mobileRemote')} side={wide ? 'bottom' : 'right'} delayMs={300}>
             <button
               type="button"
               className={css.footIconButton}

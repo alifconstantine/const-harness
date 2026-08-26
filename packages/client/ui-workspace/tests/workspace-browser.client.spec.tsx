@@ -673,7 +673,7 @@ describe('WorkspaceBrowser', () => {
     }
   })
 
-  it('rail state renders icon controls that request expansion', () => {
+  it('rail state hides redundant search icon and focuses search on event after expansion', () => {
     vi.useFakeTimers()
     try {
       const expandSidebar = vi.fn()
@@ -681,9 +681,9 @@ describe('WorkspaceBrowser', () => {
       // No wide chrome in rail state.
       expect(screen.queryByText('工作区')).toBeNull()
       expect(screen.queryByPlaceholderText('搜索会话…')).toBeNull()
-      fireEvent.click(screen.getByRole('button', { name: '搜索会话' }))
-      expect(expandSidebar).toHaveBeenCalledTimes(1)
-      // The wide flip mounts the input and focuses it after the slide.
+      // Redundant local search icon is hidden in rail state to avoid duplicate search icons.
+      expect(screen.queryByRole('button', { name: '搜索会话' })).toBeNull()
+      // The wide flip mounts the input and focuses it after the slide when search opens.
       rerender(b, { wide: true })
       act(() => { window.dispatchEvent(new CustomEvent('const:open-search')) })
       const input = screen.getByPlaceholderText('搜索会话…')

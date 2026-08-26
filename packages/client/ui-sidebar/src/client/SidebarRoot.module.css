@@ -66,7 +66,8 @@
 .railIn .iconButton,
 .railIn .navItem,
 .railIn .newSession,
-.railIn .regionArea {
+.railIn .regionArea,
+.railIn .divider {
   animation: rail-in 150ms var(--ds-ease-in-out) backwards;
 }
 
@@ -144,29 +145,52 @@
   background: var(--dsw-alias-interactive-bg-hover);
 }
 
-.collapsed .iconButton {
-  width: 36px;
-  height: 36px;
+/* Rail logo swap: collapsed, the toggle rests as the brand logo and smoothly
+   crossfades to the panel expand icon on hover without layout reflow or SVG clipping bugs. */
+.toggle {
+  position: relative;
 }
 
-/* Rail logo swap: collapsed, the toggle rests as the whale mark (brand ink,
-   no hover circle) and hovering reveals the panel icon — the expand
-   affordance (figma sidebar-hover flow). Expanded it is a plain panel icon. */
+.toggle svg {
+  pointer-events: none;
+}
+
+.collapsed .toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
 .collapsed .toggle .panelIcon {
-  display: none;
+  position: absolute;
+  opacity: 0;
+  transform: scale(0.85);
+  transition: opacity 140ms var(--ds-ease-in-out), transform 140ms var(--ds-ease-in-out);
+}
+
+.collapsed .toggle .railFish {
+  position: absolute;
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 140ms var(--ds-ease-in-out), transform 140ms var(--ds-ease-in-out);
 }
 
 .collapsed .toggle:hover .panelIcon {
-  display: inline;
+  opacity: 1;
+  transform: scale(1);
 }
 
 .collapsed .toggle:hover .railFish {
-  display: none;
+  opacity: 0;
+  transform: scale(0.85);
 }
 
 /* Rail icons ride the primary ink (figma rail spec); expanded keeps the
    secondary icon-button ink. */
 .collapsed .iconButton {
+  width: 36px;
+  height: 36px;
   color: var(--dsw-alias-label-primary);
 }
 
@@ -217,15 +241,55 @@
   font-weight: 500;
 }
 
+/* Category divider between Core Actions and Feature Modules */
+.divider {
+  flex: none;
+  height: 1px;
+  width: 100%;
+  background: var(--dsw-alias-border-l1, rgba(255, 255, 255, 0.08));
+  margin: 6px 0;
+  box-sizing: border-box;
+}
+
+.collapsed .divider {
+  width: 24px;
+  margin: 6px auto;
+}
+
 .collapsed .navItem,
 .collapsed .newSession {
   align-self: flex-start;
   width: 36px;
   height: 36px;
   padding: 0;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   justify-content: center;
-  border-radius: 50%;
+  border-radius: 8px;
+  position: relative;
+  transition: background 120ms var(--ds-ease-in-out), color 120ms var(--ds-ease-in-out), transform 120ms var(--ds-ease-in-out);
+}
+
+.collapsed .navItem:hover,
+.collapsed .newSession:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+  transform: translateY(-1px);
+}
+
+.collapsed .navItem.active {
+  background: var(--dsw-alias-interactive-bg-active, rgba(255, 255, 255, 0.08));
+  color: var(--dsw-alias-label-primary);
+}
+
+.collapsed .navItem.active::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: var(--dsw-alias-brand-primary, #3b82f6);
 }
 
 .navLabel {

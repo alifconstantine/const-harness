@@ -19,11 +19,11 @@ exports[`sidebar shell snapshots > renders the collapsed rail after the crossfad
       >
         <svg
           aria-hidden="true"
-          data-content="451b5541"
+          data-content="ae9d0415"
           fill="none"
           height="24"
-          viewBox="0 0 190 24"
-          width="190"
+          viewBox="0 0 160 24"
+          width="160"
         />
       </button>
       <button
@@ -94,6 +94,11 @@ exports[`sidebar shell snapshots > renders the collapsed rail after the crossfad
           Ctrl+K
         </span>
       </button>
+      <div
+        aria-orientation="horizontal"
+        class="divider"
+        role="separator"
+      />
       <button
         aria-label="Automations"
         class="navItem"
@@ -221,11 +226,11 @@ exports[`sidebar shell snapshots > renders the expanded column (wordmark, capsul
       >
         <svg
           aria-hidden="true"
-          data-content="451b5541"
+          data-content="ae9d0415"
           fill="none"
           height="24"
-          viewBox="0 0 190 24"
-          width="190"
+          viewBox="0 0 160 24"
+          width="160"
         />
       </button>
       <button
@@ -296,6 +301,11 @@ exports[`sidebar shell snapshots > renders the expanded column (wordmark, capsul
           Ctrl+K
         </span>
       </button>
+      <div
+        aria-orientation="horizontal"
+        class="divider"
+        role="separator"
+      />
       <button
         aria-label="Automations"
         class="navItem"
@@ -423,11 +433,11 @@ exports[`sidebar shell snapshots > renders the expanded column in the default lo
       >
         <svg
           aria-hidden="true"
-          data-content="451b5541"
+          data-content="ae9d0415"
           fill="none"
           height="24"
-          viewBox="0 0 190 24"
-          width="190"
+          viewBox="0 0 160 24"
+          width="160"
         />
       </button>
       <button
@@ -498,6 +508,11 @@ exports[`sidebar shell snapshots > renders the expanded column in the default lo
           Ctrl+K
         </span>
       </button>
+      <div
+        aria-orientation="horizontal"
+        class="divider"
+        role="separator"
+      />
       <button
         aria-label="自动化"
         class="navItem"
