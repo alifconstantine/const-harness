@@ -108,10 +108,16 @@ exports[`sidebar shell snapshots > renders the collapsed rail after the crossfad
         type="button"
       >
         <svg
-          data-content="d95f4712"
+          aria-hidden="true"
+          class="lucide lucide-palette"
+          data-content="f41357ca"
           fill="none"
           height="16"
-          viewBox="0 0 16 16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
           width="16"
           xmlns="http://www.w3.org/2000/svg"
         />
@@ -262,10 +268,16 @@ exports[`sidebar shell snapshots > renders the expanded column (wordmark, capsul
         type="button"
       >
         <svg
-          data-content="d95f4712"
+          aria-hidden="true"
+          class="lucide lucide-palette"
+          data-content="f41357ca"
           fill="none"
           height="16"
-          viewBox="0 0 16 16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
           width="16"
           xmlns="http://www.w3.org/2000/svg"
         />
@@ -416,10 +428,16 @@ exports[`sidebar shell snapshots > renders the expanded column in the default lo
         type="button"
       >
         <svg
-          data-content="d95f4712"
+          aria-hidden="true"
+          class="lucide lucide-palette"
+          data-content="f41357ca"
           fill="none"
           height="16"
-          viewBox="0 0 16 16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
           width="16"
           xmlns="http://www.w3.org/2000/svg"
         />
