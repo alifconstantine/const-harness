@@ -21,9 +21,10 @@
 }
 
 :global([data-conversation-scroll]) .root {
-  flex: 0 0 auto;
-  min-height: auto;
+  flex: 1 0 auto;
+  min-height: 100%;
   height: auto;
+  position: relative;
 }
 
 :global([data-conversation-scroll]) .scroll {

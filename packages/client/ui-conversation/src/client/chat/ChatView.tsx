@@ -19,6 +19,7 @@ import type { ChatViewSlotProps } from '../contract/slots.ts'
 import { PendingSteeringBubble } from './MessageItem.tsx'
 import { ChatNodeSeat } from './ChatNodeSeat.tsx'
 import { TurnWorkDisclosure } from './TurnWorkDisclosure.tsx'
+import { TurnTimelineNav } from './TurnTimelineNav.tsx'
 import { formatRunDuration } from './message-chrome.ts'
 import css from './ChatView.module.css'
 
@@ -449,6 +450,12 @@ export function ChatView({
 
   return (
     <div className={css.root}>
+      <TurnTimelineNav
+        order={order}
+        nodeStore={nodeStore}
+        timeline={timeline}
+        listRef={listRef}
+      />
       <div ref={listRef} className={css.scroll}>
         <div ref={columnRef} className={css.column} data-chat-flow="">
           {openState === 'loading' && <div className={css.hint}>{t('chat.loadingHistory')}</div>}

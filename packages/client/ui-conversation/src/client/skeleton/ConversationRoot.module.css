@@ -302,7 +302,9 @@
 
 .root[data-phase='active'] .viewArea {
   flex: 1 0 auto;
-  min-height: auto;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .root[data-phase='active'] .composerSeat {
