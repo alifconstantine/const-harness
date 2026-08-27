@@ -125,6 +125,10 @@ export function ConversationSessionHeader({
                 </div>
               )}
 
+              <div className={css.headerActions}>
+                {renderSlot('conversation.session.header.actions', {})}
+              </div>
+
               <SessionHeaderMenu
                 sessionId={sessionId}
                 displayTitle={sessionSummary?.displayTitle ?? sessionId}
@@ -144,10 +148,6 @@ export function ConversationSessionHeader({
                   openPath?.(path)
                 }}
               />
-
-              <div className={css.headerActions}>
-                {renderSlot('conversation.session.header.actions', {})}
-              </div>
             </div>
             <div className={css.headerUtilities}>
               {renderSlot('conversation.session.header.utilities', {})}

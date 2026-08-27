@@ -1174,14 +1174,31 @@ describe('attachment launcher chrome and control seats', () => {
     expect(view.queryByLabelText('Model')).toBeNull()
   })
 
-  it('triggers native file picker click when paperclip button is clicked', () => {
+  it('triggers native file picker click when Media is chosen from context menu', () => {
     const { view } = bench({ draft: 'draft text' })
     const fileInput = view.container.querySelector('input[type="file"]') as HTMLInputElement
     expect(fileInput).toBeTruthy()
     const clickSpy = vi.spyOn(fileInput, 'click')
     const launcher = view.getByLabelText('添加文件或图片')
     fireEvent.click(launcher)
+    fireEvent.click(view.getByRole('menuitem', { name: 'Media' }))
     expect(clickSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('inserts @ token when Mentions is selected from context menu', () => {
+    const { view, shell } = bench({ draft: 'hello' })
+    const launcher = view.getByLabelText('添加文件或图片')
+    fireEvent.click(launcher)
+    fireEvent.click(view.getByRole('menuitem', { name: 'Mentions' }))
+    expect(shell.snapshot.draft).toBe('hello @')
+  })
+
+  it('inserts / token when Actions is selected from context menu', () => {
+    const { view, shell } = bench({ draft: '' })
+    const launcher = view.getByLabelText('添加文件或图片')
+    fireEvent.click(launcher)
+    fireEvent.click(view.getByRole('menuitem', { name: 'Actions' }))
+    expect(shell.snapshot.draft).toBe('/')
   })
 
   it('the Access chip renders the projection value and submits a non-Full-access pick directly', async () => {
