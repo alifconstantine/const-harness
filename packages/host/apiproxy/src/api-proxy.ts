@@ -2761,6 +2761,8 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
             const res = await snapshotService.rollbackTurn(sessionId, turn, cwd)
             if (res.success) {
               restoredFiles = res.restoredFiles
+            } else if (res.error) {
+              console.warn(`[apiproxy] snapshot rollbackTurn: ${res.error}`)
             }
           } catch (err: unknown) {
             console.error('[apiproxy] snapshot rollbackTurn failed:', err)
