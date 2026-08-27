@@ -10,7 +10,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent, KeyboardEvent, MouseEvent, ReactNode } from 'react'
 import clsx from 'clsx'
 import {
-  IconPaperclipOutline16, IconWarningOutline16, Toast, Tooltip,
+  IconActionsOutline16, IconAtOutline16, IconChromeOutline16, IconImageOutline16,
+  IconPlusOutline16, IconWarningOutline16, Menu, Toast, Tooltip,
+  type MenuEntry,
 } from '@const-ai/client-ui-primitives'
 import { AttachmentRail, DropOverlay, ImageLightbox } from '@const-ai/client-ui-attachment'
 import type { AttachmentRailItem } from '@const-ai/client-ui-attachment'
@@ -565,6 +567,89 @@ export function InputBar({
     if (!empty && !disabled && !machineBusy) inputActions.submit()
   }
 
+  const [contextMenuOpen, setContextMenuOpen] = useState(false)
+
+  const insertToken = useCallback((token: string) => {
+    if (keyboard === undefined || locked || machineBusy) return
+    const el = inputRef.current
+    const currentDraft = draft
+    let next = currentDraft
+    let pos = currentDraft.length
+    const start = el?.selectionStart ?? currentDraft.length
+    const end = el?.selectionEnd ?? currentDraft.length
+    const insertAtEnd = (start === 0 && end === 0 && currentDraft.length > 0) || el === null
+    if (!insertAtEnd && (start > 0 || (start === 0 && end > 0))) {
+      const needsPrefix = start > 0 && !/\s/.test(currentDraft[start - 1] ?? '')
+      const insertStr = (needsPrefix ? ' ' : '') + token
+      next = currentDraft.slice(0, start) + insertStr + currentDraft.slice(end)
+      pos = start + insertStr.length
+    } else {
+      const needsPrefix = currentDraft.length > 0 && !/\s/.test(currentDraft[currentDraft.length - 1] ?? '')
+      const insertStr = (needsPrefix ? ' ' : '') + token
+      next = currentDraft + insertStr
+      pos = next.length
+    }
+    keyboard.setDraft(next)
+    keyboard.track(next, pos)
+    el?.focus()
+    setTimeout(() => {
+      if (el) {
+        el.selectionStart = pos
+        el.selectionEnd = pos
+      }
+    }, 0)
+  }, [keyboard, locked, machineBusy, draft])
+
+  const contextMenuItems: readonly MenuEntry[] = useMemo(() => [
+    { type: 'label', id: 'add-context-label', text: 'Add Context' },
+    {
+      id: 'media',
+      label: 'Media',
+      icon: <IconImageOutline16 size={16} />,
+      disabled: locked || addImages === undefined,
+    },
+    {
+      id: 'mentions',
+      label: 'Mentions',
+      icon: <IconAtOutline16 size={16} />,
+      disabled: locked,
+    },
+    {
+      id: 'actions',
+      label: 'Actions',
+      icon: <IconActionsOutline16 size={16} />,
+      disabled: locked,
+    },
+    {
+      id: 'browser',
+      label: 'Browser',
+      icon: <IconChromeOutline16 size={16} />,
+      disabled: locked,
+    },
+  ], [locked, addImages])
+
+  const onSelectContextItem = useCallback((id: string) => {
+    setContextMenuOpen(false)
+    switch (id) {
+      case 'media': {
+        fileInputRef.current?.click()
+        break
+      }
+      case 'mentions': {
+        insertToken('@')
+        break
+      }
+      case 'actions': {
+        insertToken('/')
+        break
+      }
+      case 'browser': {
+        insertToken('/browser')
+        break
+      }
+    }
+  }, [insertToken])
+
   // The Access seat: the projection-fed permission chip (renders nothing
   // while the permissions key is absent — permission-less host or Draft —
   // or while the command face is absent with the session).
@@ -757,18 +842,28 @@ export function InputBar({
                 e.target.value = ''
               }}
             />
-            <Tooltip label={t('input.attachFiles')} side="top" delayMs={500}>
-              <button
-                type="button"
-                className={css.add}
-                aria-label={t('input.attachFiles')}
-                disabled={locked || addImages === undefined}
-                onMouseDown={keepFocus}
-                onClick={() => { fileInputRef.current?.click() }}
-              >
-                <IconPaperclipOutline16 size={16} />
-              </button>
-            </Tooltip>
+            <Menu
+              open={contextMenuOpen}
+              anchor={(
+                <Tooltip label={t('input.attachFiles')} side="top" delayMs={500}>
+                  <button
+                    type="button"
+                    className={css.add}
+                    aria-label={t('input.attachFiles')}
+                    disabled={locked}
+                    onMouseDown={keepFocus}
+                    onClick={() => { setContextMenuOpen(p => !p) }}
+                  >
+                    <IconPlusOutline16 size={16} />
+                  </button>
+                </Tooltip>
+              )}
+              items={contextMenuItems}
+              onSelect={onSelectContextItem}
+              onClose={() => { setContextMenuOpen(false) }}
+              side="top"
+              align="start"
+            />
             <div className={css.modes}>
               {accessSelect}
               {renderSlot('conversation.input.plan', { locked })}

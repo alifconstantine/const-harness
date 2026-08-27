@@ -4,7 +4,12 @@
  * (same figma source); batch B glyphs are harness-only figma extracts.
  */
 import { Palette } from 'lucide-react'
+import { MdTerminal } from 'react-icons/md'
+import { BsBrowserChrome } from 'react-icons/bs'
 import type { IconProps } from './props.ts'
+
+export { MdTerminal } from 'react-icons/md'
+export { BsBrowserChrome } from 'react-icons/bs'
 
 export type { IconProps } from './props.ts'
 
@@ -967,17 +972,53 @@ export const IconArchiveOutline16 = ({ size = 16, className }: IconProps) => (
   </svg>
 )
 
-/** ic_ds_terminal_outline_16: terminal command prompt `>_` */
+/** ic_ds_terminal_outline_16: MdTerminal from react-icons/md */
 export const IconTerminalOutline16 = ({ size = 16, className }: IconProps) => (
+  <MdTerminal size={size} className={className} />
+)
+
+/** ic_ds_image_outline_16: media / picture image */
+export const IconImageOutline16 = ({ size = 16, className }: IconProps) => (
   <svg width={size} height={size} className={className} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
       fillRule="evenodd"
       clipRule="evenodd"
-      d="M2 2C1.44772 2 1 2.44772 1 3V13C1 13.5523 1.44772 14 2 14H14C14.5523 14 15 13.5523 15 13V3C15 2.44772 14.5523 2 14 2H2ZM2.3 3.3H13.7V12.7H2.3V3.3ZM4.14645 5.14645C4.34171 4.95118 4.65829 4.95118 4.85355 5.14645L7.35355 7.64645C7.54882 7.84171 7.54882 8.15829 7.35355 8.35355L4.85355 10.8536C4.65829 11.0488 4.34171 11.0488 4.14645 10.8536C3.95118 10.6583 3.95118 10.3417 4.14645 10.1464L6.29289 8L4.14645 5.85355C3.95118 5.65829 3.95118 5.34171 4.14645 5.14645ZM8.5 10.5C8.5 10.2239 8.72386 10 9 10H12C12.2761 10 12.5 10.2239 12.5 10.5C12.5 10.7761 12.2761 11 12 11H9C8.72386 11 8.5 10.7761 8.5 10.5Z"
+      d="M2 3C1.44772 3 1 3.44772 1 4V12C1 12.5523 1.44772 13 2 13H14C14.5523 13 15 12.5523 15 12V4C15 3.44772 14.5523 3 14 3H2ZM2.2 4.2H13.8V11.8H2.2V4.2ZM5.25 5.5C4.83579 5.5 4.5 5.83579 4.5 6.25C4.5 6.66421 4.83579 7 5.25 7C5.66421 7 6 6.66421 6 6.25C6 5.83579 5.66421 5.5 5.25 5.5ZM3.5 10.5L6 7.5L8 9.5L10.5 6.5L12.5 10.5H3.5Z"
       fill="currentColor"
     />
   </svg>
 )
+
+/** ic_ds_at_outline_16: mentions @ sign */
+export const IconAtOutline16 = ({ size = 16, className }: IconProps) => (
+  <svg width={size} height={size} className={className} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M8 1.5C4.41015 1.5 1.5 4.41015 1.5 8C1.5 11.5899 4.41015 14.5 8 14.5C9.8052 14.5 11.4339 13.7634 12.6074 12.5746L11.7589 11.7262C10.8037 12.6939 9.47196 13.3 8 13.3C5.07289 13.3 2.7 10.9271 2.7 8C2.7 5.07289 5.07289 2.7 8 2.7C10.9271 2.7 13.3 5.07289 13.3 8V8.75C13.3 9.44036 12.7404 10 12.05 10C11.3596 10 10.8 9.44036 10.8 8.75V5.5H9.6V6.15C9.17647 5.74836 8.61466 5.5 8 5.5C6.61929 5.5 5.5 6.61929 5.5 8C5.5 9.38071 6.61929 10.5 8 10.5C8.61466 10.5 9.17647 10.2516 9.6 9.85C9.97059 10.6698 10.8122 11.2 12.05 11.2C13.4031 11.2 14.5 10.1031 14.5 8.75V8C14.5 4.41015 11.5899 1.5 8 1.5ZM8 6.7C8.71797 6.7 9.3 7.28203 9.3 8C9.3 8.71797 8.71797 9.3 8 9.3C7.28203 9.3 6.7 8.71797 6.7 8C6.7 7.28203 7.28203 6.7 8 6.7Z"
+      fill="currentColor"
+    />
+  </svg>
+)
+
+/** ic_ds_actions_outline_16: command / slash action box */
+export const IconActionsOutline16 = ({ size = 16, className }: IconProps) => (
+  <svg width={size} height={size} className={className} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M2 2C1.44772 2 1 2.44772 1 3V13C1 13.5523 1.44772 14 2 14H14C14.5523 14 15 13.5523 15 13V3C15 2.44772 14.5523 2 14 2H2ZM2.3 3.3H13.7V12.7H2.3V3.3ZM5.14645 5.14645C5.34171 4.95118 5.65829 4.95118 5.85355 5.14645L10.8536 10.1464C11.0488 10.3417 11.0488 10.6583 10.8536 10.8536C10.6583 11.0488 10.3417 11.0488 10.1464 10.8536L5.14645 5.85355C4.95118 5.65829 4.95118 5.34171 5.14645 5.14645Z"
+      fill="currentColor"
+    />
+  </svg>
+)
+
+/** ic_ds_chrome_outline_16: BsBrowserChrome from react-icons/bs */
+export const IconChromeOutline16 = ({ size = 16, className }: IconProps) => (
+  <BsBrowserChrome size={size} className={className} />
+)
+
+export const IconBrowserOutline16 = IconChromeOutline16
 
 /** ic_ds_file_outline_16: file document */
 export const IconFileOutline16 = ({ size = 16, className }: IconProps) => (

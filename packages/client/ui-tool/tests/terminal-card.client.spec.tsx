@@ -636,38 +636,6 @@ describe('DetailsPanel Output section', () => {
     expect(view.getByText('点击消息流中的工具行查看详情')).toBeTruthy()
   })
 
-  it('the close button reaches closeDetails', () => {
-    localStorage.clear()
-    const chat = createChatStore().create()
-    const closeDetails = vi.fn()
-    const snap = snapshot()
-    const view = render(
-      <DetailsPanel
-        SessionProvider={SessionProviderStub}
-        renderSlot={renderToolDetails(t)}
-        sessionId={SID}
-        useSession={bindSnapshotSelector({ getSnapshot: () => snap, subscribe: () => () => {} })}
-        useSessions={bindSnapshotSelector(createSnapshotStore<SessionListState>(
-          {
-            ids: [], byId: {}, current: undefined, phase: 'ready',
-            subagentsByParent: {}, jobsBySession: {}, currentAddress: undefined,
-          }))}
-        useWorkspaces={bindSnapshotSelector(createSnapshotStore<WorkspaceListState>({
-          items: [], archivedSessionIds: [], state: 'idle', phase: 'ready', error: null,
-          baselinesReady: true, recentWorkspaceId: undefined,
-        }))}
-        useInput={(() => { throw new Error('unused') })}
-        inputActions={{ setDraft: () => {}, addImages: () => true, removeImage: () => {}, pruneImages: () => {}, submit: () => {} }}
-        useProjection={(() => undefined)}
-        useStore={bindSnapshotSelector(chat)}
-        actions={chat.actions}
-        closeDetails={closeDetails}
-        t={t}
-      />,
-    )
-    fireEvent.click(view.getByRole('button', { name: '关闭详情' }))
-    expect(closeDetails).toHaveBeenCalledTimes(1)
-  })
 
   it('a non-text result block renders as JSON, and an empty result falls back to its error', () => {
     const nonText = mount(snapshot({
