@@ -2751,7 +2751,7 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
 
         let restoredFiles: string[] = []
         const snapshotService = ctx.get('snapshot') as {
-          rollbackTurn: (sid: string, t: number, w: string) => Promise<{ success: boolean; restoredFiles: string[] }>
+          rollbackTurn: (sid: string, t: number, w: string) => Promise<{ success: boolean; restoredFiles: string[]; error?: string }>
         } | undefined
         const attachedSession = ctx.sessions.get(sessionId)
         const cwd = attachedSession?.header.cwd ?? source.header.cwd ?? process.cwd()

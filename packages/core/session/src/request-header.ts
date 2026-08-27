@@ -19,6 +19,7 @@ import type { EpochHeader, SessionEvent } from './types.ts'
  * @returns the canonical header.
  */
 export function canonicalHeader(header: EpochHeader): EpochHeader {
+  if (!header) return header
   const adapterDefaults = header.adapterDefaults
   return {
     config: header.config,

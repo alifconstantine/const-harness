@@ -419,8 +419,9 @@ export function ChatView({
       followSigRef.current = followSig
       return
     }
-    // When the transcript is empty or truncated, reset to bottom:
-    if (order.length === 0) {
+    // When the transcript is empty or truncated or fits completely without overflow:
+    const floor = Math.max(0, el.scrollHeight - el.clientHeight)
+    if (order.length === 0 || floor <= 0) {
       if (!atBottomRef.current) {
         toBottom(el)
       }
@@ -428,7 +429,7 @@ export function ChatView({
       lastKeyRef.current = null
       lastSteeringIdRef.current = null
       followSigRef.current = followSig
-      return
+      if (order.length === 0) return
     }
     // Prepend (head seq decreased): preserve the same settled row at the
     // position established by the reader's latest scroll. This excludes
@@ -524,16 +525,27 @@ export function ChatView({
   const followRef = useRef<(() => void) | null>(null)
   followRef.current = () => {
     const local = listRef.current
-    if (local !== null && atBottomRef.current) {
+    if (local !== null) {
       const el = scrollerOf(local)
-      const column = el.querySelector<HTMLElement>('[data-chat-flow]')
-      const composer = el.querySelector<HTMLElement>('[data-composer-seat]')
-      const columnHeight = column?.offsetHeight ?? 0
-      const availableHeight = el.clientHeight - (composer?.offsetHeight ?? 0)
-      if (columnHeight > 0 ? columnHeight > availableHeight : el.scrollHeight > el.clientHeight) {
-        el.scrollTop = el.scrollHeight
-        observedTopRef.current = el.scrollTop
-        chatScroll.save(null)
+      const floor = Math.max(0, el.scrollHeight - el.clientHeight)
+      if (floor <= 0) {
+        if (!atBottomRef.current) {
+          atBottomRef.current = true
+          setAtBottom(true)
+          chatScroll.save(null)
+        }
+        return
+      }
+      if (atBottomRef.current) {
+        const column = el.querySelector<HTMLElement>('[data-chat-flow]')
+        const composer = el.querySelector<HTMLElement>('[data-composer-seat]')
+        const columnHeight = column?.offsetHeight ?? 0
+        const availableHeight = el.clientHeight - (composer?.offsetHeight ?? 0)
+        if (columnHeight > 0 ? columnHeight > availableHeight : el.scrollHeight > el.clientHeight) {
+          el.scrollTop = el.scrollHeight
+          observedTopRef.current = el.scrollTop
+          chatScroll.save(null)
+        }
       }
     }
   }
