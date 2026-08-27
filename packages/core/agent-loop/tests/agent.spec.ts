@@ -164,4 +164,25 @@ describe('Agent', () => {
       expect.stringContaining('agent event "agent/status" listener threw'),
     )
   })
+
+  it('resumes cleanly after in-memory session truncate back to empty session', async () => {
+    const ctx = await harness(new MockAdapter([textResponse('first answer'), textResponse('second answer')]))
+    const agent = ctx.agentLoop.create(SessionId('truncate-resumption'), { provider: 'mock', model: 'mock' })
+
+    send(agent, 'first turn')
+    await agent.whenIdle()
+
+    expect(agent.session.events.some(e => e.type === 'request/header')).toBe(true)
+
+    // User rolls back / truncates to 0 events
+    agent.session.truncate(0)
+    expect(agent.session.events).toHaveLength(0)
+
+    // Send new prompt - should not throw adapterDefaults error
+    send(agent, 'second turn from clean start')
+    await agent.whenIdle()
+
+    expect(agent.session.events.findLast(e => e.type === 'turn/start')?.data.turn).toBe(1)
+    expect(agent.session.events.some(e => e.type === 'request/header')).toBe(true)
+  })
 })

@@ -427,9 +427,8 @@ export class ReactLoopAgent implements Agent {
       : undefined
     const maxTokens = this.options.maxTokens
     const seedConfig = deepFreeze(structuredClone(
-      this.requestHeaderLogged
-        // oxlint-disable-next-line typescript/no-non-null-assertion -- the instance logged the header it now folds
-        ? requestProposal(persistedHeader!)
+      this.requestHeaderLogged && persistedHeader !== undefined
+        ? requestProposal(persistedHeader)
         : {
           ...route,
           ...reasoningEffort === undefined ? {} : { reasoningEffort },
@@ -463,10 +462,10 @@ export class ReactLoopAgent implements Agent {
       ...tools.length > 0 ? { tools } : {},
     })
     const baseline = this.session.requestHeader()
-    if (!this.requestHeaderLogged) {
+    if (!this.requestHeaderLogged || baseline === undefined) {
       this.session.append('request/header', { header, reason: baseline === undefined ? 'initial' : 'resume' })
       this.requestHeaderLogged = true
-    } else if (baseline === undefined || !headerEquals(baseline, header)) {
+    } else if (!headerEquals(baseline, header)) {
       this.session.append('request/header', { header, reason: 'change' })
     }
 

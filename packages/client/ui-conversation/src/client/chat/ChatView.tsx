@@ -419,6 +419,17 @@ export function ChatView({
       followSigRef.current = followSig
       return
     }
+    // When the transcript is empty or truncated, reset to bottom:
+    if (order.length === 0) {
+      if (!atBottomRef.current) {
+        toBottom(el)
+      }
+      firstSeqRef.current = null
+      lastKeyRef.current = null
+      lastSteeringIdRef.current = null
+      followSigRef.current = followSig
+      return
+    }
     // Prepend (head seq decreased): preserve the same settled row at the
     // position established by the reader's latest scroll. This excludes
     // unrelated tail/composer growth while the request was in flight.
@@ -463,6 +474,13 @@ export function ChatView({
     // programmatic deliveries land on the ledger itself, so both preserve
     // the current ownership state.
     const floor = Math.max(0, el.scrollHeight - el.clientHeight)
+    if (order.length === 0 || floor <= 0) {
+      atBottomRef.current = true
+      setAtBottom(true)
+      chatScroll.save(null)
+      anchorRef.current = null
+      return
+    }
     const movedByReader = Math.abs(el.scrollTop - Math.min(observedTopRef.current, floor)) > 0.5
     const isAtBottom = movedByReader
       ? floor - el.scrollTop <= FOLLOW_THRESHOLD + 1
@@ -667,7 +685,7 @@ export function ChatView({
             <PendingSteeringBubble key={item.id} content={item.content} loadImage={loadImage} t={t} />
           ))}
         </div>
-        {!atBottom && (
+        {!atBottom && order.length > 0 && (
           <div className={css.toBottomSlot}>
             <button
               type="button"
