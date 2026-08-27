@@ -503,20 +503,24 @@ getPendingBeforeTree(sessionId: string, turn: number): string | undefined
 deletePendingBeforeTree(sessionId: string, turn: number): void
 
 /**
- * Record a completed turn's snapshot boundary.
+ * Record a completed turn's snapshot boundary and persist to disk.
  *
  * @param record - Turn snapshot record to store.
+ * @param worktree - Workspace directory path.
+ * @param projectId - Optional project identifier.
  */
-recordTurnSnapshot(record: TurnSnapshotRecord): void
+recordTurnSnapshot(record: TurnSnapshotRecord, worktree?: string, projectId?: string): void
 
 /**
- * Retrieve snapshot metadata for a turn.
+ * Retrieve snapshot metadata for a turn, falling back to disk manifest if needed.
  *
  * @param sessionId - Session identifier.
  * @param turn - Turn number.
+ * @param worktree - Optional workspace directory to check disk manifest.
+ * @param projectId - Optional project identifier.
  * @returns Turn snapshot record if found, undefined otherwise.
  */
-getTurnSnapshot(sessionId: string, turn: number): TurnSnapshotRecord | undefined
+async getTurnSnapshot( sessionId: string, turn: number, worktree?: string, projectId?: string, ): Promise<TurnSnapshotRecord | undefined>
 
 /**
  * Rollback the workspace to the exact state before a turn executed.
@@ -530,7 +534,7 @@ getTurnSnapshot(sessionId: string, turn: number): TurnSnapshotRecord | undefined
 async rollbackTurn( sessionId: string, turn: number, worktree: string, projectId?: string, ): Promise<{ success: boolean; restoredFiles: string[]; error?: string }>
 ```
 
-Source: [`packages/fs/fs-snapshot/src/index.ts:34`](../../packages/fs/fs-snapshot/src/index.ts)
+Source: [`packages/fs/fs-snapshot/src/index.ts:36`](../../packages/fs/fs-snapshot/src/index.ts)
 
 <a id="fs-events"></a>
 

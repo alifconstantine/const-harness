@@ -1080,6 +1080,11 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         parameters: [{ name: 'id', description: 'the session id to delete.' }],
         returns: 'a promise resolving once all memory state, cache entries, and storage artifacts are deleted.',
       },
+      {
+        signature: 'truncate(_id: SessionId, _events: readonly SessionEvent[]): Promise<void>',
+        description: 'Rewrite a stored session\'s log to a specified prefix without tearing down live in-memory session.',
+        parameters: [{ name: '_id', description: 'the session id to truncate.' }, { name: '_events', description: 'the contiguous event prefix to keep.' }],
+      },
     ],
   },
   {
@@ -1573,14 +1578,14 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         parameters: [{ name: 'sessionId', description: 'Session identifier.' }, { name: 'turn', description: 'Turn number.' }],
       },
       {
-        signature: 'recordTurnSnapshot(record: TurnSnapshotRecord): void',
-        description: 'Record a completed turn\'s snapshot boundary.',
-        parameters: [{ name: 'record', description: 'Turn snapshot record to store.' }],
+        signature: 'recordTurnSnapshot(record: TurnSnapshotRecord, worktree?: string, projectId?: string): void',
+        description: 'Record a completed turn\'s snapshot boundary and persist to disk.',
+        parameters: [{ name: 'record', description: 'Turn snapshot record to store.' }, { name: 'worktree', description: 'Workspace directory path.' }, { name: 'projectId', description: 'Optional project identifier.' }],
       },
       {
-        signature: 'getTurnSnapshot(sessionId: string, turn: number): TurnSnapshotRecord | undefined',
-        description: 'Retrieve snapshot metadata for a turn.',
-        parameters: [{ name: 'sessionId', description: 'Session identifier.' }, { name: 'turn', description: 'Turn number.' }],
+        signature: 'async getTurnSnapshot( sessionId: string, turn: number, worktree?: string, projectId?: string, ): Promise<TurnSnapshotRecord | undefined>',
+        description: 'Retrieve snapshot metadata for a turn, falling back to disk manifest if needed.',
+        parameters: [{ name: 'sessionId', description: 'Session identifier.' }, { name: 'turn', description: 'Turn number.' }, { name: 'worktree', description: 'Optional workspace directory to check disk manifest.' }, { name: 'projectId', description: 'Optional project identifier.' }],
         returns: 'Turn snapshot record if found, undefined otherwise.',
       },
       {

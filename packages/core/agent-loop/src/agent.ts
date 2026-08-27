@@ -250,7 +250,8 @@ export class ReactLoopAgent implements Agent {
     const phase = this.phase
     const { signal } = phase.abort
     signal.throwIfAborted()
-    const turn = phase.turn + 1
+    const lastLoggedTurn = this.session.events.findLast(event => event.type === 'turn/start')?.data.turn ?? 0
+    const turn = lastLoggedTurn + 1
     try {
       this.session.append('turn/start', { turn })
     } catch (error: unknown) {

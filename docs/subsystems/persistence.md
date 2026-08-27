@@ -386,6 +386,13 @@ abstract listSnapshots(signal?: AbortSignal): Promise<SessionPersistenceSnapshot
  * @returns a promise resolving once all memory state, cache entries, and storage artifacts are deleted.
  */
 abstract delete(id: SessionId): Promise<void>
+
+/**
+ * Rewrite a stored session's log to a specified prefix without tearing down live in-memory session.
+ * @param _id - the session id to truncate.
+ * @param _events - the contiguous event prefix to keep.
+ */
+truncate(_id: SessionId, _events: readonly SessionEvent[]): Promise<void>
 ```
 
 Types: [SessionEvent](session.md) · [SessionId](core.md)

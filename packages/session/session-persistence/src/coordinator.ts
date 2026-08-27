@@ -669,22 +669,20 @@ export class PersistenceCoordinator<TornMarker = unknown> {
     }
     return this.serialize(id, async () => {
       const stored = await this.backend.loadStored(id)
-      if (stored === undefined) return
-      const header = stored.meta
+      const header = stored?.meta ?? this.states.get(id)?.meta ?? this.ctx.get('sessions')?.get(id)?.header
+      if (header === undefined) return
       await this.backend.deleteStored?.(id)
       if (batch.length > 0) {
         await this.backend.appendBatch(header, batch, false)
       }
       this.preparations.invalidate(id)
       const existingState = this.states.get(id)
-      if (existingState) {
-        this.states.set(id, {
-          meta: header,
-          cursor: batch.length,
-          materialized: batch.length > 0,
-          ...(existingState.owner !== undefined ? { owner: existingState.owner } : {}),
-        })
-      }
+      this.states.set(id, {
+        meta: header,
+        cursor: batch.length,
+        materialized: batch.length > 0,
+        ...(existingState?.owner !== undefined ? { owner: existingState.owner } : {}),
+      })
     })
   }
 

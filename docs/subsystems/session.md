@@ -509,6 +509,12 @@ declare class Session {
    */
   deriveMessages(): Message[];
   /**
+   * Truncate the in-memory session log to a prefix of length `toSeq`.
+   * Clears derived message and fold caches.
+   * @param toSeq - the sequence index to truncate to (0 <= toSeq <= this.log.length).
+   */
+  truncate(toSeq: number): void;
+  /**
    * Instance face of the pure per-node `deriveEventMessage` export from
    * `surface.ts`.
    * @param event - the event to project.
@@ -746,7 +752,7 @@ fork(source: SessionForkSource, boundary?: number, childSessionId?: SessionId): 
 
 Types: [CreateSessionOptions](persistence.md) · [PrepareSessionOptions](persistence.md) · [SessionId](core.md)
 
-Source: [`packages/core/session/src/index.ts:792`](../../packages/core/session/src/index.ts)
+Source: [`packages/core/session/src/index.ts:813`](../../packages/core/session/src/index.ts)
 
 <a id="session-events"></a>
 
