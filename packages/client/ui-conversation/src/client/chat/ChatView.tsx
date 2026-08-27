@@ -174,14 +174,7 @@ function isTextBearingAssistant(node: ChatConversationViewNode | undefined): boo
 function isWorkNode(node: ChatConversationViewNode | undefined): boolean {
   if (node === undefined) return false
   if (node.kind === 'tool-call') return true
-  if (node.kind === 'context') {
-    const data = node.data as { provenance?: { label?: string }; form?: string } | undefined
-    const label = data?.provenance?.label
-    if (label === 'time-context' || (label === '@const-ai/system-prompt' && data?.form !== 'snapshot')) {
-      return false
-    }
-    return true
-  }
+  if (node.kind === 'context') return true
   if (node.kind === 'assistant' || node.kind === 'assistant-step') {
     return !hasVisibleProse(node)
   }

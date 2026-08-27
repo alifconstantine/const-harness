@@ -437,34 +437,44 @@ export function apply(ctx: Context): void {
               // Fork or child-rename failure keeps the source view untouched.
             })
         },
-        undoTurn: async (turnNumber) => {
-          const result = await scoped.rollbackTurn(turnNumber)
-          const shell = inputHub.shell(sessionId)
-          if (result.userPrompt) {
-            shell.setDraft(result.userPrompt)
-          }
-          if (result.userImages && result.userImages.length > 0) {
-            shell.addImages(result.userImages as never)
-          }
-          if (typeof document !== 'undefined') {
-            const textarea = document.querySelector<HTMLTextAreaElement>('[data-composer-seat] textarea')
-            textarea?.focus()
-          }
-        },
-        editTurn: async (turnNumber, text) => {
-          const result = await scoped.rollbackTurn(turnNumber)
-          const session = sessions.binding(sessionId)?.session
-          if (session !== undefined) {
-            const content: ({ type: 'text'; text: string } | { type: 'image'; attachment: { draftId: string } })[] = [
-              { type: 'text', text },
-            ]
-            if (result.userImages && result.userImages.length > 0) {
-              for (const draftId of result.userImages) {
-                content.push({ type: 'image', attachment: { draftId } })
+        undoTurn: (turnNumber) => {
+          void scoped.rollbackTurn(turnNumber)
+            .then((result) => {
+              const shell = inputHub.shell(sessionId)
+              if (result.userPrompt) {
+                shell.setDraft(result.userPrompt)
               }
-            }
-            await session.prompt(content as never, 'queue')
-          }
+              if (result.userImages && result.userImages.length > 0) {
+                shell.addImages(result.userImages as never)
+              }
+              if (typeof document !== 'undefined') {
+                const textarea = document.querySelector<HTMLTextAreaElement>('[data-composer-seat] textarea')
+                textarea?.focus()
+              }
+            })
+            .catch((err: unknown) => {
+              console.error('[ui-conversation] undoTurn failed:', err)
+            })
+        },
+        editTurn: (turnNumber, text) => {
+          void scoped.rollbackTurn(turnNumber)
+            .then(async (result) => {
+              const session = sessions.binding(sessionId)?.session
+              if (session !== undefined) {
+                const content: ({ type: 'text'; text: string } | { type: 'image'; attachment: { draftId: string } })[] = [
+                  { type: 'text', text },
+                ]
+                if (result.userImages && result.userImages.length > 0) {
+                  for (const draftId of result.userImages) {
+                    content.push({ type: 'image', attachment: { draftId } })
+                  }
+                }
+                await session.prompt(content as never, 'queue')
+              }
+            })
+            .catch((err: unknown) => {
+              console.error('[ui-conversation] editTurn failed:', err)
+            })
         },
       }
     },

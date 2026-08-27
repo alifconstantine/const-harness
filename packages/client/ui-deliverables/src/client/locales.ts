@@ -17,6 +17,9 @@ export const zh = {
   'produced.revert': '回滚修改',
   'produced.revertConfirm': '确定要回滚本轮的所有文件修改吗？',
   'produced.revertSuccess': '已成功回滚修改',
+  'produced.confirm': '确认回滚？',
+  'produced.reverted': '已回滚',
+  'produced.undo': '回滚',
 }
 
 /** English dictionary (same key set). */
@@ -33,6 +36,9 @@ export const en: Record<DeliverablesKey, string> = {
   'produced.revert': 'Revert Changes',
   'produced.revertConfirm': 'Are you sure you want to revert changes from this turn?',
   'produced.revertSuccess': 'Changes successfully reverted',
+  'produced.confirm': 'Confirm Revert?',
+  'produced.reverted': 'Reverted',
+  'produced.undo': 'Undo',
 }
 
 /** Union of this namespace's dictionary keys. */

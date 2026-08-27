@@ -141,6 +141,7 @@ function TurnMaxTokensItem({ t }: {
       <StateDot state="warning" className={css.turnErrorDot} />
       <div className={css.turnErrorCopy}>
         <span className={css.maxTokensTitle}>{t('message.maxTokens')}</span>
+        {' '}
         <span className={css.turnErrorMessage}>{t('message.maxTokens.hint')}</span>
       </div>
     </div>

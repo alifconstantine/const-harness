@@ -36,9 +36,88 @@ export interface TurnSnapshotRecord {
 export class SnapshotService extends Service {
   private readonly shadowCache = new Map<string, ShadowGit>()
   private readonly turnSnapshots = new Map<string, Map<number, TurnSnapshotRecord>>()
+  private readonly sessionQueues = new Map<string, Promise<void>>()
+  private readonly sessionWorktrees = new Map<string, string>()
+  private readonly pendingTurnSnapshots = new Map<string, string>()
 
   constructor(ctx: Context) {
     super(ctx, 'snapshot')
+
+    ctx.on('session/event', (session: Session, event: SessionEvent) => {
+      const sessionId = session.header.id
+      const worktree = session.header.cwd ?? process.cwd()
+      this.rememberSessionWorktree(sessionId, worktree)
+
+      if (event.type === 'turn/start') {
+        const data = event.data as { turn?: number }
+        const turn = data.turn ?? 1
+        this.queueSessionOp(sessionId, async () => {
+          try {
+            const beforeTreeId = await this.capture(worktree)
+            this.setPendingBeforeTree(sessionId, turn, beforeTreeId)
+          } catch (err: unknown) {
+            ctx.logger.warn(`[fs-snapshot] failed to capture snapshot at start of ${sessionId} turn ${turn}: ${String(err)}`)
+          }
+        })
+      } else if (event.type === 'turn/end') {
+        const data = event.data as { turn?: number }
+        const turn = data.turn ?? 1
+        this.queueSessionOp(sessionId, async () => {
+          const beforeTreeId = this.getPendingBeforeTree(sessionId, turn)
+          if (beforeTreeId) {
+            try {
+              const afterTreeId = await this.capture(worktree)
+              const diffs = await this.diff(worktree, beforeTreeId, afterTreeId)
+              await this.recordTurnSnapshot({
+                sessionId,
+                turn,
+                beforeTreeId,
+                afterTreeId,
+                diffs,
+                timestamp: Date.now(),
+              }, worktree)
+              this.deletePendingBeforeTree(sessionId, turn)
+            } catch (err: unknown) {
+              ctx.logger.warn(`[fs-snapshot] failed to compute diff for ${sessionId} turn ${turn}: ${String(err)}`)
+            }
+          }
+        })
+      }
+    })
+  }
+
+  /**
+   * Remember workspace directory for a session.
+   *
+   * @param sessionId - Session identifier.
+   * @param worktree - Workspace directory path.
+   */
+  rememberSessionWorktree(sessionId: string, worktree: string): void {
+    this.sessionWorktrees.set(sessionId, worktree)
+  }
+
+  /**
+   * Queue a serialized async operation for a session.
+   *
+   * @param sessionId - Session identifier.
+   * @param op - Async operation callback.
+   */
+  queueSessionOp(sessionId: string, op: () => Promise<void>): void {
+    const current = this.sessionQueues.get(sessionId) ?? Promise.resolve()
+    const next = current.then(op, op)
+    this.sessionQueues.set(sessionId, next)
+  }
+
+  /**
+   * Flush any pending queued operations for a session.
+   *
+   * @param sessionId - Session identifier.
+   */
+  async flushSessionQueue(sessionId: string): Promise<void> {
+    const current = this.sessionQueues.get(sessionId)
+    if (current) {
+      await current
+    }
   }
 
   /**
@@ -119,8 +198,6 @@ export class SnapshotService extends Service {
     return shadow.restore(treeId, options?.paths, options?.signal)
   }
 
-  private readonly pendingTurnSnapshots = new Map<string, string>()
-
   /**
    * Record a pending beforeTreeId for an in-flight turn.
    *
@@ -160,7 +237,7 @@ export class SnapshotService extends Service {
    * @param worktree - Workspace directory path.
    * @param projectId - Optional project identifier.
    */
-  recordTurnSnapshot(record: TurnSnapshotRecord, worktree?: string, projectId?: string): void {
+  async recordTurnSnapshot(record: TurnSnapshotRecord, worktree?: string, projectId?: string): Promise<void> {
     let sessionMap = this.turnSnapshots.get(record.sessionId)
     if (!sessionMap) {
       sessionMap = new Map()
@@ -169,16 +246,15 @@ export class SnapshotService extends Service {
     sessionMap.set(record.turn, record)
 
     if (worktree) {
+      this.rememberSessionWorktree(record.sessionId, worktree)
       const manifestFile = this.manifestPath(worktree, record.sessionId, projectId)
       const allRecords = Array.from(sessionMap.values())
-      void (async () => {
-        try {
-          await mkdir(dirname(manifestFile), { recursive: true })
-          await writeFile(manifestFile, JSON.stringify(allRecords, null, 2), 'utf8')
-        } catch {
-          // best-effort persistence
-        }
-      })()
+      try {
+        await mkdir(dirname(manifestFile), { recursive: true })
+        await writeFile(manifestFile, JSON.stringify(allRecords, null, 2), 'utf8')
+      } catch {
+        // best-effort persistence
+      }
     }
   }
 
@@ -200,9 +276,10 @@ export class SnapshotService extends Service {
     const memoryRecord = this.turnSnapshots.get(sessionId)?.get(turn)
     if (memoryRecord) return memoryRecord
 
-    if (worktree) {
+    const resolvedWorktree = worktree ?? this.sessionWorktrees.get(sessionId)
+    if (resolvedWorktree) {
       try {
-        const manifestFile = this.manifestPath(worktree, sessionId, projectId)
+        const manifestFile = this.manifestPath(resolvedWorktree, sessionId, projectId)
         const content = await readFile(manifestFile, 'utf8')
         const records = JSON.parse(content) as TurnSnapshotRecord[]
         let sessionMap = this.turnSnapshots.get(sessionId)
@@ -226,37 +303,58 @@ export class SnapshotService extends Service {
    *
    * @param sessionId - Session identifier.
    * @param turn - Turn number to rollback.
-   * @param worktree - Workspace directory path.
+   * @param worktree - Optional workspace directory path.
    * @param projectId - Optional project identifier.
    * @returns Rollback result with list of restored files.
    */
   async rollbackTurn(
     sessionId: string,
     turn: number,
-    worktree: string,
+    worktree?: string,
     projectId?: string,
   ): Promise<{ success: boolean; restoredFiles: string[]; error?: string }> {
-    const record = await this.getTurnSnapshot(sessionId, turn, worktree, projectId)
+    // Flush any pending queue operations for this session (e.g. in-flight turn capture/diff)
+    await this.flushSessionQueue(sessionId)
+
+    const resolvedWorktree = worktree ?? this.sessionWorktrees.get(sessionId) ?? process.cwd()
+    const record = await this.getTurnSnapshot(sessionId, turn, resolvedWorktree, projectId)
     const beforeTreeId = record?.beforeTreeId ?? this.getPendingBeforeTree(sessionId, turn)
     if (!beforeTreeId) {
       return { success: false, restoredFiles: [], error: `No snapshot found for turn ${turn}` }
     }
 
     try {
-      await this.restore(worktree, beforeTreeId, {
+      // Gather all affected file paths from turn snapshots >= turn
+      const sessionMap = this.turnSnapshots.get(sessionId)
+      const rolledBackDiffPaths = new Set<string>()
+      if (sessionMap) {
+        for (const [t, rec] of sessionMap.entries()) {
+          if (t >= turn) {
+            for (const d of rec.diffs) {
+              rolledBackDiffPaths.add(d.path)
+            }
+          }
+        }
+      }
+      if (record) {
+        for (const d of record.diffs) {
+          rolledBackDiffPaths.add(d.path)
+        }
+      }
+
+      await this.restore(resolvedWorktree, beforeTreeId, {
         ...(projectId !== undefined ? { projectId } : {}),
       })
-      const restoredFiles = record?.diffs ? record.diffs.map(d => d.path) : []
+      const restoredFiles = Array.from(rolledBackDiffPaths)
 
       // Clean up in-memory records >= turn
-      const sessionMap = this.turnSnapshots.get(sessionId)
       if (sessionMap) {
         for (const t of Array.from(sessionMap.keys())) {
           if (t >= turn) sessionMap.delete(t)
         }
       }
       // Update disk manifest
-      const manifestFile = this.manifestPath(worktree, sessionId, projectId)
+      const manifestFile = this.manifestPath(resolvedWorktree, sessionId, projectId)
       const remainingRecords = Array.from(sessionMap?.values() ?? [])
       await writeFile(manifestFile, JSON.stringify(remainingRecords, null, 2), 'utf8').catch(() => {})
 
@@ -275,46 +373,7 @@ export const name = 'fs-snapshot'
 
 /** Apply the snapshot service to the Cordis context. */
 export function apply(ctx: Context): void {
-  const service = new SnapshotService(ctx)
-
-  ctx.on('session/event', (session: Session, event: SessionEvent) => {
-    void (async () => {
-      const sessionId = session.header.id
-      const worktree = session.header.cwd ?? process.cwd()
-
-      if (event.type === 'turn/start') {
-        const data = event.data as { turn?: number }
-        const turn = data.turn ?? 1
-        try {
-          const beforeTreeId = await service.capture(worktree)
-          service.setPendingBeforeTree(sessionId, turn, beforeTreeId)
-        } catch (err: unknown) {
-          ctx.logger.warn(`[fs-snapshot] failed to capture snapshot at start of ${sessionId} turn ${turn}: ${String(err)}`)
-        }
-      } else if (event.type === 'turn/end') {
-        const data = event.data as { turn?: number }
-        const turn = data.turn ?? 1
-        const beforeTreeId = service.getPendingBeforeTree(sessionId, turn)
-        if (beforeTreeId) {
-          service.deletePendingBeforeTree(sessionId, turn)
-          try {
-            const afterTreeId = await service.capture(worktree)
-            const diffs = await service.diff(worktree, beforeTreeId, afterTreeId)
-            service.recordTurnSnapshot({
-              sessionId,
-              turn,
-              beforeTreeId,
-              afterTreeId,
-              diffs,
-              timestamp: Date.now(),
-            }, worktree)
-          } catch (err: unknown) {
-            ctx.logger.warn(`[fs-snapshot] failed to compute diff for ${sessionId} turn ${turn}: ${String(err)}`)
-          }
-        }
-      }
-    })()
-  })
+  void new SnapshotService(ctx)
 }
 
 export default SnapshotService

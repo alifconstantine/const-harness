@@ -1074,4 +1074,23 @@ describe('reference stability (the memo contract)', () => {
     expect(after.chat.timeline.turns.has(1)).toBe(false)
     expect(after.chat.order.length).toBe(0)
   })
+
+  it('rollbackTurn extracts human prompt placed inside turn boundary', async () => {
+    const { api, session } = makeSession()
+    api.onHistory = () => histResponse([])
+    await session.open()
+    const feed = (event: SessionEvent) => { session.handleMuxEnvelope('r' as never, { type: 'session/event', sessionId: SID, event }) }
+
+    feed(ev.turnStart(0, 1))
+    feed(ev.user(1, 'Prompt inside turn'))
+    feed(ev.assistant(2, 1, 'Answer 1'))
+    feed(ev.turnEnd(3, 1))
+
+    const result = await session.rollbackTurn(1)
+    expect(result.userPrompt).toBe('Prompt inside turn')
+
+    const after = session.getSnapshot()
+    expect(after.chat.timeline.turns.has(1)).toBe(false)
+    expect(after.chat.order.length).toBe(0)
+  })
 })

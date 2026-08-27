@@ -122,10 +122,29 @@ export class ShadowGit {
       }
     }
 
+    // Attempt to locate source repository common-dir even when in subfolder
+    let primaryObjects: string | undefined
+    let primaryExclude: string | undefined
+
+    try {
+      const commonDirRes = await runGit(['rev-parse', '--path-format=absolute', '--git-common-dir'], {
+        cwd: this.worktree,
+        ...(signal !== undefined ? { signal } : {}),
+      })
+      const sourceGit = commonDirRes.stdout.trim()
+      if (sourceGit && existsSync(sourceGit)) {
+        primaryObjects = join(sourceGit, 'objects')
+      }
+    } catch {
+      // Not in a git repo or git rev-parse failed; check direct .git directory fallback
+      const direct = join(this.worktree, '.git')
+      if (existsSync(direct)) {
+        primaryObjects = join(direct, 'objects')
+      }
+    }
+
     // Seed alternates from primary .git repository if it exists to share object storage
-    const primaryGitDir = join(this.worktree, '.git')
-    const primaryObjects = join(primaryGitDir, 'objects')
-    if (existsSync(primaryObjects)) {
+    if (primaryObjects && existsSync(primaryObjects)) {
       const alternatesFile = join(this.gitDir, 'objects', 'info', 'alternates')
       if (!existsSync(alternatesFile)) {
         await mkdir(join(this.gitDir, 'objects', 'info'), { recursive: true })
@@ -133,10 +152,25 @@ export class ShadowGit {
       }
     }
 
-    // Copy primary .git/info/exclude or .gitignore to shadow repo info/exclude
-    const primaryExclude = join(primaryGitDir, 'info', 'exclude')
+    try {
+      const excludeRes = await runGit(['rev-parse', '--path-format=absolute', '--git-path', 'info/exclude'], {
+        cwd: this.worktree,
+        ...(signal !== undefined ? { signal } : {}),
+      })
+      const excludePath = excludeRes.stdout.trim()
+      if (excludePath && existsSync(excludePath)) {
+        primaryExclude = excludePath
+      }
+    } catch {
+      const direct = join(this.worktree, '.git', 'info', 'exclude')
+      if (existsSync(direct)) {
+        primaryExclude = direct
+      }
+    }
+
+    // Copy primary exclude rules to shadow repo info/exclude
     const shadowExclude = join(this.gitDir, 'info', 'exclude')
-    if (existsSync(primaryExclude) && !existsSync(shadowExclude)) {
+    if (primaryExclude && existsSync(primaryExclude) && !existsSync(shadowExclude)) {
       await mkdir(join(this.gitDir, 'info'), { recursive: true })
       const excludeContent = await readFile(primaryExclude, 'utf8').catch(() => '')
       if (excludeContent) {
@@ -276,8 +310,8 @@ export class ShadowGit {
 
   /**
    * Restore files in the worktree from a given snapshot tree ID.
-   * If `paths` is omitted or empty, restores all changed files from the tree.
-   * Files that were created after treeId (i.e. did not exist in treeId) are deleted.
+   * If `paths` is provided, precisely checks out or deletes each specified file.
+   * If `paths` is omitted or empty, restores all changed files between the current worktree and target tree.
    *
    * @param treeId - Snapshot tree ID to restore.
    * @param paths - Optional list of specific paths to restore.
@@ -289,58 +323,51 @@ export class ShadowGit {
     signal?: AbortSignal,
   ): Promise<void> {
     await this.ensureRepo(signal)
-    const tempIndex = join(this.gitDir, `index-restore-${randomUUID()}`).replaceAll('\\', '/')
 
-    try {
-      // 1. Read the target tree into a temporary index
-      await this.exec(
-        ['read-tree', treeId],
-        { GIT_INDEX_FILE: tempIndex },
-        signal,
-      )
+    if (paths && paths.length > 0) {
+      for (const p of paths) {
+        const rel = relative(this.worktree, resolve(this.worktree, p)).replaceAll('\\', '/')
+        const fullPath = resolve(this.worktree, rel)
 
-      // 2. Get list of files present in treeId
-      const existingInTree = new Set(await this.files(treeId, signal))
-
-      if (paths && paths.length > 0) {
-        const checkoutList: string[] = []
-        for (const p of paths) {
-          const rel = relative(this.worktree, resolve(this.worktree, p)).replaceAll('\\', '/')
-          const fullPath = resolve(this.worktree, rel)
-          if (existingInTree.has(rel)) {
-            checkoutList.push(rel)
-          } else {
-            // File did not exist in the snapshot tree -> delete from worktree
-            await rm(fullPath, { force: true, recursive: true }).catch(() => {})
-          }
-        }
-
-        if (checkoutList.length > 0) {
-          await this.exec(
-            ['checkout-index', '-f', '--', ...checkoutList],
-            { GIT_INDEX_FILE: tempIndex },
-            signal,
-          )
-        }
-      } else {
-        // Full restore: find all current workspace files, delete any not in tree, and checkout all
-        const currentTree = await this.capture(signal).catch(() => undefined)
-        if (currentTree !== undefined) {
-          const currentFiles = await this.files(currentTree, signal)
-          for (const cur of currentFiles) {
-            if (!existingInTree.has(cur)) {
-              const fullPath = resolve(this.worktree, cur)
-              await rm(fullPath, { force: true, recursive: true }).catch(() => {})
-            }
-          }
-        }
-
-        await this.exec(
-          ['checkout-index', '-a', '-f'],
-          { GIT_INDEX_FILE: tempIndex },
+        // Check if file exists in target snapshot tree
+        const { stdout: lsOut } = await this.exec(
+          ['ls-tree', treeId, '--', rel],
+          undefined,
           signal,
-        )
+        ).catch(() => ({ stdout: '' }))
+
+        if (lsOut.trim().length > 0) {
+          // File existed in snapshot -> checkout from snapshot
+          await this.exec(['checkout', treeId, '--', rel], undefined, signal)
+        } else {
+          // File was created in a later turn / does not exist in target tree -> remove
+          await rm(fullPath, { force: true, recursive: true }).catch(() => {})
+        }
       }
+      return
+    }
+
+    // Full restore: diff target tree with current workspace
+    const currentTree = await this.capture(signal).catch(() => undefined)
+    if (currentTree !== undefined && currentTree !== treeId) {
+      const diffs = await this.diff(treeId, currentTree, signal !== undefined ? { signal } : undefined).catch(() => [])
+      for (const diff of diffs) {
+        if (diff.status === 'added') {
+          // Added in current worktree (not in target tree) -> delete
+          await rm(diff.path, { force: true, recursive: true }).catch(() => {})
+        } else {
+          // Modified or deleted -> checkout from target tree
+          await this.exec(['checkout', treeId, '--', diff.relativePath], undefined, signal).catch(() => {})
+        }
+      }
+      return
+    }
+
+    // Fallback: index-based checkout
+    const tempIndex = join(this.gitDir, `index-restore-${randomUUID()}`).replaceAll('\\', '/')
+    try {
+      await this.exec(['read-tree', treeId], { GIT_INDEX_FILE: tempIndex }, signal)
+      await this.exec(['checkout-index', '-a', '-f'], { GIT_INDEX_FILE: tempIndex }, signal)
     } finally {
       await rm(tempIndex, { force: true }).catch(() => {})
     }

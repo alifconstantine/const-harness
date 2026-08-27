@@ -383,35 +383,60 @@ export class Session implements SessionFace {
       return false
     }
 
-    // Find the turn boundary and human user message for turnNumber in local event buffer
+    function extractPromptData(event: SessionEvent): void {
+      const data = event.data as { content?: unknown }
+      if (typeof data.content === 'string') {
+        userPrompt = data.content
+      } else if (Array.isArray(data.content)) {
+        for (const part of data.content as { type?: string; text?: string; attachment?: { draftId?: string } }[]) {
+          if (part.type === 'text' && typeof part.text === 'string') {
+            userPrompt = part.text
+          }
+          if (part.type === 'image' && part.attachment?.draftId) {
+            userImages.push(part.attachment.draftId)
+          }
+        }
+      }
+    }
+
+    let turnStartSeq: number | undefined
+    let turnStartIndex = -1
+
     for (let i = 0; i < this.events.length; i++) {
       const ev = this.events[i]
       if (ev && ev.type === 'turn/start' && (ev.data as { turn?: number }).turn === turnNumber) {
-        // Look backwards for the initiating human user/steering message associated with this turn
-        for (let j = i - 1; j >= 0; j--) {
+        turnStartSeq = ev.seq
+        turnStartIndex = i
+        break
+      }
+    }
+
+    if (turnStartIndex !== -1) {
+      // 1. Look inside the turn boundary for user message
+      for (let i = turnStartIndex + 1; i < this.events.length; i++) {
+        const ev = this.events[i]
+        if (ev?.type === 'turn/end' && (ev.data as { turn?: number }).turn === turnNumber) break
+        if (ev && isHumanUserMessage(ev)) {
+          extractPromptData(ev)
+          break
+        }
+      }
+
+      // 2. If not found inside, look immediately before turn/start
+      if (userPrompt === undefined) {
+        for (let j = turnStartIndex - 1; j >= 0; j--) {
           const prev = this.events[j]
+          if (prev?.type === 'turn/end') break
           if (prev && isHumanUserMessage(prev)) {
             targetSeq = prev.seq
-            const data = prev.data as { content?: unknown }
-            if (typeof data.content === 'string') {
-              userPrompt = data.content
-            } else if (Array.isArray(data.content)) {
-              for (const part of data.content as { type?: string; text?: string; attachment?: { draftId?: string } }[]) {
-                if (part.type === 'text' && typeof part.text === 'string') {
-                  userPrompt = part.text
-                }
-                if (part.type === 'image' && part.attachment?.draftId) {
-                  userImages.push(part.attachment.draftId)
-                }
-              }
-            }
+            extractPromptData(prev)
             break
           }
         }
-        if (targetSeq === undefined) {
-          targetSeq = ev.seq
-        }
-        break
+      }
+
+      if (targetSeq === undefined) {
+        targetSeq = turnStartSeq
       }
     }
     /* jscpd:ignore-end */

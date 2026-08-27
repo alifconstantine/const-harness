@@ -45,6 +45,18 @@ export const ChatNodeSeat = memo(function ChatNodeSeat({
   // keyed-slot entry passed alongside that same Node. TypeScript does not
   // distribute an object containing a union into a union of objects itself.
   const routedOwner = { ...owner, node: routedNode } as RoutedChatNodeOwner
+  const rendered = renderSlot('conversation.chat.node', routedOwner, {
+    entryKey: routedNode.kind,
+    hookContext: nodeKey,
+    fallback: (
+      <JsonBlock
+        label={t('message.unknownSurface', { type: routedNode.kind })}
+        payload={routedNode.data}
+        truncatedLabel={total => t('json.truncated', { total })}
+      />
+    ),
+  })
+  if (rendered === null || rendered === undefined || rendered === false) return null
   return (
     <div
       className={css.flowItem}
@@ -52,17 +64,7 @@ export const ChatNodeSeat = memo(function ChatNodeSeat({
       data-chat-flow-key={routedNode.key}
       data-chat-flow-kind={routedNode.kind}
     >
-      {renderSlot('conversation.chat.node', routedOwner, {
-        entryKey: routedNode.kind,
-        hookContext: nodeKey,
-        fallback: (
-          <JsonBlock
-            label={t('message.unknownSurface', { type: routedNode.kind })}
-            payload={routedNode.data}
-            truncatedLabel={total => t('json.truncated', { total })}
-          />
-        ),
-      })}
+      {rendered}
     </div>
   )
 })

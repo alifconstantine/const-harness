@@ -48,6 +48,7 @@ export const TurnTailNodeView = memo(function TurnTailNodeView({
         tokensPerSecond={data.tokensPerSecond}
         clock="end"
         onBranch={() => { forkAt(closing.finalNode.seq) }}
+        onUndo={undoTurn !== undefined ? () => { undoTurn(data.turn) } : undefined}
         branchUnavailable={data.branchUnavailable || hasLaterChatNode}
         className={css.actions}
         extraActions={assistantActions}

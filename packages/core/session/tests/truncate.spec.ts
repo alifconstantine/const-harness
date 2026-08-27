@@ -54,7 +54,7 @@ describe('Session.truncate', () => {
   it('rejects out of bounds sequence targets', () => {
     const session = Session.create(SessionId('trunc-2'))
     session.append('turn/start', { turn: 1 })
-    expect(() => session.truncate(-1)).toThrow('invalid truncate target seq')
-    expect(() => session.truncate(10)).toThrow('invalid truncate target seq')
+    expect(() => { session.truncate(-1) }).toThrow('invalid truncate target seq')
+    expect(() => { session.truncate(10) }).toThrow('invalid truncate target seq')
   })
 })

@@ -104,17 +104,17 @@ describe('fs-snapshot engine & service', () => {
     const diffs = await service.diff(testDir, beforeTree, afterTree, { projectId: 'test-proj' })
     expect(diffs).toHaveLength(1)
 
-    service.recordTurnSnapshot({
+    await service.recordTurnSnapshot({
       sessionId: 'session-123',
       turn: 1,
       beforeTreeId: beforeTree,
       afterTreeId: afterTree,
       diffs,
       timestamp: Date.now(),
-    })
+    }, testDir, 'test-proj')
 
     // Verify turn snapshot lookup
-    const record = await service.getTurnSnapshot('session-123', 1)
+    const record = await service.getTurnSnapshot('session-123', 1, testDir, 'test-proj')
     expect(record?.turn).toBe(1)
     expect(record?.diffs[0]?.relativePath).toBe('app.tsx')
 
@@ -129,6 +129,52 @@ describe('fs-snapshot engine & service', () => {
 
     const rolledBackContent = await readFile(join(testDir, 'app.tsx'), 'utf8')
     expect(rolledBackContent).toBe('const App = () => <div>Hello</div>\n')
+  })
+
+  it('handles event-driven turn/start and turn/end with sequential queue rollback', async () => {
+    const ctx = new Context()
+    applySnapshot(ctx)
+
+    const service = ctx.get('snapshot')
+    if (!service) throw new Error('snapshot service missing')
+
+    await writeFile(join(testDir, 'script.js'), 'console.log("v1")\n', 'utf8')
+
+    const fakeSession = {
+      header: {
+        id: 'session-evt-1',
+        cwd: testDir,
+      },
+    }
+
+    // Turn 1 start
+    ctx.emit('session/event', fakeSession as never, {
+      type: 'turn/start',
+      seq: 1,
+      time: Date.now(),
+      data: { turn: 1 },
+    } as never)
+
+    await service.flushSessionQueue('session-evt-1')
+
+    // Turn 1 file modification
+    await writeFile(join(testDir, 'script.js'), 'console.log("v2")\n', 'utf8')
+    await writeFile(join(testDir, 'extra.js'), 'console.log("extra")\n', 'utf8')
+
+    // Turn 1 end
+    ctx.emit('session/event', fakeSession as never, {
+      type: 'turn/end',
+      seq: 2,
+      time: Date.now(),
+      data: { turn: 1 },
+    } as never)
+
+    // Immediate rollback awaits queue automatically
+    const rollbackRes = await service.rollbackTurn('session-evt-1', 1)
+    expect(rollbackRes.success).toBe(true)
+
+    const restoredContent = await readFile(join(testDir, 'script.js'), 'utf8')
+    expect(restoredContent).toBe('console.log("v1")\n')
   })
 
   it('deletes newly created files on turn rollback', async () => {
@@ -164,5 +210,47 @@ describe('fs-snapshot engine & service', () => {
     expect(registered).toEqual(['@const-ai/fs-snapshot'])
     expect(dispose).toBeTypeOf('function')
     dispose()
+  })
+
+  it('works when loaded directly as a Cordis Service plugin via ctx.plugin(SnapshotService)', async () => {
+    const ctx = new Context()
+    await ctx.plugin(SnapshotService)
+
+    const service = ctx.get('snapshot')
+    expect(service).toBeInstanceOf(SnapshotService)
+    if (!service) throw new Error('snapshot service missing')
+
+    await writeFile(join(testDir, 'plugin-test.txt'), 'version A\n', 'utf8')
+
+    const fakeSession = {
+      header: {
+        id: 'session-plugin-1',
+        cwd: testDir,
+      },
+    }
+
+    ctx.emit('session/event', fakeSession as never, {
+      type: 'turn/start',
+      seq: 1,
+      time: Date.now(),
+      data: { turn: 1 },
+    } as never)
+
+    await service.flushSessionQueue('session-plugin-1')
+
+    await writeFile(join(testDir, 'plugin-test.txt'), 'version B modified\n', 'utf8')
+
+    ctx.emit('session/event', fakeSession as never, {
+      type: 'turn/end',
+      seq: 2,
+      time: Date.now(),
+      data: { turn: 1 },
+    } as never)
+
+    const rollbackRes = await service.rollbackTurn('session-plugin-1', 1)
+    expect(rollbackRes.success).toBe(true)
+
+    const restoredContent = await readFile(join(testDir, 'plugin-test.txt'), 'utf8')
+    expect(restoredContent).toBe('version A\n')
   })
 })
