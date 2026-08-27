@@ -370,24 +370,33 @@ function InlinePromptEditor({
 
 /** User and admitted-steering keyed Chat renderer. */
 export const UserMessageNodeView = memo(function UserMessageNodeView({
-  node, loadImage, t, inputActions, undoTurn, editTurn,
+  node, loadImage, t, inputActions, undoTurn, editTurn, isLastUserMessage, turnNumber,
 }: ChatNodeViewProps<'user' | 'steering'>) {
   const [isEditing, setIsEditing] = useState(false)
   const data = node.data
   const { text, images } = useMemo(() => contentParts(data.content), [data.content])
   const imageLoader = loadImage
 
-  const handleEditSubmit = async (newText: string) => {
-    const turn = node.location.kind === 'turn' || node.location.kind === 'step'
-      ? node.location.turn
+  const resolvedTurn = turnNumber ?? (
+    node.location.kind === 'turn' || node.location.kind === 'step'
+      ? node.location.turn.turn
       : undefined
-    if (turn !== undefined && editTurn) {
-      await editTurn(turn.turn, newText)
+  )
+
+  const handleEditSubmit = async (newText: string) => {
+    if (resolvedTurn !== undefined && editTurn) {
+      await editTurn(resolvedTurn, newText)
       setIsEditing(false)
-    } else if (turn !== undefined && undoTurn) {
+    } else if (resolvedTurn !== undefined && undoTurn) {
       inputActions.setDraft(newText)
-      undoTurn(turn.turn)
+      undoTurn(resolvedTurn)
       setIsEditing(false)
+    }
+  }
+
+  const handleUndo = () => {
+    if (resolvedTurn !== undefined && undoTurn) {
+      undoTurn(resolvedTurn)
     }
   }
 
@@ -415,7 +424,8 @@ export const UserMessageNodeView = memo(function UserMessageNodeView({
           time={data.time}
           clock="start"
           className={css.actions}
-          onEdit={() => { setIsEditing(true) }}
+          onUndo={resolvedTurn !== undefined && undoTurn !== undefined ? handleUndo : undefined}
+          onEdit={isLastUserMessage !== false ? () => { setIsEditing(true) } : undefined}
           t={t}
         />
       )}

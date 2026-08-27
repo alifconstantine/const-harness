@@ -556,6 +556,49 @@ export function ChatView({
     loadOlder()
   }
 
+  const lastUserNodeKey = useMemo(() => {
+    for (let i = order.length - 1; i >= 0; i--) {
+      const key = order[i]
+      if (key === undefined) continue
+      const node = nodeStore.get(key)
+      if (node?.kind === 'user' || node?.kind === 'steering') {
+        return key
+      }
+    }
+    return null
+  }, [order, nodeStore])
+
+  const userTurnMap = useMemo(() => {
+    const map = new Map<string, number>()
+    let lastTurn = 0
+    for (let i = 0; i < order.length; i++) {
+      const key = order[i]
+      if (key === undefined) continue
+      const node = nodeStore.get(key)
+      if (node?.kind === 'user' || node?.kind === 'steering') {
+        let turn = node.location.kind === 'turn' || node.location.kind === 'step'
+          ? node.location.turn.turn
+          : undefined
+        if (turn === undefined) {
+          for (let j = i + 1; j < order.length; j++) {
+            const nextKey = order[j]
+            if (nextKey === undefined) break
+            const nextNode = nodeStore.get(nextKey)
+            if (nextNode?.kind === 'user' || nextNode?.kind === 'steering') break
+            if (nextNode?.location.kind === 'turn' || nextNode?.location.kind === 'step') {
+              turn = nextNode.location.turn.turn
+              break
+            }
+          }
+        }
+        const resolved = turn ?? (lastTurn + 1)
+        lastTurn = Math.max(lastTurn, resolved)
+        map.set(key, resolved)
+      }
+    }
+    return map
+  }, [order, nodeStore])
+
   return (
     <div className={css.root}>
       <TurnTimelineNav
@@ -594,6 +637,8 @@ export function ChatView({
                 editTurn={editTurn}
                 loadImage={loadImage}
                 fileMentions={fileMentions}
+                isLastUserMessage={nodeKey === lastUserNodeKey}
+                turnNumber={userTurnMap.get(nodeKey)}
                 renderSlot={renderSlot}
                 t={t}
               />

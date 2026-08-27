@@ -378,6 +378,10 @@ export interface ChatNodeOwnerProps {
   /** Resolve a session-authorized historical image for inline display. */
   loadImage: (attachment: ImageAttachmentRef) => Promise<string>
   fileMentions: (owner: TurnTailOwnerProps) => MarkdownFileMentions | undefined
+  /** True if this node is the latest user prompt in the chat history. */
+  isLastUserMessage?: boolean | undefined
+  /** Explicit turn number for this node in the conversation flow. */
+  turnNumber?: number | undefined
 }
 
 /** Full props of one registered keyed Chat business renderer. */

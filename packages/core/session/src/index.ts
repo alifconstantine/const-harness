@@ -747,6 +747,27 @@ export class Session {
   }
 
   /**
+   * Truncate the in-memory session log to a prefix of length `toSeq`.
+   * Clears derived message and fold caches.
+   * @param toSeq - the sequence index to truncate to (0 <= toSeq <= this.log.length).
+   */
+  truncate(toSeq: number): void {
+    if (!Number.isSafeInteger(toSeq) || toSeq < 0 || toSeq > this.log.length) {
+      throw new Error(`invalid truncate target seq ${toSeq}; current log length is ${this.log.length}`)
+    }
+    this.log.length = toSeq
+    this.eventsSnapshot = undefined
+    this.headerFold = undefined
+    this.headerFoldSeq = 0
+    this.contextFold = undefined
+    this.contextFoldSeq = 0
+    this.derived = []
+    this.derivedNodes = 0
+    this.derivedGeneration = 0
+    this.surfaceManager.reset()
+  }
+
+  /**
    * Instance face of the pure per-node `deriveEventMessage` export from
    * `surface.ts`.
    * @param event - the event to project.
@@ -1029,7 +1050,6 @@ export class SessionStore extends Service {
       } catch (error: unknown) {
         // Preserve the listener's exact rejection value; flush is a caller-owned
         // failure boundary, and Cordis listeners may throw arbitrary values.
-        // oxlint-disable-next-line typescript/prefer-promise-reject-errors
         return Promise.reject(error)
       }
     }))

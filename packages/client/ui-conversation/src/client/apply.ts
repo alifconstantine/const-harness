@@ -437,34 +437,34 @@ export function apply(ctx: Context): void {
               // Fork or child-rename failure keeps the source view untouched.
             })
         },
-        undoTurn: (turnNumber) => {
-          void (async () => {
-            const result = await scoped.rollbackTurn(turnNumber)
-            if (result.userPrompt) {
-              const shell = inputHub.shell(sessionId)
-              shell.setDraft(result.userPrompt)
-              if (result.userImages && result.userImages.length > 0) {
-                shell.addImages(result.userImages as never)
-              }
-            }
-          })()
+        undoTurn: async (turnNumber) => {
+          const result = await scoped.rollbackTurn(turnNumber)
+          const shell = inputHub.shell(sessionId)
+          if (result.userPrompt) {
+            shell.setDraft(result.userPrompt)
+          }
+          if (result.userImages && result.userImages.length > 0) {
+            shell.addImages(result.userImages as never)
+          }
+          if (typeof document !== 'undefined') {
+            const textarea = document.querySelector<HTMLTextAreaElement>('[data-composer-seat] textarea')
+            textarea?.focus()
+          }
         },
-        editTurn: (turnNumber, text) => {
-          void (async () => {
-            const result = await scoped.rollbackTurn(turnNumber)
-            const session = sessions.binding(sessionId)?.session
-            if (session !== undefined) {
-              const content: ({ type: 'text'; text: string } | { type: 'image'; attachment: { draftId: string } })[] = [
-                { type: 'text', text },
-              ]
-              if (result.userImages && result.userImages.length > 0) {
-                for (const draftId of result.userImages) {
-                  content.push({ type: 'image', attachment: { draftId } })
-                }
+        editTurn: async (turnNumber, text) => {
+          const result = await scoped.rollbackTurn(turnNumber)
+          const session = sessions.binding(sessionId)?.session
+          if (session !== undefined) {
+            const content: ({ type: 'text'; text: string } | { type: 'image'; attachment: { draftId: string } })[] = [
+              { type: 'text', text },
+            ]
+            if (result.userImages && result.userImages.length > 0) {
+              for (const draftId of result.userImages) {
+                content.push({ type: 'image', attachment: { draftId } })
               }
-              await session.prompt(content as never, 'queue')
             }
-          })()
+            await session.prompt(content as never, 'queue')
+          }
         },
       }
     },

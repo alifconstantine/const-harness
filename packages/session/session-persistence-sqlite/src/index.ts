@@ -202,6 +202,10 @@ export class SqliteSessionPersistence extends SessionPersistence implements Pers
     return this.coordinator.delete(id)
   }
 
+  override truncate(id: SessionId, events: readonly SessionEvent[]): Promise<void> {
+    return this.coordinator.truncate(id, events)
+  }
+
   // One method serves both public `list` and the backend hook; delegating it to
   // the coordinator would call this hook recursively.
 

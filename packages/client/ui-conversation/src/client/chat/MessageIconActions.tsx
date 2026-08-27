@@ -25,6 +25,8 @@ export interface MessageIconActionsProps {
   clock: 'start' | 'end'
   /** Fork the session at this message; omission hides the branch action. */
   onBranch?: (() => void) | undefined
+  /** Undo user prompt, rollback files, and populate text to composer input. */
+  onUndo?: (() => void) | undefined
   /** Edit user prompt in place. */
   onEdit?: (() => void) | undefined
   /** Restore prompt text (and images) to composer input. */
@@ -48,7 +50,7 @@ export interface MessageIconActionsProps {
  * @returns The actions row element.
  */
 export function MessageIconActions({
-  text, time, runMs, ttftMs, tokensPerSecond, clock, onBranch, onEdit, onRestore, branchUnavailable = false, className,
+  text, time, runMs, ttftMs, tokensPerSecond, clock, onBranch, onUndo, onEdit, onRestore, branchUnavailable = false, className,
   extraActions, t,
 }: MessageIconActionsProps) {
   const day = useCalendarDay()
@@ -119,6 +121,30 @@ export function MessageIconActions({
           {copied ? <IconCheckOutline16 /> : <IconCopyOutline16 />}
         </button>
       </Tooltip>
+      {onUndo !== undefined && (
+        <Tooltip label={t('message.undo')} side="bottom">
+          <button
+            type="button"
+            className={css.action}
+            aria-label={t('message.undo')}
+            onClick={onUndo}
+          >
+            <svg
+              width={14}
+              height={14}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+            </svg>
+          </button>
+        </Tooltip>
+      )}
       {onEdit !== undefined && (
         <Tooltip label={t('message.edit')} side="bottom">
           <button

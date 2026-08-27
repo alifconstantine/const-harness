@@ -49,10 +49,11 @@ interface MessageItemProps {
   readonly t: ChatNodeViewProps['t']
   readonly editTurn?: ((turn: number, text: string) => Promise<void> | void) | undefined
   readonly undoTurn?: ((turn: number) => void) | undefined
+  readonly isLastUserMessage?: boolean | undefined
 }
 
 /** Legacy-node fixture adapter for the independently registered renderers. */
-function MessageItem({ node, t: translate, editTurn, undoTurn }: MessageItemProps) {
+function MessageItem({ node, t: translate, editTurn, undoTurn, isLastUserMessage }: MessageItemProps) {
   const kind = node.kind === 'assistant' ? 'assistant-step' : node.kind
   const viewNode: ChatConversationViewNode = {
     key: `fixture:${node.kind}:${node.seq}`,
@@ -64,7 +65,7 @@ function MessageItem({ node, t: translate, editTurn, undoTurn }: MessageItemProp
     visibility: 'visible',
     data: node.kind === 'model-retry' ? { attempts: [node], current: node } : node,
   }
-  const props = { node: viewNode, t: translate, editTurn, undoTurn } as ChatNodeViewProps
+  const props = { node: viewNode, t: translate, editTurn, undoTurn, isLastUserMessage } as ChatNodeViewProps
   switch (node.kind) {
     case 'user':
     case 'steering':
@@ -156,6 +157,41 @@ describe('MessageItem arms', () => {
     fireEvent.click(sendBtn)
 
     expect(editTurn).toHaveBeenCalledWith(2, 'updated prompt')
+    unmount()
+  })
+
+  it('user bubble shows undo button when undoTurn is provided and triggers undoTurn on click', () => {
+    const undoTurn = vi.fn()
+    const turnLocation = {
+      kind: 'turn' as const,
+      turn: {
+        turn: 3,
+        status: 'closed' as const,
+        steps: [],
+        data: { get: () => undefined, set: () => {}, has: () => false },
+      },
+    }
+    const { unmount } = render(
+      <MessageItem
+        t={t}
+        undoTurn={undoTurn}
+        isLastUserMessage={false}
+        node={{
+          kind: 'user',
+          seq: 8,
+          time: 2000,
+          location: turnLocation as never,
+          content: [{ type: 'text', text: 'older prompt' }] as never,
+          source: null,
+        }}
+      />,
+    )
+    expect(screen.getByRole('button', { name: '撤销' })).toBeTruthy()
+    // Not last user message, so edit button should be hidden
+    expect(screen.queryByRole('button', { name: '编辑' })).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: '撤销' }))
+    expect(undoTurn).toHaveBeenCalledWith(3)
     unmount()
   })
 

@@ -1557,6 +1557,22 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'Resolves when files are restored.',
       },
       {
+        signature: 'setPendingBeforeTree(sessionId: string, turn: number, beforeTreeId: string): void',
+        description: 'Record a pending beforeTreeId for an in-flight turn.',
+        parameters: [{ name: 'sessionId', description: 'Session identifier.' }, { name: 'turn', description: 'Turn number.' }, { name: 'beforeTreeId', description: 'Snapshot tree ID captured at turn start.' }],
+      },
+      {
+        signature: 'getPendingBeforeTree(sessionId: string, turn: number): string | undefined',
+        description: 'Retrieve a pending beforeTreeId for a turn.',
+        parameters: [{ name: 'sessionId', description: 'Session identifier.' }, { name: 'turn', description: 'Turn number.' }],
+        returns: 'Snapshot tree ID if found.',
+      },
+      {
+        signature: 'deletePendingBeforeTree(sessionId: string, turn: number): void',
+        description: 'Delete a pending beforeTreeId record.',
+        parameters: [{ name: 'sessionId', description: 'Session identifier.' }, { name: 'turn', description: 'Turn number.' }],
+      },
+      {
         signature: 'recordTurnSnapshot(record: TurnSnapshotRecord): void',
         description: 'Record a completed turn\'s snapshot boundary.',
         parameters: [{ name: 'record', description: 'Turn snapshot record to store.' }],

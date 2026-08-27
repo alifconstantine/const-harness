@@ -658,6 +658,37 @@ export class PersistenceCoordinator<TornMarker = unknown> {
   }
 
   /**
+   * Rewrite a stored session's log to a specified prefix without tearing down live in-memory session.
+   * @param id - the session id.
+   * @param events - the truncated events to keep.
+   */
+  async truncate(id: SessionId, events: readonly SessionEvent[]): Promise<void> {
+    const batch = snapshotJsonValue(events)
+    if (batch === undefined) {
+      throw new TypeError('session event batch is not losslessly JSON-serializable because it contains non-JSON-serializable data')
+    }
+    return this.serialize(id, async () => {
+      const stored = await this.backend.loadStored(id)
+      if (stored === undefined) return
+      const header = stored.meta
+      await this.backend.deleteStored?.(id)
+      if (batch.length > 0) {
+        await this.backend.appendBatch(header, batch, false)
+      }
+      this.preparations.invalidate(id)
+      const existingState = this.states.get(id)
+      if (existingState) {
+        this.states.set(id, {
+          meta: header,
+          cursor: batch.length,
+          materialized: batch.length > 0,
+          ...(existingState.owner !== undefined ? { owner: existingState.owner } : {}),
+        })
+      }
+    })
+  }
+
+  /**
    * Register detached session metadata for lazy creation on the first append.
    * @param meta - header to snapshot; duplicate tracked or persisted ids reject.
    */

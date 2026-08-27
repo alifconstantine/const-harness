@@ -4,6 +4,8 @@
  * @module @const-ai/fs-snapshot
  */
 
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { dirname, join } from 'node:path'
 import { Context, Service } from '@const-ai/cordis'
 import type { Session, SessionEvent } from '@const-ai/session'
 import { ShadowGit, type FileDiffStat, type ShadowGitOptions } from './git-shadow.ts'
@@ -60,6 +62,15 @@ export class SnapshotService extends Service {
   }
 
   /**
+   * Get path to the session snapshots manifest file on disk.
+   */
+  private manifestPath(worktree: string, sessionId: string, projectId?: string): string {
+    const shadow = this.getShadow(worktree, projectId)
+    const safeSessionId = sessionId.replace(/[^a-zA-Z0-9_-]/g, '_')
+    return join(shadow.gitDir, 'sessions', `${safeSessionId}.json`)
+  }
+
+  /**
    * Capture a snapshot of a worktree directory.
    *
    * @param worktree - Workspace directory path.
@@ -108,29 +119,106 @@ export class SnapshotService extends Service {
     return shadow.restore(treeId, options?.paths, options?.signal)
   }
 
+  private readonly pendingTurnSnapshots = new Map<string, string>()
+
   /**
-   * Record a completed turn's snapshot boundary.
+   * Record a pending beforeTreeId for an in-flight turn.
+   *
+   * @param sessionId - Session identifier.
+   * @param turn - Turn number.
+   * @param beforeTreeId - Snapshot tree ID captured at turn start.
+   */
+  setPendingBeforeTree(sessionId: string, turn: number, beforeTreeId: string): void {
+    this.pendingTurnSnapshots.set(`${sessionId}:${turn}`, beforeTreeId)
+  }
+
+  /**
+   * Retrieve a pending beforeTreeId for a turn.
+   *
+   * @param sessionId - Session identifier.
+   * @param turn - Turn number.
+   * @returns Snapshot tree ID if found.
+   */
+  getPendingBeforeTree(sessionId: string, turn: number): string | undefined {
+    return this.pendingTurnSnapshots.get(`${sessionId}:${turn}`)
+  }
+
+  /**
+   * Delete a pending beforeTreeId record.
+   *
+   * @param sessionId - Session identifier.
+   * @param turn - Turn number.
+   */
+  deletePendingBeforeTree(sessionId: string, turn: number): void {
+    this.pendingTurnSnapshots.delete(`${sessionId}:${turn}`)
+  }
+
+  /**
+   * Record a completed turn's snapshot boundary and persist to disk.
    *
    * @param record - Turn snapshot record to store.
+   * @param worktree - Workspace directory path.
+   * @param projectId - Optional project identifier.
    */
-  recordTurnSnapshot(record: TurnSnapshotRecord): void {
+  recordTurnSnapshot(record: TurnSnapshotRecord, worktree?: string, projectId?: string): void {
     let sessionMap = this.turnSnapshots.get(record.sessionId)
     if (!sessionMap) {
       sessionMap = new Map()
       this.turnSnapshots.set(record.sessionId, sessionMap)
     }
     sessionMap.set(record.turn, record)
+
+    if (worktree) {
+      const manifestFile = this.manifestPath(worktree, record.sessionId, projectId)
+      const allRecords = Array.from(sessionMap.values())
+      void (async () => {
+        try {
+          await mkdir(dirname(manifestFile), { recursive: true })
+          await writeFile(manifestFile, JSON.stringify(allRecords, null, 2), 'utf8')
+        } catch {
+          // best-effort persistence
+        }
+      })()
+    }
   }
 
   /**
-   * Retrieve snapshot metadata for a turn.
+   * Retrieve snapshot metadata for a turn, falling back to disk manifest if needed.
    *
    * @param sessionId - Session identifier.
    * @param turn - Turn number.
+   * @param worktree - Optional workspace directory to check disk manifest.
+   * @param projectId - Optional project identifier.
    * @returns Turn snapshot record if found, undefined otherwise.
    */
-  getTurnSnapshot(sessionId: string, turn: number): TurnSnapshotRecord | undefined {
-    return this.turnSnapshots.get(sessionId)?.get(turn)
+  async getTurnSnapshot(
+    sessionId: string,
+    turn: number,
+    worktree?: string,
+    projectId?: string,
+  ): Promise<TurnSnapshotRecord | undefined> {
+    const memoryRecord = this.turnSnapshots.get(sessionId)?.get(turn)
+    if (memoryRecord) return memoryRecord
+
+    if (worktree) {
+      try {
+        const manifestFile = this.manifestPath(worktree, sessionId, projectId)
+        const content = await readFile(manifestFile, 'utf8')
+        const records = JSON.parse(content) as TurnSnapshotRecord[]
+        let sessionMap = this.turnSnapshots.get(sessionId)
+        if (!sessionMap) {
+          sessionMap = new Map()
+          this.turnSnapshots.set(sessionId, sessionMap)
+        }
+        for (const rec of records) {
+          sessionMap.set(rec.turn, rec)
+        }
+        return sessionMap.get(turn)
+      } catch {
+        return undefined
+      }
+    }
+    return undefined
   }
 
   /**
@@ -148,16 +236,31 @@ export class SnapshotService extends Service {
     worktree: string,
     projectId?: string,
   ): Promise<{ success: boolean; restoredFiles: string[]; error?: string }> {
-    const record = this.getTurnSnapshot(sessionId, turn)
-    if (!record) {
+    const record = await this.getTurnSnapshot(sessionId, turn, worktree, projectId)
+    const beforeTreeId = record?.beforeTreeId ?? this.getPendingBeforeTree(sessionId, turn)
+    if (!beforeTreeId) {
       return { success: false, restoredFiles: [], error: `No snapshot found for turn ${turn}` }
     }
 
     try {
-      await this.restore(worktree, record.beforeTreeId, {
+      await this.restore(worktree, beforeTreeId, {
         ...(projectId !== undefined ? { projectId } : {}),
       })
-      return { success: true, restoredFiles: record.diffs.map(d => d.path) }
+      const restoredFiles = record?.diffs ? record.diffs.map(d => d.path) : []
+
+      // Clean up in-memory records >= turn
+      const sessionMap = this.turnSnapshots.get(sessionId)
+      if (sessionMap) {
+        for (const t of Array.from(sessionMap.keys())) {
+          if (t >= turn) sessionMap.delete(t)
+        }
+      }
+      // Update disk manifest
+      const manifestFile = this.manifestPath(worktree, sessionId, projectId)
+      const remainingRecords = Array.from(sessionMap?.values() ?? [])
+      await writeFile(manifestFile, JSON.stringify(remainingRecords, null, 2), 'utf8').catch(() => {})
+
+      return { success: true, restoredFiles }
     } catch (err) {
       return {
         success: false,
@@ -173,7 +276,6 @@ export const name = 'fs-snapshot'
 /** Apply the snapshot service to the Cordis context. */
 export function apply(ctx: Context): void {
   const service = new SnapshotService(ctx)
-  const pendingTurns = new Map<string, { beforeTreeId: string }>()
 
   ctx.on('session/event', (session: Session, event: SessionEvent) => {
     void (async () => {
@@ -185,30 +287,29 @@ export function apply(ctx: Context): void {
         const turn = data.turn ?? 1
         try {
           const beforeTreeId = await service.capture(worktree)
-          pendingTurns.set(`${sessionId}:${turn}`, { beforeTreeId })
-        } catch {
-          // fail-soft snapshot capture
+          service.setPendingBeforeTree(sessionId, turn, beforeTreeId)
+        } catch (err: unknown) {
+          ctx.logger.warn(`[fs-snapshot] failed to capture snapshot at start of ${sessionId} turn ${turn}: ${String(err)}`)
         }
       } else if (event.type === 'turn/end') {
         const data = event.data as { turn?: number }
         const turn = data.turn ?? 1
-        const key = `${sessionId}:${turn}`
-        const pending = pendingTurns.get(key)
-        if (pending) {
-          pendingTurns.delete(key)
+        const beforeTreeId = service.getPendingBeforeTree(sessionId, turn)
+        if (beforeTreeId) {
+          service.deletePendingBeforeTree(sessionId, turn)
           try {
             const afterTreeId = await service.capture(worktree)
-            const diffs = await service.diff(worktree, pending.beforeTreeId, afterTreeId)
+            const diffs = await service.diff(worktree, beforeTreeId, afterTreeId)
             service.recordTurnSnapshot({
               sessionId,
               turn,
-              beforeTreeId: pending.beforeTreeId,
+              beforeTreeId,
               afterTreeId,
               diffs,
               timestamp: Date.now(),
-            })
-          } catch {
-            // fail-soft snapshot diff calculation
+            }, worktree)
+          } catch (err: unknown) {
+            ctx.logger.warn(`[fs-snapshot] failed to compute diff for ${sessionId} turn ${turn}: ${String(err)}`)
           }
         }
       }

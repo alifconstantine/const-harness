@@ -114,7 +114,7 @@ describe('fs-snapshot engine & service', () => {
     })
 
     // Verify turn snapshot lookup
-    const record = service.getTurnSnapshot('session-123', 1)
+    const record = await service.getTurnSnapshot('session-123', 1)
     expect(record?.turn).toBe(1)
     expect(record?.diffs[0]?.relativePath).toBe('app.tsx')
 

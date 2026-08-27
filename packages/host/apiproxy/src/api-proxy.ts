@@ -2691,33 +2691,60 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
           return false
         }
 
+        function extractPromptData(event: SessionEvent): void {
+          const data = event.data as { content?: unknown }
+          if (typeof data.content === 'string') {
+            userPrompt = data.content
+          } else if (Array.isArray(data.content)) {
+            for (const part of data.content as { type?: string; text?: string; attachment?: { draftId?: string } }[]) {
+              if (part.type === 'text' && typeof part.text === 'string') {
+                userPrompt = part.text
+              }
+              if (part.type === 'image' && part.attachment?.draftId) {
+                userImages.push(part.attachment.draftId)
+              }
+            }
+          }
+        }
+
+        let turnStartSeq: number | undefined
+        let turnStartIndex = -1
+
         for (let i = 0; i < events.length; i++) {
           const ev = events[i]
           if (ev && ev.type === 'turn/start' && (ev.data as { turn?: number }).turn === turn) {
-            for (let j = i - 1; j >= 0; j--) {
+            turnStartSeq = ev.seq
+            turnStartIndex = i
+            break
+          }
+        }
+
+        if (turnStartIndex !== -1) {
+          // 1. Look inside the turn boundary for user message
+          for (let i = turnStartIndex + 1; i < events.length; i++) {
+            const ev = events[i]
+            if (ev?.type === 'turn/end' && (ev.data as { turn?: number }).turn === turn) break
+            if (ev && isHumanUserMessage(ev)) {
+              extractPromptData(ev)
+              break
+            }
+          }
+
+          // 2. If not found inside, look immediately before turn/start
+          if (userPrompt === undefined) {
+            for (let j = turnStartIndex - 1; j >= 0; j--) {
               const prev = events[j]
+              if (prev?.type === 'turn/end') break
               if (prev && isHumanUserMessage(prev)) {
                 targetSeq = prev.seq
-                const data = prev.data as { content?: unknown }
-                if (typeof data.content === 'string') {
-                  userPrompt = data.content
-                } else if (Array.isArray(data.content)) {
-                  for (const part of data.content as { type?: string; text?: string; attachment?: { draftId?: string } }[]) {
-                    if (part.type === 'text' && typeof part.text === 'string') {
-                      userPrompt = part.text
-                    }
-                    if (part.type === 'image' && part.attachment?.draftId) {
-                      userImages.push(part.attachment.draftId)
-                    }
-                  }
-                }
+                extractPromptData(prev)
                 break
               }
             }
-            if (targetSeq === undefined) {
-              targetSeq = ev.seq
-            }
-            break
+          }
+
+          if (targetSeq === undefined) {
+            targetSeq = turnStartSeq
           }
         }
         /* jscpd:ignore-end */
@@ -2727,7 +2754,7 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
           rollbackTurn: (sid: string, t: number, w: string) => Promise<{ success: boolean; restoredFiles: string[] }>
         } | undefined
         const attachedSession = ctx.sessions.get(sessionId)
-        const cwd = attachedSession?.header.cwd ?? process.cwd()
+        const cwd = attachedSession?.header.cwd ?? source.header.cwd ?? process.cwd()
 
         if (snapshotService !== undefined) {
           try {
@@ -2745,49 +2772,23 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
           if (cutIndex !== -1) {
             const eventsToKeep = events.slice(0, cutIndex)
 
-            // 1. Dispose live agent handle
-            try {
-              const liveHandle = sessionAgentHandles.get(sessionId)
-              if (liveHandle) {
-                sessionAgentHandles.delete(sessionId)
-                await liveHandle.dispose()
+            // 1. Truncate live in-memory session if attached
+            if (attachedSession !== undefined) {
+              try {
+                attachedSession.truncate(targetSeq)
+              } catch (err: unknown) {
+                console.error('[apiproxy] error truncating live session during rollback:', err)
               }
-            } catch (err: unknown) {
-              console.error('[apiproxy] error disposing live agent during rollback:', err)
             }
 
-            // 2. Rewrite session persistence on disk
+            // 2. Truncate session persistence on disk non-destructively
             const persistence = ctx.get('sessionPersistence')
             if (persistence !== undefined) {
               try {
-                await persistence.delete(sessionId)
-                await persistence.create(source.header)
-                if (eventsToKeep.length > 0) {
-                  await persistence.append(sessionId, eventsToKeep)
-                }
+                await persistence.truncate(sessionId, eventsToKeep)
               } catch (err: unknown) {
-                console.error('[apiproxy] error rewriting persistence during rollback:', err)
+                console.error('[apiproxy] error truncating persistence during rollback:', err)
               }
-            }
-
-            // 3. Recreate the live Agent and Session on the host with truncated seed
-            try {
-              const composition = await composeAgent(resolveSessionPreset({ header: source.header, events: eventsToKeep }))
-              const handle = await ctx.agents.create({
-                sessionId,
-                seed: eventsToKeep,
-                meta: {
-                  ...source.header.cwd === undefined ? {} : { cwd: source.header.cwd },
-                  seedLength: eventsToKeep.length,
-                  ...source.header.parentSession === undefined ? {} : { parentSession: source.header.parentSession },
-                  ...composition.agentPreset === undefined ? {} : { agentPreset: composition.agentPreset },
-                },
-                agentOptions: agentOptions(),
-                setup: composition.setup,
-              })
-              sessionAgentHandles.set(sessionId, handle)
-            } catch (err: unknown) {
-              console.error('[apiproxy] error recreating agent during rollback:', err)
             }
           }
         }

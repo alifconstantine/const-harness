@@ -457,4 +457,11 @@ export class SurfaceManager implements SessionSurface {
       this._lastProcessedSeq = seq
     }
   }
+
+  /** Reset surface manager state after log truncation. */
+  reset(): void {
+    this._state = createFoldState()
+    this._lastProcessedSeq = this.baseSeq - 1
+    this._pendingPlan = undefined
+  }
 }

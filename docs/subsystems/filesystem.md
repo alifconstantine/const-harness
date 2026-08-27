@@ -477,6 +477,32 @@ async diff( worktree: string, fromTree: string, toTree: string, options?: { cont
 async restore( worktree: string, treeId: string, options?: { paths?: readonly string[]; projectId?: string; signal?: AbortSignal }, ): Promise<void>
 
 /**
+ * Record a pending beforeTreeId for an in-flight turn.
+ *
+ * @param sessionId - Session identifier.
+ * @param turn - Turn number.
+ * @param beforeTreeId - Snapshot tree ID captured at turn start.
+ */
+setPendingBeforeTree(sessionId: string, turn: number, beforeTreeId: string): void
+
+/**
+ * Retrieve a pending beforeTreeId for a turn.
+ *
+ * @param sessionId - Session identifier.
+ * @param turn - Turn number.
+ * @returns Snapshot tree ID if found.
+ */
+getPendingBeforeTree(sessionId: string, turn: number): string | undefined
+
+/**
+ * Delete a pending beforeTreeId record.
+ *
+ * @param sessionId - Session identifier.
+ * @param turn - Turn number.
+ */
+deletePendingBeforeTree(sessionId: string, turn: number): void
+
+/**
  * Record a completed turn's snapshot boundary.
  *
  * @param record - Turn snapshot record to store.

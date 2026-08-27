@@ -153,8 +153,19 @@ export class ShadowGit {
     extraEnv?: NodeJS.ProcessEnv,
     signal?: AbortSignal,
   ): Promise<{ stdout: string; stderr: string }> {
+    const gitDirPosix = this.gitDir.replaceAll('\\', '/')
+    const worktreePosix = this.worktree.replaceAll('\\', '/')
     return runGit(
-      ['-c', 'core.autocrlf=false', '-c', 'core.eol=lf', `--git-dir=${this.gitDir}`, `--work-tree=${this.worktree}`, ...args],
+      [
+        '-c', 'core.longpaths=true',
+        '-c', 'core.quotepath=false',
+        '-c', 'core.autocrlf=false',
+        '-c', 'core.eol=lf',
+        '-c', 'core.symlinks=true',
+        `--git-dir=${gitDirPosix}`,
+        `--work-tree=${worktreePosix}`,
+        ...args,
+      ],
       {
         cwd: this.worktree,
         ...(extraEnv !== undefined ? { env: extraEnv } : {}),
@@ -171,7 +182,7 @@ export class ShadowGit {
    */
   async capture(signal?: AbortSignal): Promise<string> {
     await this.ensureRepo(signal)
-    const tempIndex = join(this.gitDir, `index-${randomUUID()}`)
+    const tempIndex = join(this.gitDir, `index-${randomUUID()}`).replaceAll('\\', '/')
 
     try {
       // 1. Stage all files into the temporary index file respecting ignore rules
@@ -278,7 +289,7 @@ export class ShadowGit {
     signal?: AbortSignal,
   ): Promise<void> {
     await this.ensureRepo(signal)
-    const tempIndex = join(this.gitDir, `index-restore-${randomUUID()}`)
+    const tempIndex = join(this.gitDir, `index-restore-${randomUUID()}`).replaceAll('\\', '/')
 
     try {
       // 1. Read the target tree into a temporary index
