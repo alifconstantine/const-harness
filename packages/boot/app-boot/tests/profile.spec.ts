@@ -161,7 +161,7 @@ describe('loadProfile', () => {
       .toEqual([...PROFILE_TEMPLATES.web ?? []])
   })
 
-  it('normalizes only the exact installation-owned headless bundle tuple', () => {
+  it('normalizes exact installation-owned legacy bundle tuples', () => {
     const anchor = stageInstallation({
       '@const-ai/base': { patch: '[]\n' },
       '@const-ai/web-app': { patch: '[]\n' },
@@ -169,13 +169,21 @@ describe('loadProfile', () => {
       'custom-bundle': { patch: '[]\n' },
     })
     const home = tmp()
-    const stock = resolveProfileDir('headless', home)
-    initProfile(stock, [
+    const stockHeadless = resolveProfileDir('headless', home)
+    initProfile(stockHeadless, [
       '@const-ai/base', '@const-ai/web-app', '@const-ai/headless',
     ])
     loadProfile('t', 'headless', anchor, home)
-    expect(readProfileManifest('t', stock).dsh?.profile?.bundles)
+    expect(readProfileManifest('t', stockHeadless).dsh?.profile?.bundles)
       .toEqual(['@const-ai/base', '@const-ai/headless'])
+
+    const legacyWebDir = resolveProfileDir('web', home)
+    initProfile(legacyWebDir, [
+      '@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app',
+    ])
+    loadProfile('t', 'web', anchor, home)
+    expect(readProfileManifest('t', legacyWebDir).dsh?.profile?.bundles)
+      .toEqual(['@const-ai/base', '@const-ai/web-app'])
 
     const customHome = tmp()
     const custom = resolveProfileDir('headless', customHome)

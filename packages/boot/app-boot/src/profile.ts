@@ -117,8 +117,15 @@ export const PROFILE_TEMPLATES: Record<string, readonly string[]> = {
 }
 
 /** Installation-owned bundle tuples normalized to the shipped template. */
-const INSTALLATION_OWNED_PROFILE_TUPLES: Record<string, readonly string[]> = {
-  headless: ['@const-ai/base', '@const-ai/web-app', '@const-ai/headless'],
+const INSTALLATION_OWNED_PROFILE_TUPLES: Record<string, readonly (readonly string[])[]> = {
+  web: [
+    ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app'],
+  ],
+  headless: [
+    ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-headless'],
+    ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-headless'],
+    ['@const-ai/base', '@const-ai/web-app', '@const-ai/headless'],
+  ],
 }
 
 /** The bundle list a `dsh plugin` init uses for a name with no shipped template. */
@@ -295,11 +302,11 @@ function sameBundles(left: readonly string[], right: readonly string[]): boolean
  * while preserving every other manifest field. Any other list is user-owned.
  */
 function normalizeShippedProfile(name: string, dir: string, manifest: ProfileManifest): ProfileManifest {
-  const installationOwned = INSTALLATION_OWNED_PROFILE_TUPLES[name]
+  const legacyTuples = INSTALLATION_OWNED_PROFILE_TUPLES[name]
   const current = PROFILE_TEMPLATES[name]
   const bundles = manifest.dsh?.profile?.bundles
-  if (installationOwned === undefined || current === undefined || bundles === undefined
-    || !sameBundles(bundles, installationOwned)) return manifest
+  if (legacyTuples === undefined || current === undefined || bundles === undefined
+    || !legacyTuples.some(tuple => sameBundles(bundles, tuple))) return manifest
   const normalized: ProfileManifest = {
     ...manifest,
     dsh: {
