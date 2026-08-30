@@ -258,7 +258,24 @@ function clientConfig(id: string, entry: string): UserConfig {
           `export default ${JSON.stringify(classMap)};`,
         ].join('\n')
       },
-    }],
+    }, {
+    name: 'dsh-image-assets-inline',
+    resolveId(source: string, importer: string | undefined) {
+      if (!/\.(webp|jpg|jpeg|png|svg|gif)$/i.test(source)) return null
+      const abs = importer !== undefined ? sourceAssetPath(source, importer) : source
+      return `\0dsh-image:${abs}`
+    },
+    async load(virtualId: string) {
+      if (!virtualId.startsWith('\0dsh-image:')) return null
+      const fileId = virtualId.slice('\0dsh-image:'.length)
+      this.addWatchFile(fileId)
+      const buffer = await readFile(fileId)
+      const ext = basename(fileId).split('.').pop()?.toLowerCase() ?? 'png'
+      const mime = ext === 'svg' ? 'image/svg+xml' : ext === 'webp' ? 'image/webp' : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/png'
+      const base64 = `data:${mime};base64,${buffer.toString('base64')}`
+      return `export default ${JSON.stringify(base64)};`
+    },
+  }],
     outputOptions: {
       entryFileNames: 'client.js',
       // The map is served from /plugins/<scoped-package>/client.js.map. The

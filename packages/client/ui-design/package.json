@@ -1,0 +1,80 @@
+{
+  "name": "@const-ai/client-ui-design",
+  "description": "Native Const Design studio overlay, brand design systems, templates gallery, and multi-surface canvas",
+  "version": "0.1.0-rc.5",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "client": {
+      "inject": [
+        "@const-ai/client-runtime",
+        "@const-ai/client-connection"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "directory": "packages/client/ui-design"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/client.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@const-ai/cordis": "workspace:^",
+    "@const-ai/client-connection": "workspace:^",
+    "@const-ai/client-locale": "workspace:^",
+    "@const-ai/client-runtime": "workspace:^",
+    "@const-ai/client-ui-layout": "workspace:^",
+    "@const-ai/client-ui-primitives": "workspace:^",
+    "@const-ai/client-ui-slots": "workspace:^",
+    "@const-ai/host-apiproxy": "workspace:^",
+    "@const-ai/invariants": "workspace:^",
+    "react": "^18.2.0"
+  },
+  "devDependencies": {
+    "@const-ai/cordis": "workspace:^",
+    "@const-ai/client-connection": "workspace:^",
+    "@const-ai/client-locale": "workspace:^",
+    "@const-ai/client-runtime": "workspace:^",
+    "@const-ai/client-test-runtime": "workspace:^",
+    "@const-ai/client-ui-layout": "workspace:^",
+    "@const-ai/client-ui-primitives": "workspace:^",
+    "@const-ai/client-ui-slots": "workspace:^",
+    "@const-ai/host-apiproxy": "workspace:^",
+    "@const-ai/invariants": "workspace:^",
+    "@testing-library/react": "^16.1.0",
+    "@types/react": "^18.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}

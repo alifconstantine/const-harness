@@ -21,6 +21,16 @@ export interface DesignSystemSummary {
   readonly suggestedCraft: readonly string[]
   /** Preview colors extracted from design tokens or preview manifests. */
   readonly previewColors: readonly string[]
+  /** Full brand palette colors for design system preview. */
+  readonly palette?: readonly string[]
+  /** Display/Heading font family (e.g. 'Playfair Display', 'Inter'). */
+  readonly displayFont?: string
+  /** Body font family (e.g. 'Inter', 'system-ui'). */
+  readonly bodyFont?: string
+  /** Monospace font family (e.g. 'JetBrains Mono', 'Menlo'). */
+  readonly monoFont?: string
+  /** Short identity quote or philosophy text from DESIGN.md. */
+  readonly identityQuote?: string
   /** Whether the design system includes a Tailwind CSS theme file. */
   readonly hasTailwind: boolean
 }
@@ -67,6 +77,10 @@ export interface DesignTemplateSummary {
   readonly tags: readonly string[]
   /** Optional preview role or thumbnail indicator. */
   readonly previewRole?: string
+  /** Optional preview image URL for direct image thumbnail display. */
+  readonly previewImageUrl?: string
+  /** Optional example HTML preview string. */
+  readonly exampleHtml?: string
 }
 
 /** Complete template definition with starter HTML code and blueprints. */

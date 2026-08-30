@@ -52,6 +52,13 @@ export class DesignService implements DesignApi {
   private readonly designTemplatesDir: string
   private readonly craftDir: string
   private readonly promptTemplatesDir: string
+  private readonly skillsDir: string
+  private readonly atomsDir: string
+  private readonly scenariosDir: string
+  private readonly communityDir: string
+  private readonly examplesDir: string
+  private readonly imageTemplatesDir: string
+  private readonly videoTemplatesDir: string
 
   private systemsCache: DesignSystemSummary[] | undefined
   private templatesCache: DesignTemplateSummary[] | undefined
@@ -65,6 +72,13 @@ export class DesignService implements DesignApi {
     this.designTemplatesDir = join(this.assetsDir, 'design-templates')
     this.craftDir = join(this.assetsDir, 'craft')
     this.promptTemplatesDir = join(this.assetsDir, 'prompt-templates')
+    this.skillsDir = join(this.assetsDir, 'skills')
+    this.atomsDir = join(this.assetsDir, 'atoms')
+    this.scenariosDir = join(this.assetsDir, 'scenarios')
+    this.communityDir = join(this.assetsDir, 'community')
+    this.examplesDir = join(this.assetsDir, 'examples')
+    this.imageTemplatesDir = join(this.assetsDir, 'image-templates')
+    this.videoTemplatesDir = join(this.assetsDir, 'video-templates')
   }
 
   /** Lists all available brand design systems with optional search and category filters. */
@@ -456,11 +470,11 @@ export class DesignService implements DesignApi {
                 template: {
                   id: data.id ?? id,
                   surface: data.surface ?? surface,
-                  title: data.title ?? id,
-                  summary: data.summary ?? '',
-                  category: data.category ?? 'General',
+                  title: cleanPluginTitle(data.title ?? id),
+                  summary: cleanPluginTitle(data.summary ?? ''),
+                  category: surface === 'image' ? 'Image' : 'Video',
                   tags: Array.isArray(data.tags) ? data.tags : [],
-                  model: data.model ?? 'default',
+                  model: 'default',
                   aspect: data.aspect ?? '1:1',
                   prompt: data.prompt ?? '',
                   ...data.previewImageUrl !== undefined ? { previewImageUrl: data.previewImageUrl } : {},
@@ -472,6 +486,104 @@ export class DesignService implements DesignApi {
           }
         } catch {
           // JSON parse failed
+        }
+      }
+    }
+
+    // Check image-templates and video-templates
+    for (const [tplDir, sfc] of [[this.imageTemplatesDir, 'image'], [this.videoTemplatesDir, 'video']] as const) {
+      const dir = join(tplDir, id)
+      const jsonRaw = await safeReadText(join(dir, 'open-design.json'))
+      const skillRaw = await safeReadText(join(dir, 'SKILL.md'))
+      if (jsonRaw !== undefined || skillRaw !== undefined) {
+        let title = id.replace(/-/g, ' ')
+        let summary = ''
+        let prompt = ''
+        if (jsonRaw !== undefined) {
+          try {
+            const parsed = JSON.parse(jsonRaw) as { title?: string; name?: string; description?: string; prompt?: string; summary?: string }
+            title = parsed.title ?? parsed.name ?? title
+            summary = parsed.summary ?? parsed.description ?? ''
+            prompt = parsed.prompt ?? ''
+          } catch {}
+        }
+        if (skillRaw !== undefined) {
+          const fm = parseSimpleFrontmatter(skillRaw)
+          title = (fm.name as string) ?? (fm.title as string) ?? title
+          summary = (fm.description as string) ?? summary
+          if (!prompt) prompt = skillRaw
+        }
+        return {
+          rpcId: request.rpcId,
+          result: {
+            ok: true,
+            value: {
+              template: {
+                id,
+                surface: sfc,
+                title: cleanPluginTitle(title),
+                summary: cleanPluginTitle(summary),
+                category: sfc === 'image' ? 'Image' : 'Video',
+                tags: [id, sfc],
+                model: 'default',
+                aspect: sfc === 'image' ? '1:1' : '16:9',
+                prompt,
+              },
+            },
+          },
+        }
+      }
+    }
+
+    // Check skills, atoms, scenarios, community
+    for (const [pluginDir, catName] of [
+      [this.skillsDir, 'Skills & Tools'],
+      [this.atomsDir, 'Atoms'],
+      [this.scenariosDir, 'Scenarios'],
+      [this.communityDir, 'Community'],
+    ] as const) {
+      const dir = join(pluginDir, id)
+      const skillRaw = await safeReadText(join(dir, 'SKILL.md'))
+      const jsonRaw = await safeReadText(join(dir, 'open-design.json'))
+      if (skillRaw !== undefined || jsonRaw !== undefined) {
+        let title = id.replace(/-/g, ' ')
+        let summary = ''
+        let declaredCat: string | undefined
+        let prompt = skillRaw ?? ''
+        if (jsonRaw !== undefined) {
+          try {
+            const parsed = JSON.parse(jsonRaw) as { title?: string; name?: string; description?: string; prompt?: string; category?: string }
+            title = parsed.title ?? parsed.name ?? title
+            summary = parsed.description ?? ''
+            if (parsed.prompt) prompt = parsed.prompt
+            declaredCat = parsed.category
+          } catch {}
+        }
+        if (skillRaw !== undefined) {
+          const fm = parseSimpleFrontmatter(skillRaw)
+          title = (fm.name as string) ?? (fm.title as string) ?? title
+          summary = (fm.description as string) ?? summary
+          declaredCat = (fm.category as string) ?? declaredCat
+        }
+        const category = resolveSkillCategory(id, declaredCat || catName)
+        return {
+          rpcId: request.rpcId,
+          result: {
+            ok: true,
+            value: {
+              template: {
+                id,
+                surface: 'image',
+                title: cleanPluginTitle(title),
+                summary: cleanPluginTitle(summary),
+                category,
+                tags: [id, category.toLowerCase()],
+                model: 'default',
+                aspect: '1:1',
+                prompt,
+              },
+            },
+          },
         }
       }
     }
@@ -590,7 +702,9 @@ export class DesignService implements DesignApi {
   private async loadPromptTemplatesIndex(): Promise<PromptTemplateSummary[]> {
     if (this.promptTemplatesCache !== undefined) return this.promptTemplatesCache
 
-    const summaries: PromptTemplateSummary[] = []
+    const map = new Map<string, PromptTemplateSummary>()
+
+    // 1. Load prompt-templates/image and prompt-templates/video
     for (const surface of ['image', 'video'] as const) {
       const surfaceDir = join(this.promptTemplatesDir, surface)
       try {
@@ -613,14 +727,16 @@ export class DesignService implements DesignApi {
               previewVideoUrl?: string
               source?: PromptTemplateSource
             }
-            summaries.push({
-              id: data.id ?? entry.name.replace(/\.json$/, ''),
+            const id = data.id ?? entry.name.replace(/\.json$/, '')
+            const title = cleanPluginTitle(data.title ?? entry.name.replace(/\.json$/, ''))
+            map.set(id, {
+              id,
               surface: data.surface ?? surface,
-              title: data.title ?? entry.name,
-              summary: data.summary ?? '',
-              category: data.category ?? 'General',
+              title,
+              summary: cleanPluginTitle(data.summary ?? ''),
+              category: surface === 'image' ? 'Image' : 'Video',
               tags: Array.isArray(data.tags) ? data.tags : [],
-              model: data.model ?? 'default',
+              model: 'default',
               aspect: data.aspect ?? '1:1',
               ...data.previewImageUrl !== undefined ? { previewImageUrl: data.previewImageUrl } : {},
               ...data.previewVideoUrl !== undefined ? { previewVideoUrl: data.previewVideoUrl } : {},
@@ -635,7 +751,175 @@ export class DesignService implements DesignApi {
       }
     }
 
-    this.promptTemplatesCache = summaries.sort((a, b) => a.title.localeCompare(b.title))
+    // 2. Load image-templates directory
+    try {
+      const entries = await readdir(this.imageTemplatesDir, { withFileTypes: true })
+      for (const entry of entries) {
+        if (!entry.isDirectory() || entry.name.startsWith('.')) continue
+        const id = entry.name
+        if (map.has(id)) continue
+        const dir = join(this.imageTemplatesDir, id)
+        const jsonRaw = await safeReadText(join(dir, 'open-design.json'))
+        const skillRaw = await safeReadText(join(dir, 'SKILL.md'))
+        let title = cleanPluginTitle(id.replace(/-/g, ' '))
+        let summary = ''
+        if (jsonRaw !== undefined) {
+          try {
+            const parsed = JSON.parse(jsonRaw) as { title?: string; name?: string; description?: string; summary?: string }
+            title = cleanPluginTitle(parsed.title ?? parsed.name ?? title)
+            summary = cleanPluginTitle(parsed.summary ?? parsed.description ?? '')
+          } catch {}
+        } else if (skillRaw !== undefined) {
+          const fm = parseSimpleFrontmatter(skillRaw)
+          title = cleanPluginTitle((fm.name as string) ?? (fm.title as string) ?? title)
+          summary = cleanPluginTitle((fm.description as string) ?? '')
+        }
+        map.set(id, {
+          id,
+          surface: 'image',
+          title,
+          summary,
+          category: 'Image',
+          tags: [id, 'image'],
+          model: 'default',
+          aspect: '1:1',
+        })
+      }
+    } catch {}
+
+    // 3. Load video-templates directory
+    try {
+      const entries = await readdir(this.videoTemplatesDir, { withFileTypes: true })
+      for (const entry of entries) {
+        if (!entry.isDirectory() || entry.name.startsWith('.')) continue
+        const id = entry.name
+        if (map.has(id)) continue
+        const dir = join(this.videoTemplatesDir, id)
+        const jsonRaw = await safeReadText(join(dir, 'open-design.json'))
+        const skillRaw = await safeReadText(join(dir, 'SKILL.md'))
+        let title = cleanPluginTitle(id.replace(/-/g, ' '))
+        let summary = ''
+        if (jsonRaw !== undefined) {
+          try {
+            const parsed = JSON.parse(jsonRaw) as { title?: string; name?: string; description?: string; summary?: string }
+            title = cleanPluginTitle(parsed.title ?? parsed.name ?? title)
+            summary = cleanPluginTitle(parsed.summary ?? parsed.description ?? '')
+          } catch {}
+        } else if (skillRaw !== undefined) {
+          const fm = parseSimpleFrontmatter(skillRaw)
+          title = cleanPluginTitle((fm.name as string) ?? (fm.title as string) ?? title)
+          summary = cleanPluginTitle((fm.description as string) ?? '')
+        }
+        map.set(id, {
+          id,
+          surface: 'video',
+          title,
+          summary,
+          category: 'Video',
+          tags: [id, 'video'],
+          model: 'default',
+          aspect: '16:9',
+        })
+      }
+    } catch {}
+
+    // 4. Load skills directory (160+ skills!)
+    try {
+      const entries = await readdir(this.skillsDir, { withFileTypes: true })
+      for (const entry of entries) {
+        if (!entry.isDirectory() || entry.name.startsWith('.')) continue
+        const id = entry.name
+        if (map.has(id)) continue
+        const dir = join(this.skillsDir, id)
+        const skillRaw = await safeReadText(join(dir, 'SKILL.md'))
+        let title = cleanPluginTitle(id.replace(/-/g, ' '))
+        let summary = ''
+        let declaredCat: string | undefined
+        if (skillRaw !== undefined) {
+          const fm = parseSimpleFrontmatter(skillRaw)
+          title = cleanPluginTitle((fm.name as string) ?? (fm.title as string) ?? title)
+          summary = cleanPluginTitle((fm.description as string) ?? '')
+          declaredCat = fm.category as string | undefined
+        }
+        const category = resolveSkillCategory(id, declaredCat)
+        map.set(id, {
+          id,
+          surface: 'image',
+          title,
+          summary,
+          category,
+          tags: [id, category.toLowerCase()],
+          model: 'default',
+          aspect: '1:1',
+        })
+      }
+    } catch {}
+
+    // 5. Load atoms directory
+    try {
+      const entries = await readdir(this.atomsDir, { withFileTypes: true })
+      for (const entry of entries) {
+        if (!entry.isDirectory() || entry.name.startsWith('.')) continue
+        const id = entry.name
+        if (map.has(id)) continue
+        const dir = join(this.atomsDir, id)
+        const jsonRaw = await safeReadText(join(dir, 'open-design.json'))
+        let title = cleanPluginTitle(id.replace(/-/g, ' '))
+        let summary = ''
+        if (jsonRaw !== undefined) {
+          try {
+            const parsed = JSON.parse(jsonRaw) as { title?: string; name?: string; description?: string }
+            title = cleanPluginTitle(parsed.title ?? parsed.name ?? title)
+            summary = cleanPluginTitle(parsed.description ?? '')
+          } catch {}
+        }
+        map.set(id, {
+          id,
+          surface: 'image',
+          title,
+          summary,
+          category: 'Atoms',
+          tags: [id, 'atom'],
+          model: 'default',
+          aspect: '1:1',
+        })
+      }
+    } catch {}
+
+    // 6. Load scenarios & community directories
+    for (const [sDir, catName] of [[this.scenariosDir, 'Scenarios'], [this.communityDir, 'Community']] as const) {
+      try {
+        const entries = await readdir(sDir, { withFileTypes: true })
+        for (const entry of entries) {
+          if (!entry.isDirectory() || entry.name.startsWith('.')) continue
+          const id = entry.name
+          if (map.has(id)) continue
+          const dir = join(sDir, id)
+          const jsonRaw = await safeReadText(join(dir, 'open-design.json'))
+          let title = cleanPluginTitle(id.replace(/-/g, ' '))
+          let summary = ''
+          if (jsonRaw !== undefined) {
+            try {
+              const parsed = JSON.parse(jsonRaw) as { title?: string; name?: string; description?: string }
+              title = cleanPluginTitle(parsed.title ?? parsed.name ?? title)
+              summary = cleanPluginTitle(parsed.description ?? '')
+            } catch {}
+          }
+          map.set(id, {
+            id,
+            surface: 'image',
+            title,
+            summary,
+            category: catName,
+            tags: [id, catName.toLowerCase()],
+            model: 'default',
+            aspect: '1:1',
+          })
+        }
+      } catch {}
+    }
+
+    this.promptTemplatesCache = Array.from(map.values()).sort((a, b) => a.title.localeCompare(b.title))
     return this.promptTemplatesCache
   }
 
@@ -672,6 +956,7 @@ export class DesignService implements DesignApi {
 
           // Extract preview colors from tokens.css or design-tokens.json
           const previewColors = await extractPreviewColors(dir)
+          const brandDetails = await extractBrandDetails(dir)
 
           summaries.push({
             id,
@@ -682,6 +967,11 @@ export class DesignService implements DesignApi {
             suggestedCraft,
             previewColors,
             hasTailwind,
+            ...(brandDetails.palette.length > 0 ? { palette: brandDetails.palette } : {}),
+            ...(brandDetails.displayFont ? { displayFont: brandDetails.displayFont } : {}),
+            ...(brandDetails.bodyFont ? { bodyFont: brandDetails.bodyFont } : {}),
+            ...(brandDetails.monoFont ? { monoFont: brandDetails.monoFont } : {}),
+            ...(brandDetails.identityQuote ? { identityQuote: brandDetails.identityQuote } : {}),
           })
         } catch {
           // Ignore invalid manifest
@@ -698,48 +988,68 @@ export class DesignService implements DesignApi {
   private async loadTemplatesIndex(): Promise<DesignTemplateSummary[]> {
     if (this.templatesCache !== undefined) return this.templatesCache
 
-    const summaries: DesignTemplateSummary[] = []
-    try {
-      const entries = await readdir(this.designTemplatesDir, { withFileTypes: true })
-      for (const entry of entries) {
-        if (!entry.isDirectory() || entry.name.startsWith('.')) continue
+    const map = new Map<string, DesignTemplateSummary>()
 
-        const dir = join(this.designTemplatesDir, entry.name)
-        const skillPath = join(dir, 'SKILL.md')
-        const skillRaw = await safeReadText(skillPath)
+    // Load both designTemplatesDir and examplesDir
+    for (const templatesFolder of [this.examplesDir, this.designTemplatesDir]) {
+      try {
+        const entries = await readdir(templatesFolder, { withFileTypes: true })
+        for (const entry of entries) {
+          if (!entry.isDirectory() || entry.name.startsWith('.')) continue
+          if (map.has(entry.name)) continue
 
-        let title = entry.name
-        let category = 'templates'
-        let description = ''
-        let tags: string[] = [entry.name]
+          const dir = join(templatesFolder, entry.name)
+          const skillPath = join(dir, 'SKILL.md')
+          const exampleHtmlPath = join(dir, 'example.html')
+          const jsonPath = join(dir, 'open-design.json')
+          const skillRaw = await safeReadText(skillPath)
+          const exampleHtml = await safeReadText(exampleHtmlPath)
+          const jsonRaw = await safeReadText(jsonPath)
 
-        if (skillRaw !== undefined) {
-          const frontmatter = parseSimpleFrontmatter(skillRaw)
-          title = (frontmatter.en_name as string | undefined)
-            ?? (frontmatter.title as string | undefined)
-            ?? (frontmatter.name as string | undefined)
-            ?? entry.name
-          category = (frontmatter.category as string | undefined)
-            ?? (entry.name.startsWith('html-ppt') ? 'slides' : 'templates')
-          description = (frontmatter.description as string | undefined) ?? ''
-          if (Array.isArray(frontmatter.tags)) {
-            tags = frontmatter.tags.filter((t): t is string => typeof t === 'string')
+          let title = formatTemplateTitle(entry.name)
+          let category = resolveTemplateCategory(entry.name)
+          let description = ''
+          let tags: string[] = [entry.name]
+
+          if (jsonRaw !== undefined) {
+            try {
+              const parsed = JSON.parse(jsonRaw) as { title?: string; name?: string; description?: string; category?: string; tags?: string[] }
+              if (parsed.title || parsed.name) title = formatTemplateTitle(entry.name, parsed.title ?? parsed.name)
+              if (parsed.description) description = parsed.description
+              if (parsed.category) category = resolveTemplateCategory(entry.name, parsed.category)
+              if (Array.isArray(parsed.tags)) tags = parsed.tags
+            } catch {}
+          } else if (skillRaw !== undefined) {
+            const frontmatter = parseSimpleFrontmatter(skillRaw)
+            const declaredTitle = (frontmatter.en_name as string | undefined)
+              ?? (frontmatter.title as string | undefined)
+            if (declaredTitle) {
+              title = formatTemplateTitle(entry.name, declaredTitle)
+            }
+            if (frontmatter.category) {
+              category = resolveTemplateCategory(entry.name, frontmatter.category as string)
+            }
+            description = (frontmatter.description as string | undefined) ?? ''
+            if (Array.isArray(frontmatter.tags)) {
+              tags = frontmatter.tags.filter((t): t is string => typeof t === 'string')
+            }
           }
-        }
 
-        summaries.push({
-          id: entry.name,
-          title,
-          category,
-          description,
-          tags,
-        })
+          map.set(entry.name, {
+            id: entry.name,
+            title,
+            category,
+            description,
+            tags,
+            ...(exampleHtml ? { exampleHtml } : {}),
+          })
+        }
+      } catch {
+        // Directory missing
       }
-    } catch {
-      // Directory missing
     }
 
-    this.templatesCache = summaries.sort((a, b) => a.title.localeCompare(b.title))
+    this.templatesCache = Array.from(map.values()).sort((a, b) => a.title.localeCompare(b.title))
     return this.templatesCache
   }
 }
@@ -785,6 +1095,81 @@ async function extractPreviewColors(systemDir: string): Promise<string[]> {
     }
   }
   return colors
+}
+
+/** Extracts typography, full color palette, and identity quote from DESIGN.md or tokens. */
+async function extractBrandDetails(systemDir: string): Promise<{
+  palette: string[]
+  displayFont?: string
+  bodyFont?: string
+  monoFont?: string
+  identityQuote?: string
+}> {
+  const palette: string[] = []
+  let displayFont: string | undefined
+  let bodyFont: string | undefined
+  let monoFont: string | undefined
+  let identityQuote: string | undefined
+
+  // Read DESIGN.md
+  const designMd = await safeReadText(join(systemDir, 'DESIGN.md'))
+  if (designMd !== undefined) {
+    const lines = designMd.split('\n')
+    for (const line of lines) {
+      const trimmed = line.trim()
+      // Extract quote
+      if (trimmed.startsWith('> ') && !trimmed.toLowerCase().includes('category:') && !identityQuote) {
+        identityQuote = trimmed.slice(2).trim()
+      }
+      // Extract typography families: primary=Playfair Display, display=Playfair Display, mono=JetBrains Mono
+      if (trimmed.includes('Families:') || trimmed.includes('families:')) {
+        const dMatch = trimmed.match(/display=([^,;]+)/i)
+        if (dMatch) displayFont = dMatch[1]?.trim()
+        const pMatch = trimmed.match(/primary=([^,;]+)/i)
+        if (pMatch) bodyFont = pMatch[1]?.trim()
+        const bMatch = trimmed.match(/body=([^,;]+)/i)
+        if (bMatch) bodyFont = bMatch[1]?.trim()
+        const mMatch = trimmed.match(/mono=([^,;]+)/i)
+        if (mMatch) monoFont = mMatch[1]?.trim()
+      }
+    }
+  }
+
+  // Read tokens.css for fonts and full palette
+  const tokensText = await safeReadText(join(systemDir, 'tokens.css'))
+  if (tokensText !== undefined) {
+    // Hex colors
+    const hexMatches = tokensText.match(/#[0-9a-fA-F]{6}\b/g)
+    if (hexMatches !== null) {
+      for (const hex of hexMatches) {
+        const lower = hex.toLowerCase()
+        if (!palette.includes(lower)) {
+          palette.push(lower)
+        }
+      }
+    }
+    // Fonts if not found in DESIGN.md
+    if (!displayFont) {
+      const match = tokensText.match(/--font-display:\s*([^;]+);/)
+      if (match && match[1]) displayFont = match[1].split(',')[0]?.replace(/["']/g, '').trim()
+    }
+    if (!bodyFont) {
+      const match = tokensText.match(/--font-body:\s*([^;]+);/)
+      if (match && match[1]) bodyFont = match[1].split(',')[0]?.replace(/["']/g, '').trim()
+    }
+    if (!monoFont) {
+      const match = tokensText.match(/--font-mono:\s*([^;]+);/)
+      if (match && match[1]) monoFont = match[1].split(',')[0]?.replace(/["']/g, '').trim()
+    }
+  }
+
+  return {
+    palette: palette.slice(0, 10),
+    ...(displayFont ? { displayFont } : {}),
+    ...(bodyFont ? { bodyFont } : {}),
+    ...(monoFont ? { monoFont } : {}),
+    ...(identityQuote ? { identityQuote } : {}),
+  }
 }
 
 /** Parses lightweight key-value frontmatter from markdown without external heavy deps. */
@@ -838,3 +1223,109 @@ function parseSimpleFrontmatter(text: string): Record<string, unknown> {
 
   return result
 }
+
+function formatTemplateTitle(id: string, frontmatterTitle?: string): string {
+  if (frontmatterTitle && frontmatterTitle !== id && !frontmatterTitle.includes('-')) {
+    return frontmatterTitle
+  }
+  return id
+    .replace(/^html-ppt-/, '')
+    .split('-')
+    .map((w) => {
+      const lower = w.toLowerCase()
+      if (lower === 'ui') return 'UI'
+      if (lower === 'api') return 'API'
+      if (lower === 'hr') return 'HR'
+      if (lower === 'dcf') return 'DCF'
+      if (lower === 'kpi') return 'KPI'
+      if (lower === 'saas') return 'SaaS'
+      if (lower === 'ai') return 'AI'
+      if (lower === 'okrs') return 'OKRs'
+      if (lower === 'flowai') return 'FlowAI'
+      if (lower === 'ppt') return 'PPT'
+      if (lower === 'fpv') return 'FPV'
+      return w.charAt(0).toUpperCase() + w.slice(1)
+    })
+    .join(' ')
+}
+
+function resolveTemplateCategory(id: string, frontmatterCat?: string): string {
+  const lower = id.toLowerCase()
+  if (lower.startsWith('html-ppt') || lower.includes('deck') || lower.includes('pitch') || lower === 'guizang-ppt') {
+    return 'Slide deck'
+  }
+  if (lower.includes('wireframe')) {
+    return 'Wireframe'
+  }
+  if (
+    lower.includes('mobile') ||
+    lower.includes('gamified') ||
+    lower.includes('dating') ||
+    lower.includes('hr-onboarding')
+  ) {
+    return 'Mobile app'
+  }
+  if (
+    lower.includes('dashboard') ||
+    lower.includes('kanban') ||
+    lower.includes('finance') ||
+    lower.includes('valuation') ||
+    lower.includes('trading')
+  ) {
+    return 'Dashboards'
+  }
+  if (
+    lower.includes('landing') ||
+    lower.includes('pricing') ||
+    lower.includes('waitlist') ||
+    lower.includes('marketing') ||
+    lower.includes('email') ||
+    lower.includes('blog') ||
+    lower.includes('poster') ||
+    lower.includes('contact')
+  ) {
+    return 'Landing / marketing'
+  }
+  if (frontmatterCat && frontmatterCat !== 'templates') {
+    return frontmatterCat
+  }
+  return 'Apps'
+}
+
+function cleanPluginTitle(raw: string): string {
+  let s = raw
+  s = s.replace(/seedance\s*2(?:\.0)?\s*[-–—:]*\s*/gi, '')
+  s = s.replace(/seedance\s*[-–—:]*\s*/gi, '')
+  s = s.replace(/gpt\s*image\s*2(?:\.0)?\s*[-–—:]*\s*/gi, '')
+  s = s.replace(/gpt\s*image\s*[-–—:]*\s*/gi, '')
+  s = s.replace(/seedream\s*[-–—:]*\s*/gi, '')
+  s = s.replace(/flux-pro-v1\.1\s*[-–—:]*\s*/gi, '')
+  s = s.replace(/flux\s*[-–—:]*\s*/gi, '')
+  s = s.replace(/kling\s*o3\s*[-–—:]*\s*/gi, '')
+  s = s.replace(/kling\s*[-–—:]*\s*/gi, '')
+  s = s.replace(/sora\s*[-–—:]*\s*/gi, '')
+  s = s.replace(/minimax\s*[-–—:]*\s*/gi, '')
+  s = s.replace(/^[-–—:\s]+|[-–—:\s]+$/g, '').trim()
+  if (s === '') return raw
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
+function resolveSkillCategory(id: string, declaredCat?: string): string {
+  const lower = id.toLowerCase()
+  if (declaredCat && declaredCat !== 'General' && declaredCat !== 'skill') return declaredCat
+  if (lower.includes('animat') || lower.includes('motion') || lower.includes('gsap') || lower.includes('remotion') || lower.includes('video') || lower.includes('hyperframe')) {
+    return 'Animation'
+  }
+  if (lower.includes('figma') || lower.includes('canvas') || lower.includes('design') || lower.includes('color') || lower.includes('theme') || lower.includes('taste') || lower.includes('stitch') || lower.includes('apple-hig')) {
+    return 'Design'
+  }
+  if (lower.includes('flutter') || lower.includes('swift') || lower.includes('frontend') || lower.includes('react') || lower.includes('shadcn') || lower.includes('threejs') || lower.includes('shader') || lower.includes('ui') || lower.includes('web')) {
+    return 'UI / Code'
+  }
+  if (lower.includes('image') || lower.includes('fal-') || lower.includes('venice-') || lower.includes('photo') || lower.includes('sticker') || lower.includes('art')) {
+    return 'Image'
+  }
+  return 'Skills & Tools'
+}
+
+

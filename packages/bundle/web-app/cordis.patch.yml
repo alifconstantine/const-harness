@@ -282,6 +282,9 @@
     - id: ui-automations
       name: '@const-ai/client-ui-automations'
 
+    - id: ui-design
+      name: '@const-ai/client-ui-design'
+
 # ── the agent plane moves behind agent presets ─────────────────────────────
 #
 # Every row below composes what ONE agent contributes to the host registries:

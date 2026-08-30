@@ -1,0 +1,29 @@
+/**
+ * Package-owned invariant companion for `@const-ai/client-ui-design`.
+ * @module @const-ai/client-ui-design/invariant
+ */
+
+/* jscpd:ignore-start */
+import type { Context } from '@const-ai/cordis'
+import type { InvariantInstaller } from '@const-ai/invariants'
+
+const PACKAGE_NAME = '@const-ai/client-ui-design'
+
+/** Cordis companion plugin name. */
+export const name = 'client-ui-design-invariant'
+/** Service required before the companion can reserve package ownership. */
+export const inject = ['invariants']
+
+/**
+ * No runtime invariant: a pure-consumer overlay plugin.
+ */
+const install: InvariantInstaller = () => {}
+
+/**
+ * Register this package's invariant companion.
+ * @param ctx - Cordis context carrying the invariant service.
+ * @returns the installed registration's disposer after setup succeeds.
+ */
+export const apply = (ctx: Context): Promise<() => void> =>
+  Promise.resolve(ctx.invariants.register(PACKAGE_NAME, install))
+/* jscpd:ignore-end */

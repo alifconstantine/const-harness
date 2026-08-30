@@ -330,7 +330,10 @@ export class FakeApiClient implements IApiClient {
     systemDetail: payload => this.record('design.systemDetail', payload, Promise.resolve({ rpcId: RpcId('fk'), result: { ok: false, error: { code: 'design-system-not-found', message: 'not found', details: { id: payload.id } } } })),
     templates: payload => this.record('design.templates', payload, Promise.resolve(ok({ templates: [], categories: [] }))),
     templateDetail: payload => this.record('design.templateDetail', payload, Promise.resolve({ rpcId: RpcId('fk'), result: { ok: false, error: { code: 'design-template-not-found', message: 'not found', details: { id: payload.id } } } })),
+    craftGuidelines: payload => this.record('design.craftGuidelines', payload, Promise.resolve(ok({ guidelines: [] }))),
     craftGuideline: payload => this.record('design.craftGuideline', payload, Promise.resolve({ rpcId: RpcId('fk'), result: { ok: false, error: { code: 'craft-guideline-not-found', message: 'not found', details: { id: payload.id } } } })),
+    promptTemplates: payload => this.record('design.promptTemplates', payload, Promise.resolve(ok({ templates: [], categories: [], surfaces: [] }))),
+    promptTemplateDetail: payload => this.record('design.promptTemplateDetail', payload, Promise.resolve({ rpcId: RpcId('fk'), result: { ok: false, error: { code: 'prompt-template-not-found', message: 'not found', details: { id: payload.id } } } })),
   }
 
   /** When true, streams never fire onOpen (misbehaving-carrier material for the handshake timeout guard). */

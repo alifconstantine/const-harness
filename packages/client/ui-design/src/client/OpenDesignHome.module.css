@@ -1,0 +1,747 @@
+.container {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  padding: 24px 24px 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+  background: var(--dsw-alias-bg-base);
+  color: var(--dsw-alias-label-primary);
+  scroll-behavior: smooth;
+}
+
+.contentWrapper {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+/* Compact Hero Section (Balanced focal point) */
+.heroSection {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 0;
+  margin-bottom: 20px;
+  box-sizing: border-box;
+}
+
+/* Header Area */
+.heroHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  user-select: none;
+}
+
+.logoIcon {
+  color: var(--dsw-alias-label-primary);
+}
+
+.brandTitle {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--dsw-alias-label-primary);
+}
+
+/* Surface Mode Chips Row */
+.modeChipsRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.modeChip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-label-secondary);
+  border: 1px solid var(--dsw-alias-border-l2);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.modeChip:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.modeChip.active {
+  background: rgba(34, 197, 94, 0.12);
+  color: #16a34a;
+  border-color: rgba(34, 197, 94, 0.35);
+  font-weight: 600;
+}
+
+/* Outer Composer Frame (Matching OpenDesign Image 2) */
+.composerOuterFrame {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--dsw-alias-bg-layer-1);
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 16px;
+  padding: 12px 14px 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.16);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.composerOuterFrame:focus-within {
+  border-color: var(--dsw-alias-border-l4);
+  box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.24);
+}
+
+/* Top Toolbar Row inside Outer Frame */
+.topBarRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 4px;
+  position: relative;
+}
+
+.topBarItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--dsw-alias-label-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: 6px;
+  transition: all 0.12s ease;
+}
+
+.topBarItem:hover {
+  color: var(--dsw-alias-label-primary);
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+/* Composer Bottom Sub Row (Design System + Folder pickers at bottom of card) */
+.composerBottomSubRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 6px;
+  border-top: 1px solid var(--dsw-alias-border-l1, rgba(255, 255, 255, 0.06));
+  position: relative;
+}
+
+.bottomSubItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--dsw-alias-label-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: 6px;
+  transition: all 0.12s ease;
+}
+
+.bottomSubItem:hover {
+  color: var(--dsw-alias-label-primary);
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+/* Examples Gallery Section (Matching Image 2) */
+.examplesSection {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 0;
+  margin-bottom: 40px;
+}
+
+/* Inner AI Composer Box */
+.composerCard {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--dsw-alias-bg-layer-1);
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+}
+
+/* Active Template Chip Badge above textarea */
+.activeTemplateBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--dsw-alias-interactive-bg-hover);
+  border: 1px solid var(--dsw-alias-border-l2);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--dsw-alias-label-primary);
+  align-self: flex-start;
+}
+
+.activeTemplateBadge button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+.activeTemplateBadge button:hover {
+  color: var(--dsw-alias-label-primary);
+}
+
+.textarea {
+  width: 100%;
+  min-height: 68px;
+  border: none;
+  background: transparent;
+  color: var(--dsw-alias-label-primary);
+  font-size: 14px;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+  font-family: inherit;
+}
+
+.textarea::placeholder {
+  color: var(--dsw-alias-label-tertiary);
+}
+
+/* Composer Bottom Toolbar */
+.composerBottomBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 4px;
+  position: relative;
+}
+
+.composerLeftActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.plusBtn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-bg-layer-2);
+  color: var(--dsw-alias-label-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.plusBtn:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.plusBtn.active {
+  background: var(--dsw-alias-interactive-bg-active);
+  color: var(--dsw-alias-label-primary);
+}
+
+.modeDropdownBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  background: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.modeDropdownBtn:hover {
+  background: rgba(34, 197, 94, 0.18);
+}
+
+.composerRightActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pillControlBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-bg-layer-2);
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.pillControlBtn:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.permissionBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-bg-layer-2);
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.permissionBtn:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.permissionDanger {
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.modelSelectorBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.modelSelectorBtn:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.sendBtn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: var(--dsw-alias-brand-primary);
+  color: var(--dsw-alias-label-primary-foreground);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.sendBtn:hover {
+  opacity: 0.9;
+  transform: scale(1.04);
+}
+
+.sendBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Generic Popover Dropdown Menu */
+.dropdownMenu {
+  position: absolute;
+  background: var(--dsw-specific-menu, var(--dsw-alias-bg-layer-3));
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.28);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 500;
+  animation: popIn 0.12s ease-out;
+}
+
+.dropdownMenuUp {
+  bottom: calc(100% + 8px);
+}
+
+.dropdownMenuDown {
+  top: calc(100% + 6px);
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--dsw-alias-label-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+}
+
+.dropdownItem:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.dropdownItem.active {
+  background: var(--dsw-alias-interactive-bg-active);
+  color: var(--dsw-alias-label-primary);
+  font-weight: 600;
+}
+
+.dropdownItemLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+
+
+.examplesHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.examplesHeading {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--dsw-alias-label-primary);
+}
+
+/* Standardized, perfectly aligned category filter pills (Image 3 fix) */
+.categoryFilterRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.catBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 14px;
+  gap: 6px;
+  border-radius: 9999px;
+  font-size: 12.5px;
+  font-weight: 500;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-bg-layer-2);
+  color: var(--dsw-alias-label-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.catBtn:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+  border-color: var(--dsw-alias-border-l3);
+}
+
+.catBtn.active {
+  background: #ffffff;
+  color: #09090b;
+  border-color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+}
+
+.catBtnIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Horizontal Scrolling Carousel */
+.carouselWrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.cardsCarousel {
+  width: 100%;
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding: 6px 2px 18px 2px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.cardsCarousel::-webkit-scrollbar {
+  display: none;
+}
+
+/* Floating Navigation Arrows */
+.scrollArrowBtn {
+  position: absolute;
+  top: 45%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--dsw-specific-menu, var(--dsw-alias-bg-layer-3));
+  border: 1px solid var(--dsw-alias-border-l2);
+  color: var(--dsw-alias-label-primary);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 20;
+  transition: all 0.15s ease;
+}
+
+.scrollArrowBtn:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  transform: translateY(-50%) scale(1.08);
+}
+
+.scrollArrowLeft {
+  left: -14px;
+}
+
+.scrollArrowRight {
+  right: -14px;
+}
+
+/* Showcase Example Card */
+.cardItem {
+  flex: 0 0 250px;
+  width: 250px;
+  background: var(--dsw-alias-bg-layer-1);
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  text-align: left;
+}
+
+.cardItem:hover {
+  transform: translateY(-4px);
+  border-color: var(--dsw-alias-border-l4);
+  box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.25);
+}
+
+.cardThumbnailWrapper {
+  width: 100%;
+  height: 140px;
+  background: #141416;
+  border-bottom: 1px solid var(--dsw-alias-border-l2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.cardThumbnailWrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.25s ease;
+}
+
+.cardItem:hover .cardThumbnailWrapper img {
+  transform: scale(1.04);
+}
+
+.cardIframePreview {
+  width: 750px;
+  height: 437px;
+  transform: scale(0.33);
+  transform-origin: top left;
+  pointer-events: none;
+  border: none;
+  background: #ffffff;
+}
+
+/* High-End Mini Mockup Layouts (Zero boring empty icons) */
+.cardMockupContainer {
+  width: 100%;
+  height: 100%;
+  padding: 14px 16px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
+  position: relative;
+}
+
+.cardMockupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.cardMockupDots {
+  display: flex;
+  gap: 5px;
+}
+
+.cardMockupDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--dsw-alias-border-l3);
+}
+
+.cardMockupBadge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.cardMockupBody {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  justify-content: center;
+}
+
+.cardMockupHeroBar {
+  height: 14px;
+  width: 70%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+}
+
+.cardMockupLine {
+  height: 6px;
+  width: 90%;
+  border-radius: 3px;
+  background: var(--dsw-alias-border-l3);
+}
+
+.cardMockupLineShort {
+  height: 6px;
+  width: 50%;
+  border-radius: 3px;
+  background: var(--dsw-alias-border-l2);
+}
+
+.cardMockupFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cardMockupCta {
+  height: 18px;
+  width: 48px;
+  border-radius: 4px;
+  background: var(--dsw-alias-brand-primary);
+  opacity: 0.8;
+}
+
+.cardInfo {
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cardTitle {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--dsw-alias-label-primary);
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardCategoryBadge {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--dsw-alias-label-tertiary);
+  text-transform: uppercase;
+}
+
+.modeChipIcon {
+  display: flex;
+  align-items: center;
+}

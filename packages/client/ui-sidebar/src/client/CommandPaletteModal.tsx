@@ -282,10 +282,10 @@ export function CommandPaletteModal({
       title: 'OpenDesign Studio',
       subtitle: 'Switch to visual component & UI canvas mode',
       icon: <Palette size={16} />,
-      category: 'navigation',
+      category: 'tools',
       run: () => {
         onClose()
-        window.dispatchEvent(new CustomEvent('const:filter-mode', { detail: { mode: 'design' } }))
+        window.dispatchEvent(new CustomEvent('const:open-design'))
       },
     },
     {

@@ -291,12 +291,15 @@ type SessionTreeProps = Pick<
   onSessionArchive: (sessionId: SessionNode['id']) => void
   /** Open the browser-owned session delete-confirmation dialog. */
   onSessionDelete?: (sessionId: SessionNode['id'], currentTitle: string) => void
+  /** Mode indicating whether regular or design workspace sessions are grouped. */
+  mode?: SessionGroupBy
   /** Session order behavior: fixed after edits, or additionally promoted by user activity. */
   orderBy: SessionOrderBy
 }
 
 /** The scrolling session tree; unmounting drops the sessions subscription and expand-all state. */
 function SessionTree({
+  mode,
   useSessions, startSession, open, forkSession, workspaces, archivedSessionIds,
   onRenameRequest, onDeleteRequest, onSessionRename, onSessionArchive, onSessionDelete,
   insertWorkspaceBefore, insertSessionBefore, orderBy,
@@ -374,8 +377,8 @@ function SessionTree({
       ...(sessionOrderByAccount[UNGROUPED_KEY] === undefined
         ? {}
         : { ungroupedOrder: sessionOrderByAccount[UNGROUPED_KEY] }),
-    }),
-    [list, orderedWorkspaces, archivedSessionIds, expandedGroups, sessionOrderByAccount],
+    }, mode),
+    [list, orderedWorkspaces, archivedSessionIds, expandedGroups, sessionOrderByAccount, mode],
   )
   const now = Date.now()
   const commitSessionDrag = (activeDrag: DragState, over: NonNullable<DragState['over']>): void => {
@@ -1230,9 +1233,10 @@ export function WorkspaceBrowser({
               t={t}
             />
           )
-          : groupBy === 'workspace'
+          : groupBy === 'workspace' || groupBy === 'design'
             ? (
               <SessionTree
+                mode={groupBy}
                 useSessions={useSessions}
                 onSessionRename={onSessionRename}
                 onSessionArchive={onSessionArchive}

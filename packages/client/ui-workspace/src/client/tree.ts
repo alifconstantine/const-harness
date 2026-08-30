@@ -8,6 +8,7 @@ import {
   type SessionSearchResultItem, type SessionSummary, type SubagentDescendantSummary,
   type WorkspaceId, type WorkspaceView,
 } from '@const-ai/client-runtime/client'
+import type { SessionGroupBy } from './stores.ts'
 
 /** Group key for Sessions outside every Workspace. */
 export const UNGROUPED_KEY = ''
@@ -166,6 +167,31 @@ function orderedUngrouped(members: readonly SessionSummary[], stored: readonly s
 }
 
 /**
+ * Detect whether a session is a Design Studio / UI session.
+ * @param s - Session summary snapshot.
+ * @param currentId - ID of currently active session (to preserve blank draft).
+ * @returns True if session matches design keywords or is active draft.
+ */
+export function isDesignSession(s: SessionSummary, currentId?: SessionId): boolean {
+  if (s.blank && s.id === currentId) return true
+  const origin = (s as unknown as { origin?: string }).origin
+  if (origin === 'design') return true
+  const titleLower = (s.displayTitle || '').toLowerCase()
+  return (
+    titleLower.includes('[design]') ||
+    titleLower.includes('opendesign') ||
+    titleLower.includes('design studio') ||
+    titleLower.includes('prototype') ||
+    titleLower.includes('wireframe') ||
+    titleLower.includes('mockup') ||
+    titleLower.includes('figma') ||
+    titleLower.includes('hyperframe') ||
+    titleLower.includes('slide deck') ||
+    titleLower.includes('design system')
+  )
+}
+
+/**
  * Group Sessions by Host Workspace: one group per entity in stable Host
  * order, with members resolved from sessionIds in their stored order. Sessions
  * outside every Workspace trail in the browser-local Ungrouped order, which
@@ -176,6 +202,7 @@ function groupByWorkspace(
   workspaces: readonly WorkspaceView[],
   archived: ReadonlySet<SessionId>,
   ungroupedOrder: readonly string[] | undefined,
+  mode?: SessionGroupBy,
 ): Group[] {
   const groups: Group[] = []
   const accounted = new Set<SessionId>()
@@ -186,8 +213,11 @@ function groupByWorkspace(
       if (summary === undefined) continue // account may lead the list pull; the row appears when the summary lands
       accounted.add(id)
       if (!sessionVisible(summary, list.current, archived)) continue
+      if (mode === 'design' && !isDesignSession(summary, list.current)) continue
+      if (mode === 'conversation' && isDesignSession(summary, list.current)) continue
       members.push(summary)
     }
+    if (mode === 'design' && members.length === 0) continue
     groups.push(buildGroup(
       workspace.workspaceId, workspace.workspaceId, workspace.path,
       Date.parse(workspace.createdAt), workspace.title, members, 'account',
@@ -196,14 +226,18 @@ function groupByWorkspace(
   const stray = list.ids
     .map(id => list.byId[id])
     .filter((s): s is SessionSummary =>
-      s !== undefined && !accounted.has(s.id) && sessionVisible(s, list.current, archived))
+      s !== undefined && !accounted.has(s.id) && sessionVisible(s, list.current, archived)
+      && (mode !== 'design' || isDesignSession(s, list.current))
+      && (mode !== 'conversation' || !isDesignSession(s, list.current))
+    )
   if (stray.length > 0) {
+    const ungroupedLabel = mode === 'design' ? 'Recent' : UNGROUPED_LABEL
     groups.push(buildGroup(
       UNGROUPED_KEY,
       undefined,
       undefined,
       undefined,
-      UNGROUPED_LABEL,
+      ungroupedLabel,
       ungroupedOrder === undefined ? stray : orderedUngrouped(stray, ungroupedOrder),
       ungroupedOrder === undefined ? 'recency' : 'account',
     ))
@@ -239,6 +273,7 @@ function sessionNode(
  * @param workspaces - real workspaces in stable Host order.
  * @param archivedSessionIds - registry-global archive set.
  * @param view - local expansion arrays.
+ * @param mode - optional grouping mode ('workspace' | 'design' | 'conversation').
  * @returns group sections in render order.
  */
 export function deriveGroups(
@@ -246,6 +281,7 @@ export function deriveGroups(
   workspaces: readonly WorkspaceView[],
   archivedSessionIds: readonly SessionId[],
   view: TreeView,
+  mode?: SessionGroupBy,
 ): GroupNode[] {
   const archived = new Set(archivedSessionIds)
   const expandedGroups = new Set(view.expandedGroups)
@@ -255,7 +291,7 @@ export function deriveGroups(
     : (workspaces.find(w => w.sessionIds.includes(list.current as SessionId))?.workspaceId as string | undefined)
         ?? UNGROUPED_KEY
   const groups: GroupNode[] = []
-  for (const g of groupByWorkspace(list, workspaces, archived, view.ungroupedOrder)) {
+  for (const g of groupByWorkspace(list, workspaces, archived, view.ungroupedOrder, mode)) {
     const expanded = expandedGroups.has(g.key)
     groups.push({
       key: g.key,
@@ -316,16 +352,7 @@ export function deriveDesign(
   for (const id of list.ids) {
     const s = list.byId[id]
     if (s === undefined || !sessionVisible(s, list.current, archived)) continue
-    const titleLower = (s.displayTitle || '').toLowerCase()
-    if (
-      titleLower.includes('design') ||
-      titleLower.includes('ui') ||
-      titleLower.includes('ux') ||
-      titleLower.includes('mockup') ||
-      titleLower.includes('prototype') ||
-      titleLower.includes('layout') ||
-      titleLower.includes('desain')
-    ) {
+    if (isDesignSession(s, list.current)) {
       rows.push(s)
     }
   }

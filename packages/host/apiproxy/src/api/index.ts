@@ -71,8 +71,9 @@ export type {
   AutomationItem, AutomationRunHistory, AutomationSchedule, AutomationScheduleKind, AutomationsApi,
 } from './automations.ts'
 export type {
-  CraftGuideline, DesignApi, DesignSystemDetail, DesignSystemSummary,
-  DesignTemplateDetail, DesignTemplateSummary,
+  CraftGuideline, CraftGuidelineSummary, DesignApi, DesignSystemDetail, DesignSystemSummary,
+  DesignTemplateDetail, DesignTemplateSummary, PromptTemplateDetail, PromptTemplateSource,
+  PromptTemplateSummary,
 } from './design.ts'
 
 export type { QuestionResponsePayload } from './questions.ts'

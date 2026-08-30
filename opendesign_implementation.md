@@ -246,6 +246,6 @@ packages/
 | **Sub-Fase 1C** | Implementasi `DesignService` & Binding Host | ✅ Completed | In-memory index cache untuk 153 brand, 114 template, 13 craft docs, 107 prompt templates; async reader untuk token, komponen, dan `previewPages`; terikat ke `api-proxy.ts`. |
 | **Sub-Fase 1D** | Unit Tests & Backend Verification | ✅ Completed | 20/20 unit tests lolos (100%), 408 host apiproxy tests lolos, monorepo typecheck lolos (Code 0). |
 | **Fase 2** | Agent Design Brain & Prompt Engine | ✅ Completed | Prompt injector (`design-prompt-injector.ts`), token injection, craft rules, deck skeleton 1920x1080, live tweaks, 16/16 unit tests lolos (100%). |
-| **Fase 3** | Client Plugin Shell & Home View | ⏳ Pending | Plugin shell, Hero Composer, 153 Brand Selector, Template Gallery, 107 Prompt Templates Gallery. |
+| **Fase 3** | Client Plugin Shell & Home View | ✅ Completed | `@const-ai/client-ui-design` package dibuat, Const Design Hero Composer, mode chips (# Prototype, Slide deck, Image, Document, HyperFrames, Website clone, All), + button popover, Figma import modal (mock UI), 153 brand selector popover, template gallery cards, model selector & permission selector. 45/45 tests pass, monorepo typecheck pass (Code 0). |
 | **Fase 4** | Studio 2-Pane View & Multi-Surface Canvas | ⏳ Pending | 2-Pane chat/stage, 6 surface viewports (mobile frame, 16:9 deck, live dashboard), live tweaks panel. |
 | **Fase 5** | Export Engine, Drawing Layer & Polish | ⏳ Pending | Offline inlined HTML, multi-page PDF, PPTX via PptxGenJS, MP4 video, visual annotation feedback. |

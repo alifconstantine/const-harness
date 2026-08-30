@@ -27,6 +27,11 @@ export const designSystemSummarySchema = z.object({
   tags: z.array(z.string()),
   suggestedCraft: z.array(z.string()),
   previewColors: z.array(z.string()),
+  palette: z.array(z.string()).optional(),
+  displayFont: z.string().optional(),
+  bodyFont: z.string().optional(),
+  monoFont: z.string().optional(),
+  identityQuote: z.string().optional(),
   hasTailwind: z.boolean(),
 }) satisfies z.ZodType<Wire<DesignSystemSummary>>
 
@@ -54,6 +59,8 @@ export const designTemplateSummarySchema = z.object({
   description: z.string(),
   tags: z.array(z.string()),
   previewRole: z.string().optional(),
+  previewImageUrl: z.string().optional(),
+  exampleHtml: z.string().optional(),
 }) satisfies z.ZodType<Wire<DesignTemplateSummary>>
 
 /** DesignTemplateDetail schema. */

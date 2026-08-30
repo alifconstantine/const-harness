@@ -70,6 +70,7 @@ export function SidebarRoot({
 
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [automationsActive, setAutomationsActive] = useState(false)
+  const [designActive, setDesignActive] = useState(false)
 
   useEffect(() => {
     const handleState = (e: Event) => {
@@ -86,6 +87,27 @@ export function SidebarRoot({
       window.removeEventListener('const:automations-state', handleState)
       window.removeEventListener('const:open-automations', handleOpen)
       window.removeEventListener('const:close-automations', handleClose)
+    }
+  }, [])
+
+  useEffect(() => {
+    const handleDesignState = (e: Event) => {
+      const custom = e as CustomEvent<{ active: boolean }>
+      setDesignActive(custom.detail.active)
+    }
+    const handleOpenDesign = () => {
+      setDesignActive(true)
+      window.dispatchEvent(new CustomEvent('const:filter-mode', { detail: { mode: 'design' } }))
+    }
+    const handleCloseDesign = () => { setDesignActive(false) }
+
+    window.addEventListener('const:design-state', handleDesignState)
+    window.addEventListener('const:open-design', handleOpenDesign)
+    window.addEventListener('const:close-design', handleCloseDesign)
+    return () => {
+      window.removeEventListener('const:design-state', handleDesignState)
+      window.removeEventListener('const:open-design', handleOpenDesign)
+      window.removeEventListener('const:close-design', handleCloseDesign)
     }
   }, [])
 
@@ -241,6 +263,8 @@ export function SidebarRoot({
             aria-label={t('nav.newTask')}
             onClick={() => {
               window.dispatchEvent(new CustomEvent('const:close-automations'))
+              window.dispatchEvent(new CustomEvent('const:close-design'))
+              window.dispatchEvent(new CustomEvent('const:filter-mode', { detail: { mode: 'workspace' } }))
               startSession()
             }}
           >
@@ -260,6 +284,7 @@ export function SidebarRoot({
               if (automationsActive) {
                 window.dispatchEvent(new CustomEvent('const:close-automations'))
               } else {
+                window.dispatchEvent(new CustomEvent('const:close-design'))
                 window.dispatchEvent(new CustomEvent('const:open-automations'))
               }
             }}
@@ -269,14 +294,21 @@ export function SidebarRoot({
           </button>
         </Tooltip>
 
-        {/* Design (OpenDesign Studio) */}
+        {/* Design (Const Design Studio) */}
         <Tooltip label={t('nav.design')} side={wide ? 'bottom' : 'right'} delayMs={300}>
           <button
             type="button"
-            className={css.navItem}
+            className={clsx(css.navItem, designActive && css.active)}
             aria-label={t('nav.design')}
             onClick={() => {
-              window.dispatchEvent(new CustomEvent('const:filter-mode', { detail: { mode: 'design' } }))
+              if (designActive) {
+                window.dispatchEvent(new CustomEvent('const:close-design'))
+                window.dispatchEvent(new CustomEvent('const:filter-mode', { detail: { mode: 'workspace' } }))
+              } else {
+                window.dispatchEvent(new CustomEvent('const:close-automations'))
+                window.dispatchEvent(new CustomEvent('const:open-design'))
+                window.dispatchEvent(new CustomEvent('const:filter-mode', { detail: { mode: 'design' } }))
+              }
             }}
           >
             <IconDesignOutline16 size={wide ? 16 : 18} />

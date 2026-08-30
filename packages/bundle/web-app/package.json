@@ -55,6 +55,7 @@
     "@const-ai/client-ui-agent-preset": "workspace:^",
     "@const-ai/client-ui-automations": "workspace:^",
     "@const-ai/client-ui-commands": "workspace:^",
+    "@const-ai/client-ui-design": "workspace:^",
     "@const-ai/client-ui-conversation": "workspace:^",
     "@const-ai/client-ui-cordis": "workspace:^",
     "@const-ai/client-ui-deliverables": "workspace:^",
