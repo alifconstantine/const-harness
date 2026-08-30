@@ -1,4 +1,4 @@
-﻿---
+---
 name: doc-kami-parchment
 zh_name: "Kami 羊皮纸文档"
 en_name: "Kami Parchment Document"

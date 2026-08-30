@@ -1,4 +1,4 @@
-﻿---
+---
 name: resume-modern
 zh_name: "极简简历"
 en_name: "Modern Resume"

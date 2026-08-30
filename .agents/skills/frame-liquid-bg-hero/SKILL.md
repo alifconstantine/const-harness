@@ -1,4 +1,4 @@
-﻿---
+---
 name: frame-liquid-bg-hero
 zh_name: "流体背景 Hero 帧"
 en_name: "Liquid Background Hero"

@@ -1,4 +1,4 @@
-﻿---
+---
 name: frame-logo-outro
 zh_name: "品牌 Logo 收尾帧"
 en_name: "Logo Outro Frame"

@@ -43,6 +43,12 @@ export class DesignNotFoundError extends Error {
   }
 }
 
+/** Helper extracting non-empty string value from frontmatter object safely. */
+function getFmString(fm: Record<string, unknown>, key: string): string | undefined {
+  const val = fm[key]
+  return typeof val === 'string' && val.trim().length > 0 ? val.trim() : undefined
+}
+
 /**
  * Service managing bundled design systems, templates, craft rules, and prompt templates.
  */
@@ -53,6 +59,7 @@ export class DesignService implements DesignApi {
   private readonly craftDir: string
   private readonly promptTemplatesDir: string
   private readonly skillsDir: string
+  private readonly agentsSkillsDir: string
   private readonly atomsDir: string
   private readonly scenariosDir: string
   private readonly communityDir: string
@@ -73,6 +80,7 @@ export class DesignService implements DesignApi {
     this.craftDir = join(this.assetsDir, 'craft')
     this.promptTemplatesDir = join(this.assetsDir, 'prompt-templates')
     this.skillsDir = join(this.assetsDir, 'skills')
+    this.agentsSkillsDir = fileURLToPath(new URL('../../../../.agents/skills', import.meta.url))
     this.atomsDir = join(this.assetsDir, 'atoms')
     this.scenariosDir = join(this.assetsDir, 'scenarios')
     this.communityDir = join(this.assetsDir, 'community')
@@ -509,8 +517,8 @@ export class DesignService implements DesignApi {
         }
         if (skillRaw !== undefined) {
           const fm = parseSimpleFrontmatter(skillRaw)
-          title = (fm.name as string) ?? (fm.title as string) ?? title
-          summary = (fm.description as string) ?? summary
+          title = getFmString(fm, 'name') ?? getFmString(fm, 'title') ?? title
+          summary = getFmString(fm, 'description') ?? summary
           if (!prompt) prompt = skillRaw
         }
         return {
@@ -552,7 +560,13 @@ export class DesignService implements DesignApi {
         let prompt = skillRaw ?? ''
         if (jsonRaw !== undefined) {
           try {
-            const parsed = JSON.parse(jsonRaw) as { title?: string; name?: string; description?: string; prompt?: string; category?: string }
+            const parsed = JSON.parse(jsonRaw) as {
+              title?: string
+              name?: string
+              description?: string
+              prompt?: string
+              category?: string
+            }
             title = parsed.title ?? parsed.name ?? title
             summary = parsed.description ?? ''
             if (parsed.prompt) prompt = parsed.prompt
@@ -561,9 +575,9 @@ export class DesignService implements DesignApi {
         }
         if (skillRaw !== undefined) {
           const fm = parseSimpleFrontmatter(skillRaw)
-          title = (fm.name as string) ?? (fm.title as string) ?? title
-          summary = (fm.description as string) ?? summary
-          declaredCat = (fm.category as string) ?? declaredCat
+          title = getFmString(fm, 'name') ?? getFmString(fm, 'title') ?? title
+          summary = getFmString(fm, 'description') ?? summary
+          declaredCat = getFmString(fm, 'category') ?? declaredCat
         }
         const category = resolveSkillCategory(id, declaredCat || catName)
         return {
@@ -602,7 +616,10 @@ export class DesignService implements DesignApi {
   }
 
   /** Compiles a complete OpenDesign system prompt using active design assets. */
-  async composePrompt(options: DesignPromptOptions): Promise<DesignPromptResult> {
+  async composePrompt(
+    request: RpcRequest<DesignPromptOptions>,
+  ): Promise<RpcResponse<DesignPromptResult>> {
+    const options = request.payload
     let designSystem = options.designSystem
     if (designSystem === undefined && options.designSystemId !== undefined) {
       const res = await this.systemDetail({
@@ -648,12 +665,20 @@ export class DesignService implements DesignApi {
       }
     }
 
-    return DesignPromptInjector.inject({
+    const result = DesignPromptInjector.inject({
       ...options,
       ...designSystem !== undefined ? { designSystem } : {},
       ...template !== undefined ? { template } : {},
       ...craftGuidelines !== undefined ? { craftGuidelines } : {},
     })
+
+    return {
+      rpcId: request.rpcId,
+      result: {
+        ok: true,
+        value: result,
+      },
+    }
   }
 
   private async loadCraftIndex(): Promise<CraftGuidelineSummary[]> {
@@ -771,8 +796,8 @@ export class DesignService implements DesignApi {
           } catch {}
         } else if (skillRaw !== undefined) {
           const fm = parseSimpleFrontmatter(skillRaw)
-          title = cleanPluginTitle((fm.name as string) ?? (fm.title as string) ?? title)
-          summary = cleanPluginTitle((fm.description as string) ?? '')
+          title = cleanPluginTitle(getFmString(fm, 'name') ?? getFmString(fm, 'title') ?? title)
+          summary = cleanPluginTitle(getFmString(fm, 'description') ?? '')
         }
         map.set(id, {
           id,
@@ -807,8 +832,8 @@ export class DesignService implements DesignApi {
           } catch {}
         } else if (skillRaw !== undefined) {
           const fm = parseSimpleFrontmatter(skillRaw)
-          title = cleanPluginTitle((fm.name as string) ?? (fm.title as string) ?? title)
-          summary = cleanPluginTitle((fm.description as string) ?? '')
+          title = cleanPluginTitle(getFmString(fm, 'name') ?? getFmString(fm, 'title') ?? title)
+          summary = cleanPluginTitle(getFmString(fm, 'description') ?? '')
         }
         map.set(id, {
           id,
@@ -823,37 +848,39 @@ export class DesignService implements DesignApi {
       }
     } catch {}
 
-    // 4. Load skills directory (160+ skills!)
-    try {
-      const entries = await readdir(this.skillsDir, { withFileTypes: true })
-      for (const entry of entries) {
-        if (!entry.isDirectory() || entry.name.startsWith('.')) continue
-        const id = entry.name
-        if (map.has(id)) continue
-        const dir = join(this.skillsDir, id)
-        const skillRaw = await safeReadText(join(dir, 'SKILL.md'))
-        let title = cleanPluginTitle(id.replace(/-/g, ' '))
-        let summary = ''
-        let declaredCat: string | undefined
-        if (skillRaw !== undefined) {
-          const fm = parseSimpleFrontmatter(skillRaw)
-          title = cleanPluginTitle((fm.name as string) ?? (fm.title as string) ?? title)
-          summary = cleanPluginTitle((fm.description as string) ?? '')
-          declaredCat = fm.category as string | undefined
+    // 4. Load skills directory (170+ skills from assets and root .agents/skills)
+    for (const sDir of [this.skillsDir, this.agentsSkillsDir]) {
+      try {
+        const entries = await readdir(sDir, { withFileTypes: true })
+        for (const entry of entries) {
+          if (!entry.isDirectory() || entry.name.startsWith('.')) continue
+          const id = entry.name
+          if (map.has(id)) continue
+          const dir = join(sDir, id)
+          const skillRaw = await safeReadText(join(dir, 'SKILL.md'))
+          let title = cleanPluginTitle(id.replace(/-/g, ' '))
+          let summary = ''
+          let declaredCat: string | undefined
+          if (skillRaw !== undefined) {
+            const fm = parseSimpleFrontmatter(skillRaw)
+            title = cleanPluginTitle(getFmString(fm, 'en_name') ?? getFmString(fm, 'name') ?? getFmString(fm, 'title') ?? title)
+            summary = cleanPluginTitle(getFmString(fm, 'en_description') ?? getFmString(fm, 'description') ?? '')
+            declaredCat = getFmString(fm, 'category') ?? getFmString(fm, 'od.category')
+          }
+          const category = resolveSkillCategory(id, declaredCat)
+          map.set(id, {
+            id,
+            surface: 'image',
+            title,
+            summary,
+            category,
+            tags: [id, category.toLowerCase()],
+            model: 'default',
+            aspect: '1:1',
+          })
         }
-        const category = resolveSkillCategory(id, declaredCat)
-        map.set(id, {
-          id,
-          surface: 'image',
-          title,
-          summary,
-          category,
-          tags: [id, category.toLowerCase()],
-          model: 'default',
-          aspect: '1:1',
-        })
-      }
-    } catch {}
+      } catch {}
+    }
 
     // 5. Load atoms directory
     try {
@@ -1010,14 +1037,24 @@ export class DesignService implements DesignApi {
           let category = resolveTemplateCategory(entry.name)
           let description = ''
           let tags: string[] = [entry.name]
+          let examplePrompt: string | undefined
 
           if (jsonRaw !== undefined) {
             try {
-              const parsed = JSON.parse(jsonRaw) as { title?: string; name?: string; description?: string; category?: string; tags?: string[] }
+              const parsed = JSON.parse(jsonRaw) as {
+                title?: string
+                name?: string
+                description?: string
+                category?: string
+                tags?: string[]
+                prompt?: string
+                examplePrompt?: string
+              }
               if (parsed.title || parsed.name) title = formatTemplateTitle(entry.name, parsed.title ?? parsed.name)
               if (parsed.description) description = parsed.description
               if (parsed.category) category = resolveTemplateCategory(entry.name, parsed.category)
               if (Array.isArray(parsed.tags)) tags = parsed.tags
+              if (parsed.examplePrompt || parsed.prompt) examplePrompt = parsed.examplePrompt ?? parsed.prompt
             } catch {}
           } else if (skillRaw !== undefined) {
             const frontmatter = parseSimpleFrontmatter(skillRaw)
@@ -1029,9 +1066,17 @@ export class DesignService implements DesignApi {
             if (frontmatter.category) {
               category = resolveTemplateCategory(entry.name, frontmatter.category as string)
             }
-            description = (frontmatter.description as string | undefined) ?? ''
+            description = (frontmatter.en_description as string | undefined)
+              ?? (frontmatter.description as string | undefined)
+              ?? ''
             if (Array.isArray(frontmatter.tags)) {
               tags = frontmatter.tags.filter((t): t is string => typeof t === 'string')
+            }
+            const ep = (frontmatter['od.example_prompt'] as string | undefined)
+              ?? (frontmatter.example_prompt as string | undefined)
+              ?? (frontmatter['od.useCase.query'] as string | undefined)
+            if (ep) {
+              examplePrompt = ep
             }
           }
 
@@ -1041,6 +1086,7 @@ export class DesignService implements DesignApi {
             category,
             description,
             tags,
+            ...(examplePrompt ? { examplePrompt } : {}),
             ...(exampleHtml ? { exampleHtml } : {}),
           })
         }
@@ -1185,11 +1231,31 @@ function parseSimpleFrontmatter(text: string): Record<string, unknown> {
   const lines = frontmatterBlock.split('\n')
 
   let currentKey = ''
+  let parentKey = ''
   let inList = false
+  let inBlockScalar = false
   const listItems: string[] = []
+  const blockLines: string[] = []
 
   for (const line of lines) {
     const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
+
+    const isIndented = line.startsWith('  ') || line.startsWith('\t')
+
+    if (inBlockScalar) {
+      if (isIndented && !trimmed.includes(':')) {
+        blockLines.push(trimmed)
+        continue
+      }
+      result[currentKey] = blockLines.join(' ')
+      if (parentKey) {
+        result[`${parentKey}.${currentKey}`] = blockLines.join(' ')
+      }
+      blockLines.length = 0
+      inBlockScalar = false
+    }
+
     if (trimmed.startsWith('- ') && inList) {
       const val = trimmed.slice(2).replace(/^["']|["']$/g, '').trim()
       listItems.push(val)
@@ -1198,27 +1264,51 @@ function parseSimpleFrontmatter(text: string): Record<string, unknown> {
 
     if (inList && listItems.length > 0) {
       result[currentKey] = [...listItems]
+      if (parentKey) {
+        result[`${parentKey}.${currentKey}`] = [...listItems]
+      }
       listItems.length = 0
       inList = false
     }
 
-    const colonIdx = line.indexOf(':')
+    const colonIdx = trimmed.indexOf(':')
     if (colonIdx > 0) {
-      const key = line.slice(0, colonIdx).trim()
-      const rawVal = line.slice(colonIdx + 1).trim()
+      const key = trimmed.slice(0, colonIdx).trim()
+      const rawVal = trimmed.slice(colonIdx + 1).trim()
 
-      if (rawVal === '' || rawVal === '|') {
-        currentKey = key
+      if (!isIndented) {
+        parentKey = key
+      }
+
+      currentKey = key
+
+      if (rawVal === '|' || rawVal === '>-' || rawVal === '>') {
+        inBlockScalar = true
+        blockLines.length = 0
+      } else if (rawVal === '') {
         inList = true
       } else {
         const cleanVal = rawVal.replace(/^["']|["']$/g, '').trim()
         result[key] = cleanVal
+        if (isIndented && parentKey) {
+          result[`${parentKey}.${key}`] = cleanVal
+        }
       }
+    }
+  }
+
+  if (inBlockScalar && blockLines.length > 0) {
+    result[currentKey] = blockLines.join(' ')
+    if (parentKey) {
+      result[`${parentKey}.${currentKey}`] = blockLines.join(' ')
     }
   }
 
   if (inList && listItems.length > 0) {
     result[currentKey] = [...listItems]
+    if (parentKey) {
+      result[`${parentKey}.${currentKey}`] = [...listItems]
+    }
   }
 
   return result

@@ -1,4 +1,4 @@
-﻿---
+---
 name: venice-audio-music
 description: |
   Music generation queueing, retrieval, and completion endpoints via Venice.ai. Suited for jingles, background loops, and prototype scoring.

@@ -1,4 +1,4 @@
-﻿---
+---
 name: doc
 description: |
   Read, create, and edit .docx documents with formatting and layout fidelity via OpenAI's document skill.

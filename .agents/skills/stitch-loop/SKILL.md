@@ -1,4 +1,4 @@
-﻿---
+---
 name: stitch-loop
 description: |
   Iterative design-to-code feedback loop. Critique → adjust → ship cycle for tightening visual fidelity between brief and built UI.

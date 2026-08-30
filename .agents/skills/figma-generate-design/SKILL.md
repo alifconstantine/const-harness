@@ -1,4 +1,4 @@
-﻿---
+---
 name: figma-generate-design
 description: |
   Build or update screens in Figma from code or description using design system components. Translate app pages into Figma using design tokens.

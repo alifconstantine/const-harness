@@ -1,4 +1,4 @@
-﻿---
+---
 name: research-decision-room
 description: |
   Turn messy user research notes, interviews, support tickets, surveys, and product

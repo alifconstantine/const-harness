@@ -1,4 +1,4 @@
-﻿---
+---
 name: article-magazine
 zh_name: "杂志文章"
 en_name: "Magazine Article"

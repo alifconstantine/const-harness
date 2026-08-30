@@ -1,4 +1,4 @@
-﻿---
+---
 name: pptx
 description: |
   Read, generate, and adjust PowerPoint slides, layouts, and templates. Useful for executive decks, training material, and product reviews.

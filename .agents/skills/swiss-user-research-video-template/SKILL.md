@@ -1,4 +1,4 @@
-﻿---
+---
 name: swiss-user-research-video-template
 description: |
   Swiss-style user-research narrative template in warm-paper editorial aesthetics.

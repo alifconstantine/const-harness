@@ -1,4 +1,4 @@
-﻿---
+---
 name: pr-feedback-quality-gate
 description: |
   Safely track pull request feedback, resolve review comments or merge conflicts, validate fixes, and use a read-only cross-review before committing or pushing follow-up changes.

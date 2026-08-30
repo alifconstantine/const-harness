@@ -162,6 +162,7 @@ function scriptedApi(overrides: {
       craftGuideline: err,
       promptTemplates: r => ok(r, { templates: [], categories: [], surfaces: [] }),
       promptTemplateDetail: err,
+      composePrompt: err,
       ...overrides.design,
     },
     events: { mux: () => empty<MuxFrame>(), host: () => empty<HostFrame>(), ...overrides.events },

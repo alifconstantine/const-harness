@@ -1,4 +1,4 @@
-﻿---
+---
 name: figma-code-connect-components
 description: |
   Connect Figma design components to code components using Code Connect so design-system updates flow into the codebase automatically.

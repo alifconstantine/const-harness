@@ -1,4 +1,4 @@
-﻿---
+---
 name: venice-image-edit
 description: |
   Image edits, upscaling, and background removal via the Venice.ai API.

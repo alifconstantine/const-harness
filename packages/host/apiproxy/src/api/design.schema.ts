@@ -61,6 +61,7 @@ export const designTemplateSummarySchema = z.object({
   previewRole: z.string().optional(),
   previewImageUrl: z.string().optional(),
   exampleHtml: z.string().optional(),
+  examplePrompt: z.string().optional(),
 }) satisfies z.ZodType<Wire<DesignTemplateSummary>>
 
 /** DesignTemplateDetail schema. */
@@ -206,3 +207,29 @@ export const designPromptTemplateDetailRequestSchema = z.object({
 export const designPromptTemplateDetailValueSchema = z.object({
   template: promptTemplateDetailSchema,
 }) satisfies z.ZodType<Wire<ResponseValue<'design.promptTemplateDetail'>>>
+
+/** design.composePrompt request payload. */
+export const designComposePromptRequestSchema = z.object({
+  mode: z.enum(['deck', 'prototype', 'dashboard', 'document', 'hyperframes', 'general']).optional(),
+  designSystemId: z.string().optional(),
+  templateId: z.string().optional(),
+  craftRuleIds: z.array(z.string()).optional(),
+  includeSlideSkeleton: z.boolean().optional(),
+  includeLiveTweaksSchema: z.boolean().optional(),
+  locale: z.string().optional(),
+  customInstructions: z.string().optional(),
+}) satisfies z.ZodType<Wire<RequestPayload<'design.composePrompt'>>>
+
+/** design.composePrompt response value. */
+export const designComposePromptValueSchema = z.object({
+  systemPrompt: z.string(),
+  tokensCss: z.string().optional(),
+  designMarkdown: z.string().optional(),
+  injectedCraftRules: z.array(z.string()),
+  metadata: z.object({
+    mode: z.enum(['deck', 'prototype', 'dashboard', 'document', 'hyperframes', 'general']),
+    designSystemId: z.string().optional(),
+    templateId: z.string().optional(),
+    locale: z.string().optional(),
+  }),
+}) satisfies z.ZodType<Wire<ResponseValue<'design.composePrompt'>>>

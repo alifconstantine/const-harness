@@ -1,4 +1,4 @@
-﻿---
+---
 name: color-expert
 description: |
   Color science expert skill with 286K words of reference material covering OKLCH/OKLAB, palette generation, accessibility/contrast, color naming, pigment mixing, and historical color theory.

@@ -1,4 +1,4 @@
-﻿---
+---
 name: faq-page
 description: |
   A Frequently Asked Questions (FAQ) page with collapsible accordion sections,

@@ -1,4 +1,4 @@
-﻿---
+---
 name: youtube-clipper
 description: |
   YouTube clip generation and editing with automated workflows — pull source video, slice highlights, add captions, and export.

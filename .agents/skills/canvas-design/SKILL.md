@@ -1,4 +1,4 @@
-﻿---
+---
 name: canvas-design
 description: |
   Create beautiful visual art in PNG and PDF documents using design philosophy and aesthetic principles for posters, illustrations, and static pieces.

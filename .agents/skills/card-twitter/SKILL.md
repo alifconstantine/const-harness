@@ -1,4 +1,4 @@
-﻿---
+---
 name: card-twitter
 zh_name: "Twitter 分享卡"
 en_name: "Twitter Share Card"

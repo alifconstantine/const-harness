@@ -1,4 +1,4 @@
-﻿---
+---
 name: copywriting
 description: |
   Write and rewrite marketing copy for landing pages, homepages, and ads. Useful as a copy chief partner during launches.

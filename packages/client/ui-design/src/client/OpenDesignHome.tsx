@@ -5,6 +5,8 @@ import type {
   PromptTemplateSummary,
   WorkspaceView,
 } from '@const-ai/host-apiproxy/api'
+import type { IApiClient } from '@const-ai/host-apiproxy/client'
+import type { ClientContext } from '@const-ai/client-runtime/client'
 import {
   ConstLogo,
   IconPlusOutline16,
@@ -15,6 +17,8 @@ import {
   IconChevronDownOutline14,
   IconChevronRightOutline14,
   IconGlobeOutline14,
+  IconFolderClose16,
+  IconFolderOpen16,
 } from '@const-ai/client-ui-primitives'
 import { FigmaImportModal } from './FigmaImportModal.tsx'
 import { PluginPickerPopover } from './PluginPickerPopover.tsx'
@@ -103,21 +107,22 @@ function getTemplateThumbnail(t: { id: string; title: string; category?: string 
     return imgWorkspaceCover
   }
 
-  return mockCovers[index % mockCovers.length]!
+  return mockCovers[index % mockCovers.length] ?? imgOpenDesignLanding
 }
 
 export interface OpenDesignHomeProps {
-  api?: any
+  api?: IApiClient | undefined
+  ctx?: ClientContext | undefined
   onStartSession: (options: {
     prompt: string
     mode: string
     interaction: string
     designSystemId: string | null
-    workspaceId?: string
-    model?: string
+    workspaceId?: string | undefined
+    model?: string | undefined
     permissionPreset: string
   }) => void
-  t?: (key: keyof typeof en) => string
+  t?: ((key: keyof typeof en) => string) | undefined
 }
 
 /* =========================================================================
@@ -307,6 +312,64 @@ function IconFilterAppSvg({ size = 12 }: { size?: number }) {
    MAIN OPEN DESIGN HOME COMPONENT
    ========================================================================= */
 
+interface PlaceholderScenario {
+  id: string
+  text: string
+  mode: string
+}
+
+const DEFAULT_SCENARIO: PlaceholderScenario = {
+  id: 'pitch-deck',
+  text: 'Create a decision-grade pitch deck for an AI infra startup',
+  mode: 'slide_deck',
+}
+
+const PLACEHOLDER_SCENARIOS: readonly PlaceholderScenario[] = [
+  DEFAULT_SCENARIO,
+  { id: 'landing', text: 'Build a high-converting SaaS landing page with an interactive Bento grid', mode: 'prototype' },
+  { id: 'mobile-app', text: 'Design a modern mobile onboarding flow with biometric authentication', mode: 'prototype' },
+  { id: 'dashboard', text: 'Build a dark-mode fintech trading dashboard with real-time charts', mode: 'prototype' },
+  { id: 'magazine', text: 'Create an editorial magazine article layout with warm parchment aesthetic', mode: 'document' },
+  { id: 'hyperframes', text: 'Create a 60fps HyperFrames motion intro with chromatic glow and logo reveal', mode: 'hyperframes' },
+  { id: 'wireframe', text: 'Design a clean wireframe flow for a multi-step team collaboration workflow', mode: 'prototype' },
+  { id: 'website-clone', text: 'Clone and modernize the Linear app homepage with sleek typography and subtle animations', mode: 'website_clone' },
+]
+
+const DEFAULT_DESIGN_TEMPLATES: readonly DesignTemplateSummary[] = [
+  {
+    id: 'kanban-board',
+    title: 'Kanban Board',
+    category: 'Dashboards',
+    description: 'An interactive board for managing tasks across columns with smooth drag-and-drop animations.',
+    tags: ['dashboard', 'kanban', 'tasks'],
+    examplePrompt: 'Build a modern Kanban task management board with drag-and-drop columns, priority tags, and clean dark mode UI.',
+  },
+  {
+    id: 'pitch-deck',
+    title: 'Pitch Deck',
+    category: 'Slides',
+    description: 'A 16:9 widescreen presentation deck with structured narrative arcs and high typographic polish.',
+    tags: ['slides', 'deck', 'pitch'],
+    examplePrompt: 'Create a decision-grade pitch deck for an AI developer platform with 16:9 widescreen slides and typography hierarchy.',
+  },
+  {
+    id: 'open-design-landing',
+    title: 'Landing Page',
+    category: 'Landing',
+    description: 'A modern marketing landing page with hero CTA, animated Bento grid, and testimonials.',
+    tags: ['landing', 'marketing', 'hero'],
+    examplePrompt: 'Build a high-converting SaaS landing page with animated hero, interactive Bento feature grid, and live metrics.',
+  },
+  {
+    id: 'mobile-flow',
+    title: 'Mobile Flow',
+    category: 'Mobile',
+    description: 'A touch-optimized mobile app prototype with bottom sheet modals and smooth transitions.',
+    tags: ['mobile', 'app', 'prototype'],
+    examplePrompt: 'Design a modern mobile onboarding flow with biometric authentication, touch controls, and clean layout.',
+  },
+]
+
 export function OpenDesignHome({
   api,
   onStartSession,
@@ -333,7 +396,7 @@ export function OpenDesignHome({
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false)
 
   const [systems, setSystems] = useState<readonly DesignSystemSummary[]>([])
-  const [templates, setTemplates] = useState<readonly DesignTemplateSummary[]>([])
+  const [templates, setTemplates] = useState<readonly DesignTemplateSummary[]>(DEFAULT_DESIGN_TEMPLATES)
   const [promptTemplates, setPromptTemplates] = useState<readonly PromptTemplateSummary[]>([])
   const [workspaces, setWorkspaces] = useState<{ id: string; name: string }[]>([])
   const [selectedFolder, setSelectedFolder] = useState<{ id: string; name: string } | null>(null)
@@ -341,11 +404,57 @@ export function OpenDesignHome({
   const [selectedModel, setSelectedModel] = useState<string>('Omniroute/Const')
   const [exampleCategory, setExampleCategory] = useState<string>('all')
 
+  const [scenarioIndex, setScenarioIndex] = useState(0)
+  const [typedCharCount, setTypedCharCount] = useState(0)
+  const [typewriterPhase, setTypewriterPhase] = useState<'typing' | 'holding' | 'deleting' | 'pausing'>('typing')
+
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const cardsContainerRef = useRef<HTMLDivElement>(null)
   const scrollAnimRef = useRef<number | null>(null)
 
   const [isMoreCatOpen, setIsMoreCatOpen] = useState(false)
+
+  const currentScenario = PLACEHOLDER_SCENARIOS[scenarioIndex % PLACEHOLDER_SCENARIOS.length] ?? DEFAULT_SCENARIO
+
+  useEffect(() => {
+    if (prompt.trim().length > 0) return
+
+    let delay = 36
+    if (typewriterPhase === 'typing') {
+      if (typedCharCount < currentScenario.text.length) {
+        delay = 34
+        const timer = setTimeout(() => {
+          setTypedCharCount(c => c + 1)
+        }, delay)
+        return () => { clearTimeout(timer) }
+      }
+      setTypewriterPhase('holding')
+    } else if (typewriterPhase === 'holding') {
+      delay = 2400
+      const timer = setTimeout(() => {
+        setTypewriterPhase('deleting')
+      }, delay)
+      return () => { clearTimeout(timer) }
+    } else if (typewriterPhase === 'deleting') {
+      if (typedCharCount > 0) {
+        delay = 16
+        const timer = setTimeout(() => {
+          setTypedCharCount(c => c - 1)
+        }, delay)
+        return () => { clearTimeout(timer) }
+      }
+      setTypewriterPhase('pausing')
+    } else {
+      delay = 350
+      const timer = setTimeout(() => {
+        setScenarioIndex(i => (i + 1) % PLACEHOLDER_SCENARIOS.length)
+        setTypewriterPhase('typing')
+      }, delay)
+      return () => { clearTimeout(timer) }
+    }
+  }, [prompt, typedCharCount, typewriterPhase, currentScenario])
+
+  const visiblePlaceholderText = currentScenario.text.slice(0, typedCharCount)
 
   const closeAllMenus = useCallback(() => {
     setIsPlusMenuOpen(false)
@@ -364,42 +473,50 @@ export function OpenDesignHome({
 
     void (async () => {
       try {
-        const res = await api.design?.systems?.({})
-        if (res?.result?.ok) {
+        const res = await api.design.systems({})
+        if (res.result.ok) {
           setSystems(res.result.value.systems)
         }
       } catch {}
 
       try {
-        const tRes = await api.design?.templates?.({})
-        if (tRes?.result?.ok) {
+        const tRes = await api.design.templates({})
+        if (tRes.result.ok) {
           setTemplates(tRes.result.value.templates)
         }
       } catch {}
 
       try {
-        const res = await api.design?.promptTemplates?.({})
-        if (res?.result?.ok) {
+        const res = await api.design.promptTemplates({})
+        if (res.result.ok) {
           setPromptTemplates(res.result.value.templates)
         }
       } catch {}
 
       try {
-        const wRes = await api.workspace?.list?.({})
-        if (wRes?.result?.ok) {
-          const items: WorkspaceView[] = wRes.result.value.items || []
-          const mapped = items.map((w: WorkspaceView) => ({
+        const wRes = await api.workspace.list({})
+        if (wRes.result.ok) {
+          const items: readonly WorkspaceView[] = wRes.result.value.items
+          const mapped = items.map(w => ({
             id: w.workspaceId,
             name: w.title || w.path.split(/[/\\]/).pop() || w.workspaceId,
           }))
           setWorkspaces(mapped)
+
+          // Auto-select first workspace if available
+          if (mapped.length > 0) {
+            setSelectedFolder(mapped[0] ?? null)
+          }
         }
       } catch {}
 
       try {
-        const mRes = await api.llm?.discoveredModels?.({})
-        if (mRes?.result?.ok && Array.isArray(mRes.result.value.models)) {
-          const list = mRes.result.value.models.map((m: any) => m.name || m.id).filter(Boolean)
+        const mRes = await api.llm.models({})
+        if (mRes.result.ok) {
+          const list = mRes.result.value.groups
+            .flatMap(g => g.models)
+            .map(m => m.name || m.id)
+            .filter((val): val is string => Boolean(val))
           if (list.length > 0) {
             setAvailableModels(list)
             setSelectedModel(list[0] || 'Omniroute/Const')
@@ -416,23 +533,20 @@ export function OpenDesignHome({
     el.style.height = `${Math.min(Math.max(el.scrollHeight, 56), 220)}px`
   }, [prompt])
 
-  const getPlaceholder = () => {
-    switch (surfaceMode) {
-      case 'prototype': return t('placeholder.prototype')
-      case 'slide_deck': return t('placeholder.slide_deck')
-      case 'image': return t('placeholder.image')
-      case 'document': return t('placeholder.document')
-      case 'hyperframes': return t('placeholder.hyperframes')
-      case 'website_clone': return t('placeholder.website_clone')
-      default: return 'Ask ZCode anything, @ to add context, / for commands or capabilities'
-    }
-  }
-
   const handleSelectTemplate = (item: DesignTemplateSummary) => {
     setSelectedTemplateBadge(item.title)
-    setPrompt(`Create a ${item.title}: ${item.description}`)
-    if (item.category.toLowerCase().includes('slide') || item.id.includes('ppt')) {
+    const seed = item.examplePrompt
+      ? item.examplePrompt
+      : item.description
+        ? `Create a ${item.title}: ${item.description}`
+        : `Create a modern ${item.title} with high aesthetic quality and clean component architecture.`
+    setPrompt(seed)
+    if (item.category.toLowerCase().includes('slide') || item.id.includes('ppt') || item.id.includes('deck')) {
       setSurfaceMode('slide_deck')
+    } else if (item.category.toLowerCase().includes('video') || item.id.includes('video') || item.id.includes('hyperframe')) {
+      setSurfaceMode('hyperframes')
+    } else if (item.category.toLowerCase().includes('doc') || item.id.includes('doc') || item.id.includes('report') || item.id.includes('brief')) {
+      setSurfaceMode('document')
     } else {
       setSurfaceMode('prototype')
     }
@@ -473,6 +587,15 @@ export function OpenDesignHome({
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Tab' && !prompt.trim()) {
+      e.preventDefault()
+      setPrompt(currentScenario.text)
+      setSurfaceMode(currentScenario.mode)
+      if (textareaRef.current) {
+        textareaRef.current.focus()
+      }
+      return
+    }
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSubmit()
@@ -583,12 +706,12 @@ export function OpenDesignHome({
 
   return (
     <div className={styles.container} onClick={closeAllMenus}>
-      <div className={styles.contentWrapper} onClick={e => e.stopPropagation()}>
+      <div className={styles.contentWrapper} onClick={(e) => { e.stopPropagation() }}>
         {/* Compact Hero Section */}
         <div className={styles.heroSection}>
           {/* Centered Brand Header */}
           <div className={styles.heroHeader}>
-            <ConstLogo size={28} className={styles.logoIcon} />
+            <ConstLogo size={34} className={styles.logoIcon} />
             <h1 className={styles.brandTitle}>{t('title')}</h1>
           </div>
 
@@ -599,7 +722,7 @@ export function OpenDesignHome({
                 key={m.id}
                 type="button"
                 className={`${styles.modeChip} ${surfaceMode === m.id ? styles.active : ''}`}
-                onClick={() => setSurfaceMode(m.id)}
+                onClick={() => { setSurfaceMode(m.id) }}
               >
                 <span className={styles.modeChipIcon}>{m.icon}</span>
                 <span>{m.label}</span>
@@ -607,14 +730,97 @@ export function OpenDesignHome({
             ))}
           </div>
 
-          {/* Outer Composer Frame (Matching Image 2) */}
-          <div className={styles.composerOuterFrame}>
+          {/* Top Header Row for Workspace & Design System Pickers (matching standard chat) */}
+          <div className={styles.composerHeaderRow}>
+            {/* Folder / Workspace Picker */}
+            <div className={styles.toolbarChipWrapper} onClick={(e) => { e.stopPropagation() }}>
+              <button
+                type="button"
+                className={styles.toolbarChip}
+                onClick={() => {
+                  closeAllMenus()
+                  setIsProjectDropdownOpen(!isProjectDropdownOpen)
+                }}
+              >
+                {selectedFolder ? <IconFolderOpen16 size={14} /> : <IconFolderClose16 size={14} />}
+                <span>{selectedFolder ? selectedFolder.name : t('folder.outside_project')}</span>
+                <IconChevronDownOutline14 size={10} />
+              </button>
+
+              {isProjectDropdownOpen && (
+                <div className={`${styles.dropdownMenu} ${styles.dropdownMenuDown}`} style={{ minWidth: 220, left: 0, top: 'calc(100% + 6px)' }}>
+                  <button
+                    type="button"
+                    className={`${styles.dropdownItem} ${!selectedFolder ? styles.active : ''}`}
+                    onClick={() => {
+                      setSelectedFolder(null)
+                      setIsProjectDropdownOpen(false)
+                    }}
+                  >
+                    <div className={styles.dropdownItemLeft}>
+                      <IconFolderClose16 size={14} />
+                      <span>{t('folder.outside_project')}</span>
+                    </div>
+                  </button>
+                  {workspaces.map(w => (
+                    <button
+                      key={w.id}
+                      type="button"
+                      className={`${styles.dropdownItem} ${selectedFolder?.id === w.id ? styles.active : ''}`}
+                      onClick={() => {
+                        setSelectedFolder(w)
+                        setIsProjectDropdownOpen(false)
+                      }}
+                    >
+                      <div className={styles.dropdownItemLeft}>
+                        <IconFolderOpen16 size={14} />
+                        <span>{w.name}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Design System Picker */}
+            <div className={styles.toolbarChipWrapper} onClick={(e) => { e.stopPropagation() }}>
+              <button
+                type="button"
+                className={styles.toolbarChip}
+                onClick={() => {
+                  closeAllMenus()
+                  setIsDsPickerOpen(!isDsPickerOpen)
+                }}
+              >
+                <IconGlobeOutline14 size={14} />
+                <span>{selectedDesignSystem.name}</span>
+                <IconChevronDownOutline14 size={10} />
+              </button>
+
+              {isDsPickerOpen && (
+                <DesignSystemPickerPopover
+                  isOpen={isDsPickerOpen}
+                  onClose={() => { setIsDsPickerOpen(false) }}
+                  selectedId={selectedDesignSystem.id}
+                  onSelect={(id, name) => {
+                    setSelectedDesignSystem({ id, name })
+                    setIsDsPickerOpen(false)
+                  }}
+                  systems={systems}
+                  t={t}
+                />
+              )}
+            </div>
+          </div>
+
+          {/* AI Composer Card */}
+          <div className={styles.composerCard}>
             {selectedTemplateBadge && (
               <div className={styles.activeTemplateBadge}>
                 <span>{selectedTemplateBadge}</span>
                 <button
                   type="button"
-                  onClick={() => setSelectedTemplateBadge(null)}
+                  onClick={() => { setSelectedTemplateBadge(null) }}
                   aria-label="Remove template"
                 >
                   <IconCloseOutline16 size={12} />
@@ -622,15 +828,23 @@ export function OpenDesignHome({
               </div>
             )}
 
-            <textarea
-              ref={textareaRef}
-              className={styles.textarea}
-              placeholder={getPlaceholder()}
-              value={prompt}
-              onChange={e => setPrompt(e.target.value)}
-              onKeyDown={handleKeyDown}
-              rows={2}
-            />
+            <div className={styles.textareaWrapper}>
+              {!prompt && (
+                <div className={styles.placeholderCarousel} aria-hidden="true">
+                  <span className={styles.carouselText}>{visiblePlaceholderText}</span>
+                  <span className={styles.carouselCaret} />
+                  <span className={styles.tabHint}>Tab ⇥</span>
+                </div>
+              )}
+              <textarea
+                ref={textareaRef}
+                className={styles.textarea}
+                value={prompt}
+                onChange={(e) => { setPrompt(e.target.value) }}
+                onKeyDown={handleKeyDown}
+                rows={2}
+              />
+            </div>
 
             {/* Composer Bottom Toolbar */}
             <div className={styles.composerBottomBar}>
@@ -654,7 +868,7 @@ export function OpenDesignHome({
                       <button
                         type="button"
                         className={styles.dropdownItem}
-                        onClick={() => setIsPlusMenuOpen(false)}
+                        onClick={() => { setIsPlusMenuOpen(false) }}
                       >
                         <div className={styles.dropdownItemLeft}>
                           <IconPaperclipOutline16 size={14} />
@@ -665,7 +879,7 @@ export function OpenDesignHome({
                       <button
                         type="button"
                         className={styles.dropdownItem}
-                        onClick={() => setIsPlusMenuOpen(false)}
+                        onClick={() => { setIsPlusMenuOpen(false) }}
                       >
                         <div className={styles.dropdownItemLeft}>
                           <IconBrowseOutline16 size={14} />
@@ -711,7 +925,7 @@ export function OpenDesignHome({
                   {isPluginPickerOpen && (
                     <PluginPickerPopover
                       isOpen={isPluginPickerOpen}
-                      onClose={() => setIsPluginPickerOpen(false)}
+                      onClose={() => { setIsPluginPickerOpen(false) }}
                       onSelectPlugin={handleSelectPlugin}
                       templates={promptTemplates}
                       t={t}
@@ -772,7 +986,7 @@ export function OpenDesignHome({
                     {interactionMode === 'design' && <IconDesignModeSvg size={13} />}
                     {interactionMode === 'plan' && <IconPlanModeSvg size={13} />}
                     {interactionMode === 'ask' && <IconAskModeSvg size={13} />}
-                    <span>{t(`interaction.${interactionMode}` as keyof typeof en)}</span>
+                    <span>{t(`interaction.${interactionMode}`)}</span>
                     <IconChevronDownOutline14 size={10} />
                   </button>
 
@@ -836,7 +1050,7 @@ export function OpenDesignHome({
                     ) : (
                       <IconShieldWorkspaceSvg size={14} />
                     )}
-                    <span>{t(`permission.${permissionPreset}` as keyof typeof en)}</span>
+                    <span>{t(`permission.${permissionPreset}`)}</span>
                     <IconChevronDownOutline14 size={10} />
                   </button>
 
@@ -917,87 +1131,6 @@ export function OpenDesignHome({
                 </button>
               </div>
             </div>
-
-            {/* Bottom Sub Row (Design System + Working Directory pickers) */}
-            <div className={styles.composerBottomSubRow} onClick={e => e.stopPropagation()}>
-              <div style={{ position: 'relative' }}>
-                <button
-                  type="button"
-                  className={styles.bottomSubItem}
-                  onClick={() => {
-                    closeAllMenus()
-                    setIsDsPickerOpen(!isDsPickerOpen)
-                  }}
-                >
-                  <IconGlobeOutline14 size={14} />
-                  <span>{selectedDesignSystem.name}</span>
-                  <IconChevronDownOutline14 size={10} />
-                </button>
-
-                {isDsPickerOpen && (
-                  <DesignSystemPickerPopover
-                    isOpen={isDsPickerOpen}
-                    onClose={() => setIsDsPickerOpen(false)}
-                    selectedId={selectedDesignSystem.id}
-                    onSelect={(id, name) => {
-                      setSelectedDesignSystem({ id, name })
-                      setIsDsPickerOpen(false)
-                    }}
-                    systems={systems}
-                    t={t}
-                  />
-                )}
-              </div>
-
-              <div style={{ position: 'relative' }}>
-                <button
-                  type="button"
-                  className={styles.bottomSubItem}
-                  onClick={() => {
-                    closeAllMenus()
-                    setIsProjectDropdownOpen(!isProjectDropdownOpen)
-                  }}
-                >
-                  <IconBrowseOutline16 size={14} />
-                  <span>{selectedFolder ? selectedFolder.name : t('folder.outside_project')}</span>
-                  <IconChevronDownOutline14 size={10} />
-                </button>
-
-                {isProjectDropdownOpen && (
-                  <div className={`${styles.dropdownMenu} ${styles.dropdownMenuDown}`} style={{ minWidth: 220, left: 0 }}>
-                    <button
-                      type="button"
-                      className={`${styles.dropdownItem} ${!selectedFolder ? styles.active : ''}`}
-                      onClick={() => {
-                        setSelectedFolder(null)
-                        setIsProjectDropdownOpen(false)
-                      }}
-                    >
-                      <div className={styles.dropdownItemLeft}>
-                        <IconBrowseOutline16 size={14} />
-                        <span>{t('folder.outside_project')}</span>
-                      </div>
-                    </button>
-                    {workspaces.map(w => (
-                      <button
-                        key={w.id}
-                        type="button"
-                        className={`${styles.dropdownItem} ${selectedFolder?.id === w.id ? styles.active : ''}`}
-                        onClick={() => {
-                          setSelectedFolder(w)
-                          setIsProjectDropdownOpen(false)
-                        }}
-                      >
-                        <div className={styles.dropdownItemLeft}>
-                          <IconBrowseOutline16 size={14} />
-                          <span>{w.name}</span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
         </div>
 
@@ -1018,7 +1151,7 @@ export function OpenDesignHome({
                   key={c.id}
                   type="button"
                   className={`${styles.catBtn} ${exampleCategory === c.id ? styles.active : ''}`}
-                  onClick={() => setExampleCategory(c.id)}
+                  onClick={() => { setExampleCategory(c.id) }}
                 >
                   <span className={styles.catBtnIcon}>{c.icon}</span>
                   <span>{c.label}</span>
@@ -1030,7 +1163,7 @@ export function OpenDesignHome({
                 <button
                   type="button"
                   className={`${styles.catBtn} ${['slides', 'document', 'hyperframes'].includes(exampleCategory) ? styles.active : ''}`}
-                  onClick={() => setIsMoreCatOpen(!isMoreCatOpen)}
+                  onClick={() => { setIsMoreCatOpen(!isMoreCatOpen) }}
                 >
                   <span>More</span>
                   <IconChevronDownOutline14 size={10} />
@@ -1078,7 +1211,7 @@ export function OpenDesignHome({
             <button
               type="button"
               className={`${styles.scrollArrowBtn} ${styles.scrollArrowLeft}`}
-              onClick={() => scrollLeftBy(260)}
+              onClick={() => { scrollLeftBy(260) }}
               aria-label="Scroll left"
             >
               ‹
@@ -1101,7 +1234,7 @@ export function OpenDesignHome({
                   <div
                     key={item.id}
                     className={styles.cardItem}
-                    onClick={() => handleSelectPromptTemplate(item)}
+                    onClick={() => { handleSelectPromptTemplate(item) }}
                   >
                     <div className={styles.cardThumbnailWrapper}>
                       {item.previewImageUrl ? (
@@ -1130,7 +1263,7 @@ export function OpenDesignHome({
                   <div
                     key={item.id}
                     className={styles.cardItem}
-                    onClick={() => handleSelectTemplate(item)}
+                    onClick={() => { handleSelectTemplate(item) }}
                   >
                     <div className={styles.cardThumbnailWrapper}>
                       {renderTemplateVisual(item, idx)}
@@ -1147,7 +1280,7 @@ export function OpenDesignHome({
             <button
               type="button"
               className={`${styles.scrollArrowBtn} ${styles.scrollArrowRight}`}
-              onClick={() => scrollRightBy(260)}
+              onClick={() => { scrollRightBy(260) }}
               aria-label="Scroll right"
             >
               ›
@@ -1158,7 +1291,7 @@ export function OpenDesignHome({
 
       <FigmaImportModal
         isOpen={isFigmaModalOpen}
-        onClose={() => setIsFigmaModalOpen(false)}
+        onClose={() => { setIsFigmaModalOpen(false) }}
         onImportMock={(notes) => {
           const importText = notes ? `[Imported from Figma: ${notes}]` : '[Imported from Figma]'
           setPrompt(prev => (prev ? `${prev}\n${importText}` : importText))

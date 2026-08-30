@@ -357,6 +357,19 @@ function fakeApi(overrides: Partial<{ muxFrames: MuxFrame[]; hostFrames: HostFra
       async promptTemplateDetail(request) {
         return { rpcId: request.rpcId, result: { ok: false, error: { code: 'prompt-template-not-found', message: 'stub', details: { id: request.payload.id } } } }
       },
+      async composePrompt(request) {
+        return {
+          rpcId: request.rpcId,
+          result: {
+            ok: true,
+            value: {
+              systemPrompt: 'stub',
+              injectedCraftRules: [],
+              metadata: { mode: 'prototype' },
+            },
+          },
+        }
+      },
     },
     events: {
       mux: (_request, signal) => stream(muxFrames, signal),

@@ -81,6 +81,8 @@ export interface DesignTemplateSummary {
   readonly previewImageUrl?: string
   /** Optional example HTML preview string. */
   readonly exampleHtml?: string
+  /** Optional example prompt / starter prompt blueprint from template manifest or SKILL.md. */
+  readonly examplePrompt?: string
 }
 
 /** Complete template definition with starter HTML code and blueprints. */
@@ -171,6 +173,60 @@ export interface PromptTemplateDetail extends PromptTemplateSummary {
   readonly prompt: string
 }
 
+/** Supported prompt modes for OpenDesign deliverables. */
+export type DesignPromptMode =
+  | 'deck'
+  | 'prototype'
+  | 'dashboard'
+  | 'document'
+  | 'hyperframes'
+  | 'general'
+
+/** Configuration options for generating an OpenDesign system prompt. */
+export interface DesignPromptOptions {
+  /** Target deliverable mode. Defaults to 'general'. */
+  readonly mode?: DesignPromptMode
+  /** Brand design system ID (e.g. 'linear-app', 'stripe', 'apple'). */
+  readonly designSystemId?: string
+  /** Optional pre-loaded design system detail. */
+  readonly designSystem?: DesignSystemDetail
+  /** Starter design template ID (e.g. 'html-ppt-pitch-deck', 'live-dashboard'). */
+  readonly templateId?: string
+  /** Optional pre-loaded template detail. */
+  readonly template?: DesignTemplateDetail
+  /** IDs of craft guidelines to inject. Defaults to key rules. */
+  readonly craftRuleIds?: readonly string[]
+  /** Optional pre-loaded craft guidelines map. */
+  readonly craftGuidelines?: readonly CraftGuideline[]
+  /** Whether to inject the fixed 16:9 slide deck framework (auto-true for 'deck' mode). */
+  readonly includeSlideSkeleton?: boolean
+  /** Whether to inject the interactive live tweaks parameter schema directive (auto-true for 'dashboard' mode). */
+  readonly includeLiveTweaksSchema?: boolean
+  /** Output locale code (e.g. 'en', 'zh-CN', 'id'). Defaults to 'en'. */
+  readonly locale?: string
+  /** Custom user/project-level design instructions. */
+  readonly customInstructions?: string
+}
+
+/** Result of prompt compilation. */
+export interface DesignPromptResult {
+  /** Full assembled system prompt string. */
+  readonly systemPrompt: string
+  /** Resolved CSS tokens (:root block) if a design system was active. */
+  readonly tokensCss?: string
+  /** Resolved DESIGN.md markdown rules if a design system was active. */
+  readonly designMarkdown?: string
+  /** List of craft rule IDs successfully injected into the prompt. */
+  readonly injectedCraftRules: readonly string[]
+  /** Compilation metadata. */
+  readonly metadata: {
+    readonly mode: DesignPromptMode
+    readonly designSystemId?: string
+    readonly templateId?: string
+    readonly locale?: string
+  }
+}
+
 /** Design domain unary methods (the map key design.* of RpcMethodMap). */
 export interface DesignApi {
   /** Lists all available brand design systems with category filtering. */
@@ -204,4 +260,8 @@ export interface DesignApi {
   /** Reads the full prompt and parameters for one prompt template. */
   promptTemplateDetail(request: RpcRequest<{ id: string }>):
   Promise<RpcResponse<{ template: PromptTemplateDetail }>>
+
+  /** Compiles a complete OpenDesign system prompt using active design assets. */
+  composePrompt(request: RpcRequest<DesignPromptOptions>):
+  Promise<RpcResponse<DesignPromptResult>>
 }

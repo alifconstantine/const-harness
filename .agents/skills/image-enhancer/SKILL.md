@@ -1,4 +1,4 @@
-﻿---
+---
 name: image-enhancer
 description: |
   Improve image and screenshot quality by enhancing resolution, sharpness, and clarity for professional presentations and documentation.

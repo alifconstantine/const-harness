@@ -1,4 +1,4 @@
-﻿---
+---
 name: brainstorming
 description: |
   Transform rough ideas into fully-formed designs through structured questioning and alternative exploration. Useful early in concept work.

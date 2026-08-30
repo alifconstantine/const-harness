@@ -1,4 +1,4 @@
-﻿---
+---
 name: weread-year-in-review-video-template
 description: |
   WeRead-inspired HyperFrames video template for vertical annual reading reports,

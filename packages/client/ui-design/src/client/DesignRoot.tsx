@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import type { ClientContext } from '@const-ai/client-runtime/client'
+import type { ClientContext, WorkspaceId } from '@const-ai/client-runtime/client'
 import type { ConnectionHandle } from '@const-ai/client-connection/client'
 import { OpenDesignHome } from './OpenDesignHome.tsx'
 import styles from './DesignRoot.module.css'
@@ -82,35 +82,66 @@ export function DesignRoot({ ctx }: DesignRootProps): React.JSX.Element | null {
     mode: string
     interaction: string
     designSystemId: string | null
-    workspaceId?: string
-    model?: string
+    workspaceId?: string | undefined
+    model?: string | undefined
     permissionPreset: string
   }) => {
     try {
-      if (api?.sessions?.create) {
-        const res = await api.sessions.create(
-          options.workspaceId ? { workspaceId: options.workspaceId as any } : {},
-        )
-        if (res?.result?.ok) {
-          const sessionId = res.result.value.sessionId
-          ctx.sessions.open(sessionId)
+      const sessionId = await ctx.workspaces.connectWorkspace(
+        options.workspaceId ? (options.workspaceId as unknown as WorkspaceId) : undefined,
+      )
 
-          // Send initial prompt if available
-          if (api.sessions?.prompt && options.prompt) {
-            void api.sessions.prompt({
-              sessionId,
-              mode: 'queue',
-              content: [{ type: 'text', text: options.prompt }],
+      if (sessionId) {
+        ctx.sessions.open(sessionId)
+
+        // Select model if specified
+        if (options.model && api) {
+          try {
+            await api.sessions.selectModel({ sessionId, provider: 'default', model: options.model })
+          } catch {}
+        }
+
+        // Compose full design prompt with tokens, DESIGN.md, and craft guidelines
+        let finalPrompt = options.prompt
+        if ((options.designSystemId || options.mode) && api) {
+          try {
+            const targetMode: 'deck' | 'prototype' | 'document' | 'hyperframes' = options.mode === 'slide_deck'
+              ? 'deck'
+              : options.mode === 'hyperframes'
+                ? 'hyperframes'
+                : options.mode === 'document'
+                  ? 'document'
+                  : 'prototype'
+            const composed = await api.design.composePrompt({
+              mode: targetMode,
+              ...(options.designSystemId ? { designSystemId: options.designSystemId } : {}),
+              customInstructions: options.prompt,
             })
-          }
+            if (composed.result.ok && composed.result.value.systemPrompt) {
+              finalPrompt = `[DESIGN DIRECTIVE]\n${composed.result.value.systemPrompt}\n\n[USER REQUEST]\n${options.prompt}`
+            }
+          } catch {}
+        }
+
+        // Send initial prompt if available
+        if (api && finalPrompt) {
+          void api.sessions.prompt({
+            sessionId,
+            mode: 'queue',
+            content: [{ type: 'text', text: finalPrompt }],
+          })
         }
       }
 
       setIsOpen(false)
       window.dispatchEvent(new CustomEvent('const:design-state', { detail: { active: false } }))
+      window.dispatchEvent(new CustomEvent('const:close-design'))
+      window.dispatchEvent(new CustomEvent('const:filter-mode', { detail: { mode: 'workspace' } }))
     } catch {
       setIsOpen(false)
       window.dispatchEvent(new CustomEvent('const:design-state', { detail: { active: false } }))
+      window.dispatchEvent(new CustomEvent('const:close-design'))
+      window.dispatchEvent(new CustomEvent('const:filter-mode', { detail: { mode: 'workspace' } }))
     }
   }
 
@@ -123,6 +154,7 @@ export function DesignRoot({ ctx }: DesignRootProps): React.JSX.Element | null {
     >
       <OpenDesignHome
         api={api}
+        ctx={ctx}
         onStartSession={(opts) => { void handleStartSession(opts) }}
       />
     </div>

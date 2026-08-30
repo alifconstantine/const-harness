@@ -1,4 +1,4 @@
-﻿---
+---
 name: pixelbin-media
 description: |
   Generate and edit images and videos with an 85+ API portfolio and build visually appealing website pages via Pixelbin.

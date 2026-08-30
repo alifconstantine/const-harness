@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { RpcId } from '../src/api/rpc.ts'
 import { DesignService } from '../src/design-service.ts'
 import {
   ANTI_AI_SLOP_RULES,
@@ -191,10 +192,17 @@ describe('DesignPromptInjector & Prompt Engine', () => {
 
   describe('DesignService.composePrompt Integration', () => {
     it('automatically resolves brand design system by ID from bundled assets', async () => {
-      const result = await service.composePrompt({
-        designSystemId: 'linear-app',
-        mode: 'prototype',
+      const res = await service.composePrompt({
+        rpcId: RpcId('compose-1'),
+        payload: {
+          designSystemId: 'linear-app',
+          mode: 'prototype',
+        },
       })
+
+      expect(res.result.ok).toBe(true)
+      if (!res.result.ok) return
+      const result = res.result.value
 
       expect(result.tokensCss).toBeDefined()
       expect(result.tokensCss).toContain(':root')
@@ -206,10 +214,17 @@ describe('DesignPromptInjector & Prompt Engine', () => {
     })
 
     it('automatically resolves template by ID and loads craft guidelines', async () => {
-      const result = await service.composePrompt({
-        templateId: 'html-ppt-pitch-deck',
-        mode: 'deck',
+      const res = await service.composePrompt({
+        rpcId: RpcId('compose-2'),
+        payload: {
+          templateId: 'html-ppt-pitch-deck',
+          mode: 'deck',
+        },
       })
+
+      expect(res.result.ok).toBe(true)
+      if (!res.result.ok) return
+      const result = res.result.value
 
       expect(result.systemPrompt).toContain('Pitch')
       expect(result.systemPrompt).toContain(DECK_FRAMEWORK_DIRECTIVE)
@@ -219,9 +234,16 @@ describe('DesignPromptInjector & Prompt Engine', () => {
     })
 
     it('handles non-existent design system gracefully by falling back to canonical directions', async () => {
-      const result = await service.composePrompt({
-        designSystemId: 'non-existent-system-xyz',
+      const res = await service.composePrompt({
+        rpcId: RpcId('compose-3'),
+        payload: {
+          designSystemId: 'non-existent-system-xyz',
+        },
       })
+
+      expect(res.result.ok).toBe(true)
+      if (!res.result.ok) return
+      const result = res.result.value
 
       expect(result.tokensCss).toBeUndefined()
       expect(result.systemPrompt).toContain('Visual Direction Selection (Zero-Brand Default)')

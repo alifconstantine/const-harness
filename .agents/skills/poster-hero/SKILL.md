@@ -1,4 +1,4 @@
-﻿---
+---
 name: poster-hero
 zh_name: "营销海报"
 en_name: "Marketing Poster"

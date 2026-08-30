@@ -274,6 +274,7 @@ export class FakeApiClient implements IApiClient {
     craftGuideline: payload => this.record('design.craftGuideline', payload, Promise.resolve({ rpcId: RpcId('fk'), result: { ok: false, error: { code: 'craft-guideline-not-found', message: 'not found', details: { id: payload.id } } } })),
     promptTemplates: payload => this.record('design.promptTemplates', payload, Promise.resolve(ok({ templates: [], categories: [], surfaces: [] }))),
     promptTemplateDetail: payload => this.record('design.promptTemplateDetail', payload, Promise.resolve({ rpcId: RpcId('fk'), result: { ok: false, error: { code: 'prompt-template-not-found', message: 'not found', details: { id: payload.id } } } })),
+    composePrompt: payload => this.record('design.composePrompt', payload, Promise.resolve(ok({ systemPrompt: 'fake', injectedCraftRules: [], metadata: { mode: payload.mode ?? 'prototype' } }))),
   }
 
   /** When true, streams never fire onOpen (misbehaving-carrier material for the handshake timeout guard). */

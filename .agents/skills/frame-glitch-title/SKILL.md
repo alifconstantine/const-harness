@@ -1,4 +1,4 @@
-﻿---
+---
 name: frame-glitch-title
 zh_name: "故障艺术标题帧"
 en_name: "Glitch Title Frame"

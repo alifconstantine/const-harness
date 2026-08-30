@@ -1,4 +1,4 @@
-﻿---
+---
 name: frontend-design
 description: |
   Create distinctive, production-grade frontend interfaces with strong visual direction, polished typography, considered layout, and working HTML/CSS/JS or framework code. Use for websites, landing pages, dashboards, React components, application screens, and UI beautification.

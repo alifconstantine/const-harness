@@ -1,4 +1,4 @@
-﻿---
+---
 name: after-hours-editorial-template
 description: |
   Luxury dark-editorial HyperFrames template for three-page cinematic storyboards,

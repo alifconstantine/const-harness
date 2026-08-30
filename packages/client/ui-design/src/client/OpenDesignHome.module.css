@@ -2,19 +2,21 @@
   width: 100%;
   height: 100%;
   overflow-y: auto;
-  padding: 24px 24px 60px;
+  padding: 32px 24px 60px;
   display: flex;
   flex-direction: column;
   align-items: center;
   box-sizing: border-box;
   background: var(--dsw-alias-bg-base);
+  --dsh-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
+  --dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
   color: var(--dsw-alias-label-primary);
   scroll-behavior: smooth;
 }
 
 .contentWrapper {
   width: 100%;
-  max-width: 900px;
+  max-width: 880px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -27,9 +29,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   padding: 0;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   box-sizing: border-box;
 }
 
@@ -89,83 +91,41 @@
   font-weight: 600;
 }
 
-/* Outer Composer Frame (Matching OpenDesign Image 2) */
-.composerOuterFrame {
+/* Composer Header Row (Workspace + Design System Pickers placed above the card) */
+.composerHeaderRow {
   width: 100%;
-  box-sizing: border-box;
-  background: var(--dsw-alias-bg-layer-1);
-  border: 1px solid var(--dsw-alias-border-l2);
-  border-radius: 16px;
-  padding: 12px 14px 10px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.16);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.composerOuterFrame:focus-within {
-  border-color: var(--dsw-alias-border-l4);
-  box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.24);
-}
-
-/* Top Toolbar Row inside Outer Frame */
-.topBarRow {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 2px 4px;
+  justify-content: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 0 4px;
+}
+
+.toolbarChipWrapper {
   position: relative;
 }
 
-.topBarItem {
+.toolbarChip {
   display: flex;
   align-items: center;
   gap: 6px;
+  padding: 5px 10px;
+  border-radius: 8px;
   font-size: 13px;
   font-weight: 500;
   color: var(--dsw-alias-label-secondary);
-  background: transparent;
-  border: none;
+  background: var(--dsw-alias-interactive-bg-hover, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--dsw-alias-border-l2, rgba(255, 255, 255, 0.08));
   cursor: pointer;
-  padding: 3px 6px;
-  border-radius: 6px;
-  transition: all 0.12s ease;
+  transition: all 0.15s ease;
+  user-select: none;
 }
 
-.topBarItem:hover {
+.toolbarChip:hover {
+  background: var(--dsw-alias-interactive-bg-active, rgba(255, 255, 255, 0.1));
   color: var(--dsw-alias-label-primary);
-  background: var(--dsw-alias-interactive-bg-hover);
-}
-
-/* Composer Bottom Sub Row (Design System + Folder pickers at bottom of card) */
-.composerBottomSubRow {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding-top: 6px;
-  border-top: 1px solid var(--dsw-alias-border-l1, rgba(255, 255, 255, 0.06));
-  position: relative;
-}
-
-.bottomSubItem {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--dsw-alias-label-secondary);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 3px 6px;
-  border-radius: 6px;
-  transition: all 0.12s ease;
-}
-
-.bottomSubItem:hover {
-  color: var(--dsw-alias-label-primary);
-  background: var(--dsw-alias-interactive-bg-hover);
+  border-color: var(--dsw-alias-border-l3, rgba(255, 255, 255, 0.14));
 }
 
 /* Examples Gallery Section (Matching Image 2) */
@@ -174,7 +134,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding-top: 0;
+  padding-top: 14px;
   margin-bottom: 40px;
 }
 
@@ -182,14 +142,21 @@
 .composerCard {
   width: 100%;
   box-sizing: border-box;
-  background: var(--dsw-alias-bg-layer-1);
-  border: 1px solid var(--dsw-alias-border-l2);
-  border-radius: 12px;
-  padding: 12px 14px;
+  background: var(--dsw-specific-input-major, var(--dsw-alias-bg-layer-1));
+  border: 1px solid var(--dsw-alias-border-l2-darkmode-thin, var(--dsw-alias-border-l2));
+  border-radius: 20px;
+  padding: 14px 16px 10px 16px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   position: relative;
+  box-shadow: var(--dsw-shadow-lv2, 0 4px 20px -2px rgba(0, 0, 0, 0.16));
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.composerCard:focus-within {
+  border-color: var(--dsw-alias-border-l4, rgba(255, 255, 255, 0.2));
+  box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.28);
 }
 
 /* Active Template Chip Badge above textarea */
@@ -221,6 +188,12 @@
   color: var(--dsw-alias-label-primary);
 }
 
+.textareaWrapper {
+  position: relative;
+  width: 100%;
+  min-height: 68px;
+}
+
 .textarea {
   width: 100%;
   min-height: 68px;
@@ -232,10 +205,64 @@
   resize: none;
   outline: none;
   font-family: inherit;
+  position: relative;
+  z-index: 2;
 }
 
 .textarea::placeholder {
+  color: transparent;
+}
+
+.placeholderCarousel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-start;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--dsw-alias-label-tertiary, rgba(255, 255, 255, 0.45));
+  user-select: none;
+  z-index: 1;
+  padding: 0;
+}
+
+.carouselText {
+  color: var(--dsw-alias-label-tertiary, rgba(255, 255, 255, 0.45));
+}
+
+.carouselCaret {
+  display: inline-block;
+  width: 2px;
+  height: 15px;
+  background-color: var(--dsw-alias-brand-primary, #3b82f6);
+  margin-left: 2px;
+  animation: blinkCaret 1s infinite;
+  vertical-align: middle;
+}
+
+@keyframes blinkCaret {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.tabHint {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  font-size: 10.5px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--dsw-alias-bg-layer-2);
+  border: 1px solid var(--dsw-alias-border-l2);
   color: var(--dsw-alias-label-tertiary);
+  pointer-events: none;
+  opacity: 0.75;
+  user-select: none;
 }
 
 /* Composer Bottom Toolbar */

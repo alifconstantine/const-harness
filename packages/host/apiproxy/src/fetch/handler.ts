@@ -80,6 +80,7 @@ import {
   automationUpdateRequestSchema,
 } from '../api/automations.schema.ts'
 import {
+  designComposePromptRequestSchema,
   designCraftGuidelineRequestSchema,
   designCraftGuidelinesRequestSchema,
   designPromptTemplateDetailRequestSchema,
@@ -177,6 +178,7 @@ const UNARY_ROUTES: UnaryRoutes = {
   'design.craftGuideline': { schema: designCraftGuidelineRequestSchema, invoke: (api, r) => api.design.craftGuideline(r) },
   'design.promptTemplates': { schema: designPromptTemplatesRequestSchema, invoke: (api, r) => api.design.promptTemplates(r) },
   'design.promptTemplateDetail': { schema: designPromptTemplateDetailRequestSchema, invoke: (api, r) => api.design.promptTemplateDetail(r) },
+  'design.composePrompt': { schema: designComposePromptRequestSchema, invoke: (api, r) => api.design.composePrompt(r) },
 }
 
 /** Route lookup that narrows an arbitrary path segment to a map key (single cast point for the string→key refinement). */

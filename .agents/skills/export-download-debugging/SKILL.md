@@ -1,4 +1,4 @@
-﻿---
+---
 name: export-download-debugging
 description: |
   Diagnose and fix browser, preview, or Electron export/download failures, especially image export issues involving Save As, Blob/Data URLs, the File System Access API, createWritable failures, and 0 KB files.

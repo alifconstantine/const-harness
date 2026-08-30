@@ -1,4 +1,4 @@
-﻿---
+---
 name: deck-guizang-editorial
 zh_name: "归藏编辑墨水 Deck"
 en_name: "Guizang Editorial E-Ink Deck"

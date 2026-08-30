@@ -1,4 +1,4 @@
-﻿---
+---
 name: remotion
 description: |
   Programmatic video creation with React. Useful for branded explainers, social cuts, dashboards-to-video, and reproducible motion graphics.

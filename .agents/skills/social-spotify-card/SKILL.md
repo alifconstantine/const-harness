@@ -1,4 +1,4 @@
-﻿---
+---
 name: social-spotify-card
 zh_name: "Spotify 正在播放卡"
 en_name: "Spotify Now-Playing Card"

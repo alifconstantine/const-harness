@@ -39,7 +39,7 @@ export function FigmaImportModal({
 
   return (
     <div className={styles.backdrop} onClick={onClose} role="dialog" aria-modal="true">
-      <div className={styles.modal} onClick={e => e.stopPropagation()}>
+      <div className={styles.modal} onClick={(e) => { e.stopPropagation() }}>
         <div className={styles.header}>
           <div className={styles.titleArea}>
             <UploadIcon size={18} />
@@ -54,14 +54,14 @@ export function FigmaImportModal({
           <button
             type="button"
             className={`${styles.tabBtn} ${tab === 'fig' ? styles.active : ''}`}
-            onClick={() => setTab('fig')}
+            onClick={() => { setTab('fig') }}
           >
             {t('figma.tab_fig')}
           </button>
           <button
             type="button"
             className={`${styles.tabBtn} ${tab === 'url' ? styles.active : ''}`}
-            onClick={() => setTab('url')}
+            onClick={() => { setTab('url') }}
           >
             {t('figma.tab_url')}
           </button>
@@ -86,7 +86,7 @@ export function FigmaImportModal({
               className={styles.urlInput}
               placeholder="https://www.figma.com/design/..."
               value={url}
-              onChange={e => setUrl(e.target.value)}
+              onChange={(e) => { setUrl(e.target.value) }}
             />
           </div>
         )}
@@ -96,7 +96,7 @@ export function FigmaImportModal({
           className={styles.notesInput}
           placeholder={t('figma.notes_placeholder')}
           value={notes}
-          onChange={e => setNotes(e.target.value)}
+          onChange={(e) => { setNotes(e.target.value) }}
         />
 
         <div className={styles.footer}>

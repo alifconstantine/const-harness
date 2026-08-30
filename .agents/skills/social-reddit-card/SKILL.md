@@ -1,4 +1,4 @@
-﻿---
+---
 name: social-reddit-card
 zh_name: "Reddit 帖子卡"
 en_name: "Reddit Post Card"

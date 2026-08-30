@@ -1,4 +1,4 @@
-﻿---
+---
 name: field-notes-editorial-template
 description: |
   Editorial "Field Notes" report template with soft paper background, serif hero

@@ -1,4 +1,4 @@
-﻿---
+---
 name: video-downloader
 description: |
   Download videos from YouTube and other platforms for offline viewing, editing, or archival with support for various formats and quality options.

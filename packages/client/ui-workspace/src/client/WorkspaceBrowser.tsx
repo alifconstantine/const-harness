@@ -1233,7 +1233,7 @@ export function WorkspaceBrowser({
               t={t}
             />
           )
-          : groupBy === 'workspace' || groupBy === 'design'
+          : groupBy === 'workspace'
             ? (
               <SessionTree
                 mode={groupBy}

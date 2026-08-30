@@ -1,4 +1,4 @@
-﻿---
+---
 name: frame-macos-notification
 zh_name: "macOS 通知横幅"
 en_name: "macOS Notification Banner"

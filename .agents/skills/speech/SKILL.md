@@ -1,4 +1,4 @@
-﻿---
+---
 name: speech
 description: |
   Generate spoken audio from text using OpenAI's API with built-in voices. Useful for narrated explainers, lecture audio, and quick voiceover tracks.

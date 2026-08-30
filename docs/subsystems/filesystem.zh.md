@@ -437,6 +437,29 @@ Snapshot Service for capturing worktree states and managing rollbacks.
 
 ```ts cordis-catalog
 /**
+ * Remember workspace directory for a session.
+ *
+ * @param sessionId - Session identifier.
+ * @param worktree - Workspace directory path.
+ */
+rememberSessionWorktree(sessionId: string, worktree: string): void
+
+/**
+ * Queue a serialized async operation for a session.
+ *
+ * @param sessionId - Session identifier.
+ * @param op - Async operation callback.
+ */
+queueSessionOp(sessionId: string, op: () => Promise<void>): void
+
+/**
+ * Flush any pending queued operations for a session.
+ *
+ * @param sessionId - Session identifier.
+ */
+async flushSessionQueue(sessionId: string): Promise<void>
+
+/**
  * Get or create a ShadowGit instance for a given workspace path.
  *
  * @param worktree - Workspace directory path.
@@ -509,7 +532,7 @@ deletePendingBeforeTree(sessionId: string, turn: number): void
  * @param worktree - Workspace directory path.
  * @param projectId - Optional project identifier.
  */
-recordTurnSnapshot(record: TurnSnapshotRecord, worktree?: string, projectId?: string): void
+async recordTurnSnapshot(record: TurnSnapshotRecord, worktree?: string, projectId?: string): Promise<void>
 
 /**
  * Retrieve snapshot metadata for a turn, falling back to disk manifest if needed.
@@ -527,11 +550,11 @@ async getTurnSnapshot( sessionId: string, turn: number, worktree?: string, proje
  *
  * @param sessionId - Session identifier.
  * @param turn - Turn number to rollback.
- * @param worktree - Workspace directory path.
+ * @param worktree - Optional workspace directory path.
  * @param projectId - Optional project identifier.
  * @returns Rollback result with list of restored files.
  */
-async rollbackTurn( sessionId: string, turn: number, worktree: string, projectId?: string, ): Promise<{ success: boolean; restoredFiles: string[]; error?: string }>
+async rollbackTurn( sessionId: string, turn: number, worktree?: string, projectId?: string, ): Promise<{ success: boolean; restoredFiles: string[]; error?: string }>
 ```
 
 Source: [`packages/fs/fs-snapshot/src/index.ts:36`](../../packages/fs/fs-snapshot/src/index.ts)

@@ -1,4 +1,4 @@
-﻿---
+---
 name: social-x-post-card
 zh_name: "X (Twitter) 帖子卡"
 en_name: "X / Twitter Post Card"

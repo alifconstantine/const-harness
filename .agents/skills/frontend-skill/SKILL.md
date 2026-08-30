@@ -1,4 +1,4 @@
-﻿---
+---
 name: frontend-skill
 description: |
   Create visually strong landing pages, websites, and app UIs with restrained composition. OpenAI's production frontend playbook.

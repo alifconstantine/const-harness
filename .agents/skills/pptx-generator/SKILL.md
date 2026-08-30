@@ -1,4 +1,4 @@
-﻿---
+---
 name: pptx-generator
 description: |
   Create and edit PowerPoint presentations from scratch with PptxGenJS — MiniMax's production-tested deck pipeline.

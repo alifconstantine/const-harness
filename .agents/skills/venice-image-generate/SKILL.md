@@ -1,4 +1,4 @@
-﻿---
+---
 name: venice-image-generate
 description: |
   Image generation endpoints and available styles via the Venice.ai API.

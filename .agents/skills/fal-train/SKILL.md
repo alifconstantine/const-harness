@@ -1,4 +1,4 @@
-﻿---
+---
 name: fal-train
 description: |
   Train custom AI models (LoRA) on fal.ai for personalized image generation tailored to a brand, character, or style.

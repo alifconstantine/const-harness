@@ -1,4 +1,4 @@
-﻿---
+---
 name: ui-skills
 description: |
   Opinionated, evolving constraints to guide agents when building interfaces. Useful for keeping output coherent across many small UI pieces.

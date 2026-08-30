@@ -1,4 +1,4 @@
-﻿---
+---
 name: fal-upscale
 description: |
   Upscale and enhance image and video resolution using AI super-resolution models hosted on fal.ai.

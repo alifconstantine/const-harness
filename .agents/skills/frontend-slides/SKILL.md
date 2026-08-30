@@ -1,4 +1,4 @@
-﻿---
+---
 name: frontend-slides
 description: |
   Generate animation-rich HTML presentations with visual style previews. Useful for online keynotes, embedded talks, and interactive briefs.

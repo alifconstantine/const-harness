@@ -1,4 +1,4 @@
-﻿---
+---
 name: vfx-text-cursor
 zh_name: "VFX 文字光标"
 en_name: "VFX Text Cursor"

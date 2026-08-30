@@ -1,4 +1,4 @@
-﻿---
+---
 name: frame-data-chart-nyt
 zh_name: "NYT 风数据图表帧"
 en_name: "NYT-Style Data Chart Frame"

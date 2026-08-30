@@ -1,4 +1,4 @@
-﻿---
+---
 name: ppt-keynote
 zh_name: "Keynote 风格 PPT"
 en_name: "Keynote-style Slides"

@@ -1538,6 +1538,21 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     description: 'Snapshot Service for capturing worktree states and managing rollbacks.',
     methods: [
       {
+        signature: 'rememberSessionWorktree(sessionId: string, worktree: string): void',
+        description: 'Remember workspace directory for a session.',
+        parameters: [{ name: 'sessionId', description: 'Session identifier.' }, { name: 'worktree', description: 'Workspace directory path.' }],
+      },
+      {
+        signature: 'queueSessionOp(sessionId: string, op: () => Promise<void>): void',
+        description: 'Queue a serialized async operation for a session.',
+        parameters: [{ name: 'sessionId', description: 'Session identifier.' }, { name: 'op', description: 'Async operation callback.' }],
+      },
+      {
+        signature: 'async flushSessionQueue(sessionId: string): Promise<void>',
+        description: 'Flush any pending queued operations for a session.',
+        parameters: [{ name: 'sessionId', description: 'Session identifier.' }],
+      },
+      {
         signature: 'getShadow(worktree: string, projectId?: string): ShadowGit',
         description: 'Get or create a ShadowGit instance for a given workspace path.',
         parameters: [{ name: 'worktree', description: 'Workspace directory path.' }, { name: 'projectId', description: 'Optional project identifier.' }],
@@ -1578,7 +1593,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         parameters: [{ name: 'sessionId', description: 'Session identifier.' }, { name: 'turn', description: 'Turn number.' }],
       },
       {
-        signature: 'recordTurnSnapshot(record: TurnSnapshotRecord, worktree?: string, projectId?: string): void',
+        signature: 'async recordTurnSnapshot(record: TurnSnapshotRecord, worktree?: string, projectId?: string): Promise<void>',
         description: 'Record a completed turn\'s snapshot boundary and persist to disk.',
         parameters: [{ name: 'record', description: 'Turn snapshot record to store.' }, { name: 'worktree', description: 'Workspace directory path.' }, { name: 'projectId', description: 'Optional project identifier.' }],
       },
@@ -1589,9 +1604,9 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'Turn snapshot record if found, undefined otherwise.',
       },
       {
-        signature: 'async rollbackTurn( sessionId: string, turn: number, worktree: string, projectId?: string, ): Promise<{ success: boolean; restoredFiles: string[]; error?: string }>',
+        signature: 'async rollbackTurn( sessionId: string, turn: number, worktree?: string, projectId?: string, ): Promise<{ success: boolean; restoredFiles: string[]; error?: string }>',
         description: 'Rollback the workspace to the exact state before a turn executed.',
-        parameters: [{ name: 'sessionId', description: 'Session identifier.' }, { name: 'turn', description: 'Turn number to rollback.' }, { name: 'worktree', description: 'Workspace directory path.' }, { name: 'projectId', description: 'Optional project identifier.' }],
+        parameters: [{ name: 'sessionId', description: 'Session identifier.' }, { name: 'turn', description: 'Turn number to rollback.' }, { name: 'worktree', description: 'Optional workspace directory path.' }, { name: 'projectId', description: 'Optional project identifier.' }],
         returns: 'Rollback result with list of restored files.',
       },
     ],

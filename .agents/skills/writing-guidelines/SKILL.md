@@ -1,4 +1,4 @@
-﻿---
+---
 name: writing-guidelines
 description: |
   Review docs/prose for Writing Guidelines compliance. Use when asked to "review my docs", "check writing style", "audit prose", "review docs voice and tone", or "check this page against the writing handbook".

@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-08-30-opendesign-host-design-service.md
+2026-08-30-opendesign-host-design-service.md: 4e0712260738565aa9527217f5fad7f2ff9ce2d2
+2026-08-30-opendesign-host-design-service.zh.md: c9961df5e70e636b8c2edc06ff5e59cad06e392d

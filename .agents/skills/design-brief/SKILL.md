@@ -1,4 +1,4 @@
-﻿---
+---
 name: design-brief
 description: |
   Parse a structured design brief written in I-Lang protocol format into a

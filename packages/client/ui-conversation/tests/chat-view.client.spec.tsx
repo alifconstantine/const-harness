@@ -595,7 +595,7 @@ describe('ChatView', () => {
     const view = render(<h.ChatView {...h.props} />)
     const statuses = view.getAllByRole('status')
     expect(statuses.map(status => status.textContent)).toEqual([
-      '已达到输出 token 上限回答被截断，已有输出保留在对话中。发送“继续”可让模型接着输出。',
+      '已达到输出 token 上限 回答被截断，已有输出保留在对话中。发送“继续”可让模型接着输出。',
     ])
     expect(view.queryByText('本轮运行失败')).toBeNull()
   })

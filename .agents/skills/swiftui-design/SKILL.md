@@ -1,4 +1,4 @@
-﻿---
+---
 name: swiftui-design
 description: |
   SwiftUI 前端设计 skill — anti AI-slop rules, design direction advisor, brand asset protocol, and five-dimension review. Works with Claude Code, Cursor, Codex, and OpenCode.

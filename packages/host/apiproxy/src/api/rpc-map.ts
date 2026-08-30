@@ -94,6 +94,7 @@ export interface RpcMethodMap {
   'design.craftGuideline': DesignApi['craftGuideline']
   'design.promptTemplates': DesignApi['promptTemplates']
   'design.promptTemplateDetail': DesignApi['promptTemplateDetail']
+  'design.composePrompt': DesignApi['composePrompt']
 }
 
 /** Business request payload of method K (reaches through the RpcRequest narrow form to payload). */

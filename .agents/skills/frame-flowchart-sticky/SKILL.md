@@ -1,4 +1,4 @@
-﻿---
+---
 name: frame-flowchart-sticky
 zh_name: "便利贴流程图帧"
 en_name: "Sticky Flowchart Frame"

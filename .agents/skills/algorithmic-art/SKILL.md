@@ -1,4 +1,4 @@
-﻿---
+---
 name: algorithmic-art
 description: |
   Create generative art using p5.js with seeded randomness so every render is reproducible. Useful for procedural posters, motion-style stills, and artistic frame studies.

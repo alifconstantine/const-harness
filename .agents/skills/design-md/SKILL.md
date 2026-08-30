@@ -1,4 +1,4 @@
-﻿---
+---
 name: design-md
 description: |
   Create and manage DESIGN.md files. Useful for capturing design direction, tokens, and visual rules in a single source of truth.

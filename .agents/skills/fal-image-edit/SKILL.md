@@ -1,4 +1,4 @@
-﻿---
+---
 name: fal-image-edit
 description: |
   AI-powered image editing with style transfer, background removal, object removal, and inpainting via fal.ai hosted models.

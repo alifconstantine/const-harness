@@ -1,4 +1,4 @@
-﻿---
+---
 name: wpds
 description: |
   WordPress Design System. Apply WordPress's official design tokens, typography, and component patterns to themes and sites.

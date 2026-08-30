@@ -1,4 +1,4 @@
-﻿---
+---
 name: brand-extract
 description: |
   Extract a complete Brand Kit from a live website by driving the in-app

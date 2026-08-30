@@ -1,4 +1,4 @@
-﻿---
+---
 name: digits-fintech-swiss-template
 description: |
   Swiss-grid fintech deck template in black / warm paper / neon-lime contrast.

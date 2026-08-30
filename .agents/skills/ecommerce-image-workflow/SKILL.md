@@ -1,4 +1,4 @@
-﻿---
+---
 name: ecommerce-image-workflow
 en_name: "Ecommerce Image Workflow"
 description: |

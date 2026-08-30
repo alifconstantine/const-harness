@@ -1,4 +1,4 @@
-﻿---
+---
 name: deck-swiss-international
 zh_name: "瑞士国际主义 Deck"
 en_name: "Swiss International Deck"

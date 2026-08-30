@@ -1,4 +1,4 @@
-﻿---
+---
 name: card-xiaohongshu
 zh_name: "小红书图文卡片"
 en_name: "Xiaohongshu Card"

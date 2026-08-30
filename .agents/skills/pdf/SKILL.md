@@ -1,4 +1,4 @@
-﻿---
+---
 name: pdf
 description: |
   Extract text, create PDFs, and handle forms. Useful for press releases, branded one-pagers, and printable design deliverables.

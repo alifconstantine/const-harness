@@ -1,4 +1,4 @@
-﻿---
+---
 name: editorial-burgundy-principles-template
 description: |
   Editorial studio deck template in burgundy / blush / muted-gold palette.

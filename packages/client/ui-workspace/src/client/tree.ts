@@ -169,25 +169,21 @@ function orderedUngrouped(members: readonly SessionSummary[], stored: readonly s
 /**
  * Detect whether a session is a Design Studio / UI session.
  * @param s - Session summary snapshot.
- * @param currentId - ID of currently active session (to preserve blank draft).
+ * @param _currentId - Optional ID of currently active session.
  * @returns True if session matches design keywords or is active draft.
  */
-export function isDesignSession(s: SessionSummary, currentId?: SessionId): boolean {
-  if (s.blank && s.id === currentId) return true
+export function isDesignSession(s: SessionSummary, _currentId?: SessionId): boolean {
   const origin = (s as unknown as { origin?: string }).origin
   if (origin === 'design') return true
   const titleLower = (s.displayTitle || '').toLowerCase()
   return (
-    titleLower.includes('[design]') ||
-    titleLower.includes('opendesign') ||
-    titleLower.includes('design studio') ||
+    titleLower.includes('design') ||
     titleLower.includes('prototype') ||
     titleLower.includes('wireframe') ||
     titleLower.includes('mockup') ||
     titleLower.includes('figma') ||
     titleLower.includes('hyperframe') ||
-    titleLower.includes('slide deck') ||
-    titleLower.includes('design system')
+    titleLower.includes('slide deck')
   )
 }
 

@@ -1,4 +1,4 @@
-﻿---
+---
 name: shader-dev
 description: |
   GLSL shader techniques for ray marching, fluid simulation, particle systems, and procedural generation. Useful for hero visuals and motion stills.

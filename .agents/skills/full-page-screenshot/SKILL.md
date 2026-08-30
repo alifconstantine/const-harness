@@ -1,4 +1,4 @@
-﻿---
+---
 name: full-page-screenshot
 description: |
   Capture full-page screenshots of web pages via Chrome DevTools Protocol with zero dependencies. Useful for portfolios, case studies, and audit reports.

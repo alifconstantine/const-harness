@@ -1,4 +1,4 @@
-﻿---
+---
 name: reference-design-contract
 zh_name: "参考转设计合约"
 en_name: "Reference Design Contract"

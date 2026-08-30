@@ -90,7 +90,7 @@ export function PluginPickerPopover({
   const current = templates.find(item => item.id === selectedId) ?? filtered[0]
 
   return (
-    <div className={styles.popoverContainer} onClick={e => e.stopPropagation()}>
+    <div className={styles.popoverContainer} onClick={(e) => { e.stopPropagation() }}>
       {/* Left Column: Search & Filtered List */}
       <div className={styles.leftCol}>
         <div className={styles.searchHeader}>
@@ -101,14 +101,14 @@ export function PluginPickerPopover({
               className={styles.searchInput}
               placeholder={t('plugins.search_placeholder')}
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={(e) => { setSearch(e.target.value) }}
               autoFocus
             />
             {search && (
               <button
                 type="button"
                 className={styles.clearSearchBtn}
-                onClick={() => setSearch('')}
+                onClick={() => { setSearch('') }}
                 aria-label="Clear search"
               >
                 <IconCloseOutline16 size={12} />
@@ -131,7 +131,7 @@ export function PluginPickerPopover({
                 key={tab.id}
                 type="button"
                 className={`${styles.filterChip} ${selectedCat === tab.id ? styles.activeChip : ''}`}
-                onClick={() => setSelectedCat(tab.id)}
+                onClick={() => { setSelectedCat(tab.id) }}
               >
                 {tab.label}
               </button>
@@ -148,7 +148,7 @@ export function PluginPickerPopover({
                 key={item.id}
                 type="button"
                 className={`${styles.pluginItem} ${item.id === selectedId ? styles.active : ''}`}
-                onClick={() => setSelectedId(item.id)}
+                onClick={() => { setSelectedId(item.id) }}
                 onDoubleClick={() => {
                   onSelectPlugin(item)
                   onClose()
@@ -245,7 +245,7 @@ export function PluginPickerPopover({
               )}
             </div>
 
-            {current.tags && current.tags.length > 0 && (
+            {current.tags.length > 0 && (
               <div className={styles.tagsRow}>
                 {current.tags.map(tag => (
                   <span key={tag} className={styles.tagChip}>

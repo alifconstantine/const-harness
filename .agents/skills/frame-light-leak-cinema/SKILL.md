@@ -1,4 +1,4 @@
-﻿---
+---
 name: frame-light-leak-cinema
 zh_name: "胶片漏光电影帧"
 en_name: "Light-Leak Cinematic Frame"

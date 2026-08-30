@@ -1,4 +1,4 @@
-﻿---
+---
 name: mockup-device-3d
 zh_name: "iPhone × MacBook 立体展架"
 en_name: "Device 3D Showcase"

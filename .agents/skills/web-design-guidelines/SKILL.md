@@ -1,4 +1,4 @@
-﻿---
+---
 name: web-design-guidelines
 description: |
   Review UI code for Web Interface Guidelines compliance by the Vercel engineering team. Covers layout, typography, color, motion, and accessibility for product UI.

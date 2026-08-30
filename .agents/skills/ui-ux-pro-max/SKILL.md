@@ -1,4 +1,4 @@
-﻿---
+---
 name: ui-ux-pro-max
 description: |
   Catalog-only UI/UX Pro Max entry. The full upstream templates, data, and search workflow are not bundled in Open Design.

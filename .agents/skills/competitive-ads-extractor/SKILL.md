@@ -1,4 +1,4 @@
-﻿---
+---
 name: competitive-ads-extractor
 description: |
   Extract and analyze competitors' ads from ad libraries to understand messaging and creative approaches that resonate.

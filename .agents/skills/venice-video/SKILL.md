@@ -1,4 +1,4 @@
-﻿---
+---
 name: venice-video
 description: |
   Video generation and transcription workflows via the Venice.ai API.

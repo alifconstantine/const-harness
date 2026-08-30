@@ -1,4 +1,4 @@
-﻿---
+---
 name: minimax-pdf
 description: |
   Generate, fill, and reformat PDFs with a token-based design system and 15 cover styles. Useful for branded PDFs, e-guides, and reports.

@@ -1,4 +1,4 @@
-﻿---
+---
 name: nanobanana-ppt
 description: |
   AI-powered PPT generation with document analysis and styled images via the NanoBanana stack. Combines image generation with structured deck output.

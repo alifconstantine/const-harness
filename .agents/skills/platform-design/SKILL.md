@@ -1,4 +1,4 @@
-﻿---
+---
 name: platform-design
 description: |
   300+ design rules from Apple HIG, Material Design 3, and WCAG 2.2 for cross-platform apps. Useful when shipping a single design across iOS, Android, and the web.

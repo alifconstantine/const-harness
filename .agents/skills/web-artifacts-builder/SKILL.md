@@ -1,4 +1,4 @@
-﻿---
+---
 name: web-artifacts-builder
 description: |
   Build complex claude.ai HTML artifacts with React and Tailwind. Anthropic's reference workflow for shipping rich, embeddable artifacts.

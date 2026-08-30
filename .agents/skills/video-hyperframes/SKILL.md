@@ -1,4 +1,4 @@
-﻿---
+---
 name: video-hyperframes
 zh_name: "Hyperframes 视频脚本"
 en_name: "Hyperframes Video"

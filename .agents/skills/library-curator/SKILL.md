@@ -1,4 +1,4 @@
-﻿---
+---
 name: library-curator
 description: |
   Search the OD Library (the global asset registry) and apply matching assets

@@ -1,4 +1,4 @@
-﻿---
+---
 name: figma-use
 description: |
   Run Figma Plugin API scripts for canvas writes, inspections, variables, and design-system work. Prerequisite for every other Figma skill in this catalogue.

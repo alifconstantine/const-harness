@@ -1,4 +1,4 @@
-﻿---
+---
 name: enhance-prompt
 description: |
   Improve prompts with design specs and UI/UX vocabulary. Useful for design-to-code workflows and clarifying requests for visual output.

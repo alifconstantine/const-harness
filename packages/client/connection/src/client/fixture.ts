@@ -3054,6 +3054,11 @@ function createFixtureWorld(options: FixtureOptions): FixtureWorld {
       craftGuideline: request => err(request, { code: 'craft-guideline-not-found', message: `Fixture craft guideline not found: ${request.payload.id}`, details: { id: request.payload.id } }),
       promptTemplates: request => ok(request, { templates: [], categories: [], surfaces: [] }),
       promptTemplateDetail: request => err(request, { code: 'prompt-template-not-found', message: `Fixture prompt template not found: ${request.payload.id}`, details: { id: request.payload.id } }),
+      composePrompt: request => ok(request, {
+        systemPrompt: 'Fixture design system prompt',
+        injectedCraftRules: [],
+        metadata: { mode: request.payload.mode ?? 'prototype' },
+      }),
     },
     // Satisfies the ApiProxy contract type only: the browser export button
     // hands GET /api/session.export to the native download manager, so this
@@ -3215,6 +3220,7 @@ export class FixtureApiClient extends AbstractApiClient {
       case 'design.craftGuideline': return this.api.design.craftGuideline(request)
       case 'design.promptTemplates': return this.api.design.promptTemplates(request)
       case 'design.promptTemplateDetail': return this.api.design.promptTemplateDetail(request)
+      case 'design.composePrompt': return this.api.design.composePrompt(request)
     }
   }
 

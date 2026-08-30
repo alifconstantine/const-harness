@@ -1,4 +1,4 @@
-﻿---
+---
 name: chat-motion-overlay
 description: Generate configurable chat motion overlays from a transcript or screenshot, including plain bubble scenes, app-style chat containers, optional device frames, preset or uploaded avatars, nickname display rules, and transparent-video-ready Remotion bundles. Use when Codex needs to create reusable short-form chat clips for Douyin, demo videos, story reenactments, social-message proof scenes, or embeddable alpha overlays for Hyperframe and Remotion workflows.
 triggers:

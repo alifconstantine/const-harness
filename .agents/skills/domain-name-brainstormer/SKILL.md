@@ -1,4 +1,4 @@
-﻿---
+---
 name: domain-name-brainstormer
 description: |
   Generate creative domain name ideas and check availability across multiple TLDs including .com, .io, .dev, and .ai.

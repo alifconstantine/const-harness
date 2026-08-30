@@ -77,6 +77,7 @@ import {
   automationUpdateValueSchema,
 } from '../api/automations.schema.ts'
 import {
+  designComposePromptValueSchema,
   designCraftGuidelineValueSchema,
   designCraftGuidelinesValueSchema,
   designPromptTemplateDetailValueSchema,
@@ -201,6 +202,7 @@ export interface IApiClient {
     craftGuideline(payload: RequestPayload<'design.craftGuideline'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'design.craftGuideline'>>>
     promptTemplates(payload: RequestPayload<'design.promptTemplates'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'design.promptTemplates'>>>
     promptTemplateDetail(payload: RequestPayload<'design.promptTemplateDetail'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'design.promptTemplateDetail'>>>
+    composePrompt(payload: RequestPayload<'design.composePrompt'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'design.composePrompt'>>>
   }
   /** client-response passthrough (rpcId is a backfill of the server-request's id — never minted here). */
   respond(message: ClientResponse, signal?: AbortSignal): Promise<RpcReceipt>
@@ -281,6 +283,7 @@ const UNARY_VALUE_SCHEMAS: { [K in keyof RpcMethodMap]: z.ZodType<Wire<ResponseV
   'design.craftGuideline': designCraftGuidelineValueSchema,
   'design.promptTemplates': designPromptTemplatesValueSchema,
   'design.promptTemplateDetail': designPromptTemplateDetailValueSchema,
+  'design.composePrompt': designComposePromptValueSchema,
 }
 
 /** Default timeout for bounded unary calls (rpc-compare 2026-07-19: a hung host must not leave callers pending forever). */
@@ -581,6 +584,7 @@ export abstract class AbstractApiClient implements IApiClient {
     craftGuideline: (payload, signal) => this.callUnary('design.craftGuideline', payload, signal),
     promptTemplates: (payload, signal) => this.callUnary('design.promptTemplates', payload, signal),
     promptTemplateDetail: (payload, signal) => this.callUnary('design.promptTemplateDetail', payload, signal),
+    composePrompt: (payload, signal) => this.callUnary('design.composePrompt', payload, signal),
   }
 
   readonly events: IApiClient['events'] = {

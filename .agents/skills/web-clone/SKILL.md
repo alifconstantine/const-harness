@@ -1,4 +1,4 @@
-﻿---
+---
 name: web-clone
 en_name: Website Clone
 zh_name: 网站复刻

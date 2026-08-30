@@ -1,4 +1,4 @@
-﻿---
+---
 name: fal-video-edit
 description: |
   Edit existing videos using AI — remix style, upscale, remove background, and add audio via fal.ai's hosted video models.

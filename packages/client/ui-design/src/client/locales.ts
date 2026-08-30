@@ -2,6 +2,7 @@
 
 export const NS = 'client-ui-design'
 
+/** English localization dictionary for Const Design surface. */
 export const en = {
   'title': 'Const Design',
   'subtitle': 'AI-first design studio for high-craft UI, slide decks, prototypes, and generative media',
@@ -65,6 +66,7 @@ export const en = {
   'examples.cat_more': 'More',
 }
 
+/** Chinese localization dictionary for Const Design surface. */
 export const zh = {
   'title': 'Const Design',
   'subtitle': '面向高品质 UI、演示文稿、原型与生成式媒体的 AI 原生设计工作室',
@@ -128,6 +130,7 @@ export const zh = {
   'examples.cat_more': '更多',
 }
 
+/** Supported localization key type for Const Design surface. */
 export type DesignLocaleKey = keyof typeof en
 
 declare module '@const-ai/client-ui-slots' {

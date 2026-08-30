@@ -1,4 +1,4 @@
-﻿---
+---
 name: docx
 description: |
   Create, edit, and analyze Word documents with tracked changes, comments, and formatting. Useful for design briefs, copy docs, and review-ready deliverables.

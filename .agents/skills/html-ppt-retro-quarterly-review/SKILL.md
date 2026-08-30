@@ -1,4 +1,4 @@
-﻿---
+---
 name: html-ppt-retro-quarterly-review
 description: |
   Retro Quarterly Review presentation template in a bold blue + orange editorial

@@ -1,4 +1,4 @@
-﻿---
+---
 name: design-review
 description: |
   Designer Who Codes: visual audit then fixes with atomic commits and before/after screenshots. Useful for tightening shipped UI before launch.

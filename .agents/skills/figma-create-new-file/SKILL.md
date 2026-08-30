@@ -1,4 +1,4 @@
-﻿---
+---
 name: figma-create-new-file
 description: |
   Create a new blank Figma Design or FigJam file. Useful as the first step in scripted design-system or workshop workflows.

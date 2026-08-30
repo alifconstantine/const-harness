@@ -1,4 +1,4 @@
-﻿---
+---
 name: 8-bit-orbit-video-template
 description: |
   Hyperframes-based video template for retro pixel deck motion design.

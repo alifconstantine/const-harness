@@ -1,4 +1,4 @@
-﻿---
+---
 name: theme-factory
 description: |
   Apply professional font and color themes to artifacts including slides, docs, reports, and HTML landing pages. Ships 10 pre-set themes.

@@ -147,11 +147,11 @@ describe('OpenDesignHome component', () => {
     expect(screen.getByText('Const Design')).toBeDefined()
 
     // Check surface mode buttons
-    expect(screen.getByText('Prototype')).toBeDefined()
-    expect(screen.getByText('Slide deck')).toBeDefined()
+    expect(screen.getAllByText('Prototype').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Slide deck').length).toBeGreaterThan(0)
 
     // Check interaction mode toggle
-    expect(screen.getByText('Design')).toBeDefined()
+    expect(screen.getAllByText('Design').length).toBeGreaterThan(0)
 
     // Check template card click fills prompt
     const kanbanCards = screen.getAllByText('Kanban Board')
@@ -159,7 +159,7 @@ describe('OpenDesignHome component', () => {
     fireEvent.click(kanbanCards[0]!)
 
     // Check textarea is filled
-    const textarea = screen.getByPlaceholderText(/Describe the UI prototype/) as HTMLTextAreaElement
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
     expect(textarea.value).toContain('Kanban')
 
     // Click send
@@ -168,7 +168,7 @@ describe('OpenDesignHome component', () => {
 
     expect(onStartSession).toHaveBeenCalledWith(
       expect.objectContaining({
-        prompt: expect.stringContaining('Kanban'),
+        prompt: expect.stringContaining('Kanban') as unknown,
         mode: 'prototype',
         interaction: 'design',
       }),

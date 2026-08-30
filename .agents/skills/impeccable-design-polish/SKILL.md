@@ -1,4 +1,4 @@
-﻿---
+---
 name: impeccable-design-polish
 description: |
   Follow-up design polish skill inspired by Impeccable. Use after a web or HTML artifact exists to audit, critique, polish, animate, harden, and prepare the page for a live/share pass.

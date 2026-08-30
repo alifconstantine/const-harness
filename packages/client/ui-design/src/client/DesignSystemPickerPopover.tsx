@@ -49,7 +49,7 @@ export function DesignSystemPickerPopover({
   const current = hoveredId ? systems.find(s => s.id === hoveredId) : null
 
   return (
-    <div className={styles.popoverContainer} onClick={e => e.stopPropagation()}>
+    <div className={styles.popoverContainer} onClick={(e) => { e.stopPropagation() }}>
       <div className={styles.leftCol}>
         <div className={styles.searchHeader}>
           <IconSearchOutline16 size={14} />
@@ -58,7 +58,7 @@ export function DesignSystemPickerPopover({
             className={styles.searchInput}
             placeholder={t('ds.search_placeholder')}
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value) }}
             autoFocus
           />
           <div className={styles.searchActions}>
@@ -66,7 +66,7 @@ export function DesignSystemPickerPopover({
               <button
                 type="button"
                 className={styles.clearBtn}
-                onClick={() => setSearch('')}
+                onClick={() => { setSearch('') }}
               >
                 {t('ds.clear')}
               </button>
@@ -82,7 +82,7 @@ export function DesignSystemPickerPopover({
           <button
             type="button"
             className={`${styles.dsItem} ${hoveredId === null ? styles.active : ''}`}
-            onClick={() => setHoveredId(null)}
+            onClick={() => { setHoveredId(null) }}
             onDoubleClick={() => {
               onSelect(null, t('ds.no_design_system'))
               onClose()
@@ -99,7 +99,7 @@ export function DesignSystemPickerPopover({
               key={s.id}
               type="button"
               className={`${styles.dsItem} ${hoveredId === s.id ? styles.active : ''}`}
-              onClick={() => setHoveredId(s.id)}
+              onClick={() => { setHoveredId(s.id) }}
               onDoubleClick={() => {
                 onSelect(s.id, s.name)
                 onClose()

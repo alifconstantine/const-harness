@@ -1,4 +1,4 @@
-﻿---
+---
 name: release-notes-one-pager
 description: |
   Release notes one-page HTML with highlights, Added, Fixed, Breaking changes,

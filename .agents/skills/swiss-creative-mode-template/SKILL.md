@@ -1,4 +1,4 @@
-﻿---
+---
 name: swiss-creative-mode-template
 description: |
   Swiss-inspired creative-mode presentation template skill with bold editorial
