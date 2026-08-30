@@ -100,20 +100,22 @@ graph TD
 
 ---
 
-### 🧠 FASE 2: Agent Design Brain (Prompt Engine & Skill Activation) — [⏳ PENDING]
+### 🧠 FASE 2: Agent Design Brain (Prompt Engine & Skill Activation) — [✅ COMPLETED]
 *Fokus: Memastikan agen native Const mampu memproduksi file HTML Slide Deck, Prototype, Live Dashboard, Document, dan HyperFrames yang indah, sesuai standar tema yang dipilih, dan bebas dari AI slop.*
 
-#### **Sub-Fase 2A: Design Prompt Engine (`design-prompt-injector.ts`)**
-1. Buat `packages/host/apiproxy/src/design-prompt-injector.ts`:
+#### **Sub-Fase 2A: Design Prompt Engine (`design-prompt-injector.ts`)** [✅ COMPLETED]
+1. `packages/host/apiproxy/src/design-prompt-injector.ts`:
    - Helper yang menyusun system prompt desain saat sesi OpenDesign dibuat:
      - **CSS Tokens & Design System Injection**: Injeksi `:root { ... }` dari design system yang dipilih langsung ke `<style>`.
      - **Craft Rules Injection**: Injeksi pedoman `DESIGN.md` dan aturan craft kunci (`anti-ai-slop`, `typography`, `color`, `accessibility-baseline`).
      - **Slide Deck 16:9 Skeleton**: Kontrak canvas 1920×1080, `<section class="slide" data-slide-id="...">`, scale-to-fit transform JS, 1 visual weight per slide, drawer speaker notes, dan `@media print` rules.
      - **Live Artifacts Parameter Directive**: Format pemisahan `data.json` dan parameter schema (`dataSchemaJson`) untuk live tweaks.
-2. Hubungkan prompt injector ke lifecycle pembuatan sesi di host apiproxy.
+     - **5 Canonical Directions Fallback**: `editorial-monocle`, `modern-minimal`, `human-approachable`, `tech-utility`, `brutalist-experimental` dengan OKLch palette.
+2. Integrasi ke `DesignService.composePrompt(options)`.
 
-#### **Sub-Fase 2B: Pengujian Injeksi Prompt & Output Agen**
-1. Uji unit prompt injector untuk memastikan payload prompt terformat rapi, token budget terkontrol, dan invariant prompt terpenuhi.
+#### **Sub-Fase 2B: Pengujian Injeksi Prompt & Output Agen** [✅ COMPLETED]
+1. Unit tests di `packages/host/apiproxy/tests/design-prompt-injector.spec.ts` (16/16 test cases pass).
+2. Verifikasi monorepo: `pnpm vitest run` (36/36 tests pass) & `pnpm run typecheck` (Code 0, clean build).
 
 ---
 
@@ -243,7 +245,7 @@ packages/
 | **Sub-Fase 1B** | Kontrak Tipe RPC & Zod Schemas (`design.ts`, `design.schema.ts`) | ✅ Completed | 8 method RPC (`systems`, `systemDetail`, `templates`, `templateDetail`, `craftGuidelines`, `craftGuideline`, `promptTemplates`, `promptTemplateDetail`), 4 error codes, terdaftar di client & handler. |
 | **Sub-Fase 1C** | Implementasi `DesignService` & Binding Host | ✅ Completed | In-memory index cache untuk 153 brand, 114 template, 13 craft docs, 107 prompt templates; async reader untuk token, komponen, dan `previewPages`; terikat ke `api-proxy.ts`. |
 | **Sub-Fase 1D** | Unit Tests & Backend Verification | ✅ Completed | 20/20 unit tests lolos (100%), 408 host apiproxy tests lolos, monorepo typecheck lolos (Code 0). |
-| **Fase 2** | Agent Design Brain & Prompt Engine | ⏳ Pending | Prompt injector, CSS tokens injection, craft rules injection, 1920×1080 16:9 deck skeleton. |
+| **Fase 2** | Agent Design Brain & Prompt Engine | ✅ Completed | Prompt injector (`design-prompt-injector.ts`), token injection, craft rules, deck skeleton 1920x1080, live tweaks, 16/16 unit tests lolos (100%). |
 | **Fase 3** | Client Plugin Shell & Home View | ⏳ Pending | Plugin shell, Hero Composer, 153 Brand Selector, Template Gallery, 107 Prompt Templates Gallery. |
 | **Fase 4** | Studio 2-Pane View & Multi-Surface Canvas | ⏳ Pending | 2-Pane chat/stage, 6 surface viewports (mobile frame, 16:9 deck, live dashboard), live tweaks panel. |
 | **Fase 5** | Export Engine, Drawing Layer & Polish | ⏳ Pending | Offline inlined HTML, multi-page PDF, PPTX via PptxGenJS, MP4 video, visual annotation feedback. |

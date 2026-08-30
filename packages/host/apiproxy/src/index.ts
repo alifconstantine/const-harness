@@ -30,6 +30,22 @@ export { AbstractApiClient, InProcessApiClient } from './fetch/client.ts'
 export type { IApiClient } from './fetch/client.ts'
 export { createApiProxy } from './api-proxy.ts'
 export type { ApiProxyDefaults } from './api-proxy.ts'
+export { DesignService, DesignNotFoundError } from './design-service.ts'
+export type { DesignServiceOptions } from './design-service.ts'
+export {
+  DesignPromptInjector,
+  DECK_SKELETON_HTML,
+  DECK_FRAMEWORK_DIRECTIVE,
+  ANTI_AI_SLOP_RULES,
+  LIVE_TWEAKS_DIRECTIVE,
+  CANONICAL_DIRECTIONS,
+} from './design-prompt-injector.ts'
+export type {
+  DesignPromptMode,
+  DesignPromptOptions,
+  DesignPromptResult,
+  CanonicalDirection,
+} from './design-prompt-injector.ts'
 
 declare module '@const-ai/cordis' {
   interface Context {

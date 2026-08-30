@@ -19,6 +19,12 @@ import type {
   PromptTemplateSummary,
 } from './api/design.ts'
 import type { RpcRequest, RpcResponse } from './api/rpc.ts'
+import { RpcId } from './api/rpc.ts'
+import {
+  DesignPromptInjector,
+  type DesignPromptOptions,
+  type DesignPromptResult,
+} from './design-prompt-injector.ts'
 
 /** DesignService constructor options. */
 export interface DesignServiceOptions {
@@ -481,6 +487,61 @@ export class DesignService implements DesignApi {
         },
       },
     }
+  }
+
+  /** Compiles a complete OpenDesign system prompt using active design assets. */
+  async composePrompt(options: DesignPromptOptions): Promise<DesignPromptResult> {
+    let designSystem = options.designSystem
+    if (designSystem === undefined && options.designSystemId !== undefined) {
+      const res = await this.systemDetail({
+        rpcId: RpcId('compose-prompt-sys'),
+        payload: { id: options.designSystemId },
+      })
+      if (res.result.ok) {
+        designSystem = res.result.value.system
+      }
+    }
+
+    let template = options.template
+    if (template === undefined && options.templateId !== undefined) {
+      const res = await this.templateDetail({
+        rpcId: RpcId('compose-prompt-tpl'),
+        payload: { id: options.templateId },
+      })
+      if (res.result.ok) {
+        template = res.result.value.template
+      }
+    }
+
+    let craftGuidelines = options.craftGuidelines
+    if (craftGuidelines === undefined) {
+      const ruleIds = options.craftRuleIds ?? [
+        'anti-ai-slop',
+        'typography',
+        'color',
+        'accessibility-baseline',
+      ]
+      const loaded: CraftGuideline[] = []
+      for (const id of ruleIds) {
+        const res = await this.craftGuideline({
+          rpcId: RpcId('compose-prompt-craft'),
+          payload: { id },
+        })
+        if (res.result.ok) {
+          loaded.push(res.result.value.guideline)
+        }
+      }
+      if (loaded.length > 0) {
+        craftGuidelines = loaded
+      }
+    }
+
+    return DesignPromptInjector.inject({
+      ...options,
+      ...designSystem !== undefined ? { designSystem } : {},
+      ...template !== undefined ? { template } : {},
+      ...craftGuidelines !== undefined ? { craftGuidelines } : {},
+    })
   }
 
   private async loadCraftIndex(): Promise<CraftGuidelineSummary[]> {
