@@ -3045,6 +3045,13 @@ function createFixtureWorld(options: FixtureOptions): FixtureWorld {
       history: request => ok(request, { items: [] }),
       deleteRun: request => ok(request, { deleted: true }),
     },
+    design: {
+      systems: request => ok(request, { systems: [], categories: [] }),
+      systemDetail: request => err(request, { code: 'design-system-not-found', message: `Fixture design system not found: ${request.payload.id}`, details: { id: request.payload.id } }),
+      templates: request => ok(request, { templates: [], categories: [] }),
+      templateDetail: request => err(request, { code: 'design-template-not-found', message: `Fixture design template not found: ${request.payload.id}`, details: { id: request.payload.id } }),
+      craftGuideline: request => err(request, { code: 'craft-guideline-not-found', message: `Fixture craft guideline not found: ${request.payload.id}`, details: { id: request.payload.id } }),
+    },
     // Satisfies the ApiProxy contract type only: the browser export button
     // hands GET /api/session.export to the native download manager, so this
     // stub is never reached through the fixture's dispatch.
@@ -3197,6 +3204,11 @@ export class FixtureApiClient extends AbstractApiClient {
       case 'automation.run': return this.api.automations.run(request)
       case 'automation.history': return this.api.automations.history(request)
       case 'automation.deleteRun': return this.api.automations.deleteRun(request)
+      case 'design.systems': return this.api.design.systems(request)
+      case 'design.systemDetail': return this.api.design.systemDetail(request)
+      case 'design.templates': return this.api.design.templates(request)
+      case 'design.templateDetail': return this.api.design.templateDetail(request)
+      case 'design.craftGuideline': return this.api.design.craftGuideline(request)
     }
   }
 

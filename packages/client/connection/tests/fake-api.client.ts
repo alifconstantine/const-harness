@@ -265,6 +265,14 @@ export class FakeApiClient implements IApiClient {
     deleteRun: payload => this.record('automation.deleteRun', payload, Promise.resolve(ok({ deleted: true }))),
   }
 
+  readonly design: IApiClient['design'] = {
+    systems: payload => this.record('design.systems', payload, Promise.resolve(ok({ systems: [], categories: [] }))),
+    systemDetail: payload => this.record('design.systemDetail', payload, Promise.resolve({ rpcId: RpcId('fk'), result: { ok: false, error: { code: 'design-system-not-found', message: 'not found', details: { id: payload.id } } } })),
+    templates: payload => this.record('design.templates', payload, Promise.resolve(ok({ templates: [], categories: [] }))),
+    templateDetail: payload => this.record('design.templateDetail', payload, Promise.resolve({ rpcId: RpcId('fk'), result: { ok: false, error: { code: 'design-template-not-found', message: 'not found', details: { id: payload.id } } } })),
+    craftGuideline: payload => this.record('design.craftGuideline', payload, Promise.resolve({ rpcId: RpcId('fk'), result: { ok: false, error: { code: 'craft-guideline-not-found', message: 'not found', details: { id: payload.id } } } })),
+  }
+
   /** When true, streams never fire onOpen (misbehaving-carrier material for the handshake timeout guard). */
   suppressStreamOpen = false
 

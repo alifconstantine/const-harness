@@ -79,6 +79,13 @@ import {
   automationListRequestSchema, automationRunRequestSchema,
   automationUpdateRequestSchema,
 } from '../api/automations.schema.ts'
+import {
+  designCraftGuidelineRequestSchema,
+  designSystemDetailRequestSchema,
+  designSystemsRequestSchema,
+  designTemplateDetailRequestSchema,
+  designTemplatesRequestSchema,
+} from '../api/design.schema.ts'
 
 /**
  * Unary dispatch table, keyed by (and compiler-locked to) RpcMethodMap: a map row without a
@@ -159,6 +166,11 @@ const UNARY_ROUTES: UnaryRoutes = {
   'automation.run': { schema: automationRunRequestSchema, invoke: (api, r) => api.automations.run(r) },
   'automation.history': { schema: automationHistoryRequestSchema, invoke: (api, r) => api.automations.history(r) },
   'automation.deleteRun': { schema: automationDeleteRunRequestSchema, invoke: (api, r) => api.automations.deleteRun(r) },
+  'design.systems': { schema: designSystemsRequestSchema, invoke: (api, r) => api.design.systems(r) },
+  'design.systemDetail': { schema: designSystemDetailRequestSchema, invoke: (api, r) => api.design.systemDetail(r) },
+  'design.templates': { schema: designTemplatesRequestSchema, invoke: (api, r) => api.design.templates(r) },
+  'design.templateDetail': { schema: designTemplateDetailRequestSchema, invoke: (api, r) => api.design.templateDetail(r) },
+  'design.craftGuideline': { schema: designCraftGuidelineRequestSchema, invoke: (api, r) => api.design.craftGuideline(r) },
 }
 
 /** Route lookup that narrows an arbitrary path segment to a map key (single cast point for the string→key refinement). */

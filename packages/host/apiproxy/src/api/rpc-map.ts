@@ -15,6 +15,7 @@ import type { CredentialsApi } from './credentials.ts'
 import type { LlmApi } from './llm.ts'
 import type { SubagentsApi } from './subagents.ts'
 import type { AutomationsApi } from './automations.ts'
+import type { DesignApi } from './design.ts'
 import type { RpcResponse } from './rpc.ts'
 
 /**
@@ -85,6 +86,11 @@ export interface RpcMethodMap {
   'automation.run': AutomationsApi['run']
   'automation.history': AutomationsApi['history']
   'automation.deleteRun': AutomationsApi['deleteRun']
+  'design.systems': DesignApi['systems']
+  'design.systemDetail': DesignApi['systemDetail']
+  'design.templates': DesignApi['templates']
+  'design.templateDetail': DesignApi['templateDetail']
+  'design.craftGuideline': DesignApi['craftGuideline']
 }
 
 /** Business request payload of method K (reaches through the RpcRequest narrow form to payload). */

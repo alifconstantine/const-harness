@@ -1,6 +1,6 @@
-import {Composition} from "remotion";
-import {ChatMotionOverlay} from "./components/ChatMotionOverlay";
-import {chatSpec} from "./chatSpec";
+import { Composition } from 'remotion'
+import { ChatMotionOverlay } from './components/ChatMotionOverlay'
+import { chatSpec } from './chatSpec'
 
 export const RemotionRoot = () => {
   return (
@@ -11,7 +11,7 @@ export const RemotionRoot = () => {
       fps={30}
       width={1080}
       height={1920}
-      defaultProps={{chatSpec}}
+      defaultProps={{ chatSpec }}
     />
-  );
-};
+  )
+}

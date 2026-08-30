@@ -98,6 +98,9 @@ export interface RpcErrorDetailsMap {
   'subagent-not-resumable': { childSessionId: SessionId }
   'subagent-unauthorized': { childSessionId: SessionId }
   'subagent-delivery-unavailable': { childSessionId: SessionId }
+  'design-system-not-found': { id: string }
+  'design-template-not-found': { id: string }
+  'craft-guideline-not-found': { id: string }
   'internal': {}
 }
 

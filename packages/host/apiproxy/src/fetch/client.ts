@@ -76,6 +76,13 @@ import {
   automationListValueSchema, automationRunValueSchema,
   automationUpdateValueSchema,
 } from '../api/automations.schema.ts'
+import {
+  designCraftGuidelineValueSchema,
+  designSystemDetailValueSchema,
+  designSystemsValueSchema,
+  designTemplateDetailValueSchema,
+  designTemplatesValueSchema,
+} from '../api/design.schema.ts'
 
 /**
  * Client consumption face of the contract (shape a): same domain tree as ApiProxy, but unary
@@ -182,6 +189,13 @@ export interface IApiClient {
     history(payload: RequestPayload<'automation.history'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'automation.history'>>>
     deleteRun(payload: RequestPayload<'automation.deleteRun'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'automation.deleteRun'>>>
   }
+  design: {
+    systems(payload: RequestPayload<'design.systems'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'design.systems'>>>
+    systemDetail(payload: RequestPayload<'design.systemDetail'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'design.systemDetail'>>>
+    templates(payload: RequestPayload<'design.templates'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'design.templates'>>>
+    templateDetail(payload: RequestPayload<'design.templateDetail'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'design.templateDetail'>>>
+    craftGuideline(payload: RequestPayload<'design.craftGuideline'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'design.craftGuideline'>>>
+  }
   /** client-response passthrough (rpcId is a backfill of the server-request's id — never minted here). */
   respond(message: ClientResponse, signal?: AbortSignal): Promise<RpcReceipt>
 }
@@ -253,6 +267,11 @@ const UNARY_VALUE_SCHEMAS: { [K in keyof RpcMethodMap]: z.ZodType<Wire<ResponseV
   'automation.run': automationRunValueSchema,
   'automation.history': automationHistoryValueSchema,
   'automation.deleteRun': automationDeleteRunValueSchema,
+  'design.systems': designSystemsValueSchema,
+  'design.systemDetail': designSystemDetailValueSchema,
+  'design.templates': designTemplatesValueSchema,
+  'design.templateDetail': designTemplateDetailValueSchema,
+  'design.craftGuideline': designCraftGuidelineValueSchema,
 }
 
 /** Default timeout for bounded unary calls (rpc-compare 2026-07-19: a hung host must not leave callers pending forever). */
@@ -542,6 +561,14 @@ export abstract class AbstractApiClient implements IApiClient {
     run: (payload, signal) => this.callUnary('automation.run', payload, signal),
     history: (payload, signal) => this.callUnary('automation.history', payload, signal),
     deleteRun: (payload, signal) => this.callUnary('automation.deleteRun', payload, signal),
+  }
+
+  readonly design: IApiClient['design'] = {
+    systems: (payload, signal) => this.callUnary('design.systems', payload, signal),
+    systemDetail: (payload, signal) => this.callUnary('design.systemDetail', payload, signal),
+    templates: (payload, signal) => this.callUnary('design.templates', payload, signal),
+    templateDetail: (payload, signal) => this.callUnary('design.templateDetail', payload, signal),
+    craftGuideline: (payload, signal) => this.callUnary('design.craftGuideline', payload, signal),
   }
 
   readonly events: IApiClient['events'] = {

@@ -11,91 +11,91 @@
  * viewport-height/width frame. Brand identity is shared across slides.
  */
 
-import type { MixedText, BrandBlock, ImageryConfig } from '../open-design-landing/schema';
+import type { MixedText, BrandBlock, ImageryConfig } from '../open-design-landing/schema'
 
-export type { MixedText, BrandBlock, ImageryConfig };
+export type { MixedText, BrandBlock, ImageryConfig }
 
 /* ---------- slide variants ---------- */
 
 /** Cover slide — title plate at the start of the deck. */
 export interface CoverSlide {
-  kind: 'cover';
+  kind: 'cover'
   /** Eyebrow above the title — `'Open Design · Vol. 01'`. */
-  eyebrow: string;
+  eyebrow: string
   /** Display title; encoded as `MixedText` for italic-serif rhythm. */
-  title: MixedText;
+  title: MixedText
   /** Optional sub-title under the title. */
-  subtitle?: string;
+  subtitle?: string
   /** Lead paragraph below the title. */
-  lead: string;
+  lead: string
   /** Optional image slot id (`hero` | `cta` | …) from `image-manifest.json`. */
-  image_slot?: string;
+  image_slot?: string
   /** Bottom-left meta line — date / location / coords. */
-  meta?: string;
+  meta?: string
 }
 
 /** Section divider — Roman numeral plate between chapters. */
 export interface SectionSlide {
-  kind: 'section';
-  roman: string;
+  kind: 'section'
+  roman: string
   /** Section title; rendered huge with italic-serif emphasis. */
-  title: MixedText;
+  title: MixedText
   /** Optional one-line description under the title. */
-  lead?: string;
+  lead?: string
 }
 
 /** Content slide — eyebrow + title + body (+ optional bullets + image). */
 export interface ContentSlide {
-  kind: 'content';
-  eyebrow?: string;
-  title: MixedText;
+  kind: 'content'
+  eyebrow?: string
+  title: MixedText
   /** Body paragraph; can include `<code>` raw HTML. */
-  body?: string;
+  body?: string
   /** Optional bullet list. */
-  bullets?: string[];
+  bullets?: string[]
   /** Optional image slot id from `image-manifest.json`. */
-  image_slot?: string;
+  image_slot?: string
   /** Layout: `left` puts copy left of art, `right` flips it, `full` centers. */
-  layout?: 'left' | 'right' | 'full';
+  layout?: 'left' | 'right' | 'full'
 }
 
 /** Stats slide — eyebrow + title + 3-4 large stat rings. */
 export interface StatsSlide {
-  kind: 'stats';
-  eyebrow?: string;
-  title: MixedText;
-  stats: { value: string; label: string; sub?: string }[];
+  kind: 'stats'
+  eyebrow?: string
+  title: MixedText
+  stats: { value: string; label: string; sub?: string }[]
   /** Caption under the stat row. */
-  caption?: string;
+  caption?: string
 }
 
 /** Quote slide — full-bleed pull quote. */
 export interface QuoteSlide {
-  kind: 'quote';
-  quote: MixedText;
-  author: { initial: string; name: string; title: string };
+  kind: 'quote'
+  quote: MixedText
+  author: { initial: string; name: string; title: string }
   /** Optional image slot for the right-side portrait. */
-  image_slot?: string;
+  image_slot?: string
 }
 
 /** CTA slide — closing pitch with primary action. */
 export interface CTASlide {
-  kind: 'cta';
-  eyebrow?: string;
-  title: MixedText;
-  body?: string;
-  primary: { label: string; href: string };
+  kind: 'cta'
+  eyebrow?: string
+  title: MixedText
+  body?: string
+  primary: { label: string; href: string }
   /** Optional secondary action. */
-  secondary?: { label: string; href: string };
+  secondary?: { label: string; href: string }
 }
 
 /** End slide — huge italic kicker word and footer signature. */
 export interface EndSlide {
-  kind: 'end';
+  kind: 'end'
   /** The huge kicker — `'Open Design.'`. */
-  mega: MixedText;
+  mega: MixedText
   /** Footer text under the kicker — `'Apache-2.0 · MMXXVI · Berlin'`. */
-  footer?: string;
+  footer?: string
 }
 
 export type Slide =
@@ -105,17 +105,17 @@ export type Slide =
   | StatsSlide
   | QuoteSlide
   | CTASlide
-  | EndSlide;
+  | EndSlide
 
 /* ---------- top-level ---------- */
 
 export interface OpenDesignLandingDeckInputs {
-  $schema?: string;
-  brand: BrandBlock;
+  $schema?: string
+  brand: BrandBlock
   /** Deck-wide title shown in the HUD — `'Open Design · Vol. 01'`. */
-  deck_title: string;
-  slides: Slide[];
-  imagery: ImageryConfig;
+  deck_title: string
+  slides: Slide[]
+  imagery: ImageryConfig
 }
 
 /**
@@ -125,4 +125,4 @@ export interface OpenDesignLandingDeckInputs {
  * minor (v0.4.0). Migration steps live in `README.md` under
  * "Migrating from `editorial-collage-deck`".
  */
-export type EditorialCollageDeckInputs = OpenDesignLandingDeckInputs;
+export type EditorialCollageDeckInputs = OpenDesignLandingDeckInputs

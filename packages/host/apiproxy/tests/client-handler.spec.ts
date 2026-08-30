@@ -28,6 +28,7 @@ function scriptedApi(overrides: {
   settings?: Partial<ApiProxy['settings']>
   credentials?: Partial<ApiProxy['credentials']>
   llm?: Partial<ApiProxy['llm']>
+  design?: Partial<ApiProxy['design']>
   respond?: ApiProxy['respond']
 } = {}): ApiProxy {
   async function *empty<F>(): AsyncGenerator<RpcRequest<F>> { /* no frames */ }
@@ -151,6 +152,14 @@ function scriptedApi(overrides: {
       run: r => ok(r, { success: true }),
       history: r => ok(r, { items: [] }),
       deleteRun: r => ok(r, { deleted: true }),
+    },
+    design: {
+      systems: r => ok(r, { systems: [], categories: [] }),
+      systemDetail: err,
+      templates: r => ok(r, { templates: [], categories: [] }),
+      templateDetail: err,
+      craftGuideline: err,
+      ...overrides.design,
     },
     events: { mux: () => empty<MuxFrame>(), host: () => empty<HostFrame>(), ...overrides.events },
     respond: overrides.respond ?? (() => Promise.resolve({ accepted: false as const, reason: 'not-pending' as const })),

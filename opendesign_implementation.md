@@ -220,9 +220,9 @@ packages/
 | Fase / Sub-Fase | Deskripsi | Status | Catatan / Hasil Verifikasi |
 | :--- | :--- | :---: | :--- |
 | **Sub-Fase 1A** | Ingesti Aset (153 systems, 114 templates, 13 craft docs, 162 skills) | ✅ Completed | 153 brands, 114 templates, 13 craft docs, 2 prompt templates & 162 skills sukses disalin & diverifikasi. |
-| **Sub-Fase 1B** | Kontrak Tipe RPC & Zod Schemas (`design.ts`, `design.schema.ts`) | ⏳ Pending | Terhubung ke `rpc-map.ts` & `rpc.schema.ts` |
-| **Sub-Fase 1C** | Implementasi `DesignService` & Binding Host | ⏳ Pending | Pemuatan cepat $<1$ms in-memory cache |
-| **Sub-Fase 1D** | Unit Tests & Backend Verification | ⏳ Pending | Target 100% vitest pass |
+| **Sub-Fase 1B** | Kontrak Tipe RPC & Zod Schemas (`design.ts`, `design.schema.ts`) | ✅ Completed | Kontrak `DesignApi`, skema Zod `Wire<T>`, pemetaan method di `rpc-map.ts`, error codes di `rpc.ts`, dan registrasi di `fetch/client.ts` serta `fetch/handler.ts`. |
+| **Sub-Fase 1C** | Implementasi `DesignService` & Binding Host | ✅ Completed | `DesignService` dengan pemuatan in-memory cache, async file reader, BOM handling, terikat ke `api-proxy.ts` dan `ApiProxyService`. |
+| **Sub-Fase 1D** | Unit Tests & Backend Verification | ✅ Completed | 12/12 unit tests di `design-service.spec.ts` lolos (100%), 400 host apiproxy tests pass, 453 client tests pass, full typecheck & lint lolos. |
 | **Fase 2** | Agent Design Brain & Prompt Engine | ⏳ Pending | Prompt injector & craft rules injection |
 | **Fase 3** | Client Plugin Shell & Home View | ⏳ Pending | Dipandu user bertahap |
 | **Fase 4** | Studio 2-Pane View & Interactive Canvas | ⏳ Pending | Dipandu user bertahap |

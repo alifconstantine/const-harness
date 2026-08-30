@@ -32,281 +32,281 @@
  *   ]
  */
 export interface TextSegment {
-  text: string;
+  text: string
   /** Wrap in <em> for italic-serif emphasis. */
-  em?: boolean;
+  em?: boolean
   /** Render as the coral terminating dot accent (use as the final segment). */
-  dot?: boolean;
+  dot?: boolean
 }
-export type MixedText = TextSegment[];
+export type MixedText = TextSegment[]
 
 /* ---------- brand block ---------- */
 
 export interface BrandBlock {
   /** Display name (appears in nav, footer, og:title, browser tab). */
-  name: string;
+  name: string
   /** Single glyph for the circled brand mark — `Ø`, `▲`, `★`, etc. */
-  mark: string;
+  mark: string
   /**
    * Two-line meta block in the nav: `<b>{title}</b>{subtitle}` with a
    * dividing rule. e.g. `{ title: 'Studio Nº 01', subtitle: 'Berlin / Open / Earth' }`.
    */
-  meta: { title: string; subtitle: string };
+  meta: { title: string; subtitle: string }
   /** Filed-under tagline shown in the topbar. */
-  filed_under: string;
+  filed_under: string
   /** Tagline shown in the page <title> alongside the brand. */
-  tagline: string;
+  tagline: string
   /** SEO description; appears in `<meta name='description'>`. */
-  description: string;
+  description: string
   /** ISO 639-1 language code; defaults to `en`. */
-  locale?: string;
+  locale?: string
   /** Edition badge — `'Vol. 01 / Issue Nº 26'`. */
-  edition: string;
+  edition: string
   /** Visible build version — `'v0.4.6'`. */
-  version: string;
+  version: string
   /** SPDX license identifier or short label — `'Apache-2.0'`. */
-  license: string;
+  license: string
   /** Primary CTA URL (Star on GitHub, etc.). */
-  primary_url: string;
+  primary_url: string
   /** Star-button label in the nav. */
-  primary_url_label: string;
+  primary_url_label: string
   /**
    * Optional secondary CTA URL surfaced as a ghost pill in the nav and as
    * a button in the footer brand column. When set, the marketing surface
    * advertises a "Download" entry so users know they can install directly.
    */
-  download_url?: string;
+  download_url?: string
   /** Label for the download CTA — defaults to `'Download'` when omitted. */
-  download_url_label?: string;
+  download_url_label?: string
   /** Email address shown in the CTA section. */
-  contact_email: string;
+  contact_email: string
   /** Pretty location line — `'Berlin / Open / Earth'`. */
-  location: string;
+  location: string
   /** Coordinates string — `'52.5200° N · 13.4050° E'`. */
-  coordinates: string;
+  coordinates: string
   /** Year of publication — `'2026'`. */
-  year: string;
+  year: string
   /** Roman numeral year for the footer kicker — `'MMXXVI'`. */
-  year_roman: string;
+  year_roman: string
   /** Founding tagline — `'Est. MMXXVI'`. */
-  founded: string;
+  founded: string
   /** Side rails (the rotated text fixed to viewport edges). */
-  rails: { right: string; left: string };
+  rails: { right: string; left: string }
   /** Topbar live channel languages — `['EN', 'DE', '中文', '日本語']`. First entry is bolded. */
-  languages: string[];
+  languages: string[]
   /** Topbar pulse text — `'Live · v0.4.6'`. */
-  status: string;
+  status: string
 }
 
 /* ---------- nav ---------- */
 
 export interface NavLink {
-  label: string;
-  href: string;
+  label: string
+  href: string
   /** Optional superscript count badge — `'31'`, `'72'`, etc. */
-  count?: string;
+  count?: string
 }
 
 /* ---------- hero ---------- */
 
 export interface HeroStat {
   /** Number or short string inside the ring — `'31'`. */
-  value: string;
+  value: string
   /** Bold label below the ring — `'skills'`. */
-  label: string;
+  label: string
   /** Sub-label — `'shippable'`. */
-  sub: string;
+  sub: string
   /** Visual treatment: dashed border (default), solid border, or coral accent. */
-  variant?: 'dashed' | 'solid' | 'coral';
+  variant?: 'dashed' | 'solid' | 'coral'
 }
 
 export interface HeroIndexItem {
   /** Two-digit number — `'01'`. */
-  num: string;
+  num: string
   /** Step name — `'Detect'`. */
-  label: string;
+  label: string
   /** Mark this item as the active one (rendered in solid ink). */
-  active?: boolean;
+  active?: boolean
 }
 
 export interface HeroBlock {
   /** Eyebrow label (left) — `'Open-source design studio'`. */
-  label: string;
+  label: string
   /** Eyebrow index (right of label) — `'· Nº 01'`. */
-  ix: string;
+  ix: string
   /** The H1 — encoded as MixedText. */
-  headline: MixedText;
+  headline: MixedText
   /** Lead paragraph; can include `<code>` via raw HTML — keep ASCII-quotes safe. */
-  lead: string;
+  lead: string
   /** Primary CTA. */
-  primary: { label: string; href: string };
+  primary: { label: string; href: string }
   /** Secondary CTA. */
-  secondary: { label: string; href: string };
+  secondary: { label: string; href: string }
   /** Three stat rings displayed below the CTAs. */
-  stats: [HeroStat, HeroStat, HeroStat];
+  stats: [HeroStat, HeroStat, HeroStat]
   /** Bottom-left meta line in the hero foot. */
-  meta: string;
+  meta: string
   /** Four index items rendered over the hero collage. */
-  index: [HeroIndexItem, HeroIndexItem, HeroIndexItem, HeroIndexItem];
+  index: [HeroIndexItem, HeroIndexItem, HeroIndexItem, HeroIndexItem]
   /** Image annotations (corner labels). */
   annotations: {
-    tl: string;
-    tr: string;
-    bl: string;
-    br: string;
-  };
+    tl: string
+    tr: string
+    bl: string
+    br: string
+  }
 }
 
 /* ---------- about ---------- */
 
 export interface AboutBlock {
-  label: string;
-  ix: string;
-  headline: MixedText;
-  lead: string;
-  cta_label: string;
-  cta_href: string;
+  label: string
+  ix: string
+  headline: MixedText
+  lead: string
+  cta_label: string
+  cta_href: string
   /** Footer row text — `'Research · Design · Engineering · Repeat'`. */
-  footer_text: string;
+  footer_text: string
   /** Stamp top line (coral) — `'Studio practice'`. */
-  stamp_top: string;
+  stamp_top: string
   /** Stamp bottom line (ink) — `'Est. MMXXVI'`. */
-  stamp_bottom: string;
+  stamp_bottom: string
   /** Side note (right of the about image). */
-  side_note: string;
+  side_note: string
   /** Caption below the about image. */
-  caption: { bold: string; rest: string };
+  caption: { bold: string; rest: string }
 }
 
 /* ---------- capabilities ---------- */
 
 export interface CapabilityCard {
   /** Two-digit accent — `'01'`. */
-  num: string;
+  num: string
   /** Tag — `'Skills'`. */
-  tag: string;
+  tag: string
   /** SVG inner contents (paths/circles/rects only — no <svg> wrapper). */
-  icon_svg: string;
+  icon_svg: string
   /** Title; use \n for line breaks. */
-  title: string;
+  title: string
   /** Body; can include `<code>` raw HTML. */
-  body: string;
-  href: string;
+  body: string
+  href: string
 }
 
 export interface CapabilitiesBlock {
-  label: string;
-  ix: string;
-  headline: MixedText;
-  lead: string;
-  ribbon: string;
+  label: string
+  ix: string
+  headline: MixedText
+  lead: string
+  ribbon: string
   /** Exactly four cards. */
-  cards: [CapabilityCard, CapabilityCard, CapabilityCard, CapabilityCard];
+  cards: [CapabilityCard, CapabilityCard, CapabilityCard, CapabilityCard]
 }
 
 /* ---------- labs ---------- */
 
 export interface LabPill {
-  label: string;
-  count: string;
-  active?: boolean;
+  label: string
+  count: string
+  active?: boolean
 }
 
 export interface LabCard {
-  badge: string;
-  num: string;
-  year: string;
-  title: string;
-  body: string;
-  href: string;
+  badge: string
+  num: string
+  year: string
+  title: string
+  body: string
+  href: string
 }
 
 export interface LabsBlock {
-  label: string;
-  ix: string;
-  headline: MixedText;
-  pills: LabPill[];
-  meta: { ring: string; bold: string; sub: string };
+  label: string
+  ix: string
+  headline: MixedText
+  pills: LabPill[]
+  meta: { ring: string; bold: string; sub: string }
   /** Exactly five lab cards. */
-  cards: [LabCard, LabCard, LabCard, LabCard, LabCard];
+  cards: [LabCard, LabCard, LabCard, LabCard, LabCard]
   /** Progress bar — total segments and how many are filled. */
-  progress: { total: number; filled: number };
-  foot: string;
+  progress: { total: number; filled: number }
+  foot: string
 }
 
 /* ---------- method ---------- */
 
 export interface MethodStep {
-  num: string;
-  title: string;
-  body: string;
+  num: string
+  title: string
+  body: string
 }
 
 export interface MethodBlock {
-  label: string;
-  ix: string;
-  headline: MixedText;
-  right: string;
+  label: string
+  ix: string
+  headline: MixedText
+  right: string
   /** Exactly four steps. */
-  steps: [MethodStep, MethodStep, MethodStep, MethodStep];
-  foot_left: string;
-  foot_right_bold: string;
-  foot_right_rest: string;
+  steps: [MethodStep, MethodStep, MethodStep, MethodStep]
+  foot_left: string
+  foot_right_bold: string
+  foot_right_rest: string
 }
 
 /* ---------- work ---------- */
 
 export interface WorkCard {
-  small_label: string;
-  index: string;
-  title: string;
-  body: string;
-  year: string;
-  tag: string;
+  small_label: string
+  index: string
+  title: string
+  body: string
+  year: string
+  tag: string
 }
 
 export interface WorkBlock {
-  label: string;
-  headline: MixedText;
-  link_label: string;
-  link_href: string;
+  label: string
+  headline: MixedText
+  link_label: string
+  link_href: string
   /** Two cards — first regular, second has the .alt tilt. */
-  cards: [WorkCard, WorkCard];
+  cards: [WorkCard, WorkCard]
 }
 
 /* ---------- testimonial / partners ---------- */
 
 export interface Partner {
   /** SVG inner contents (paths/circles/rects only — no <svg> wrapper). */
-  glyph_svg: string;
-  name: string;
-  role: string;
+  glyph_svg: string
+  name: string
+  role: string
   /** Click target for the partner card. When omitted, falls back to `'#'`. */
-  href?: string;
+  href?: string
 }
 
 export interface TestimonialBlock {
-  label: string;
-  ix: string;
+  label: string
+  ix: string
   /** Quote with em emphasis; the leading `"` and trailing `"` are added by the composer. */
-  quote: MixedText;
-  author: { initial: string; name: string; title: string };
-  partners_text: string;
+  quote: MixedText
+  author: { initial: string; name: string; title: string }
+  partners_text: string
   /** Up to five partners; the design fits five comfortably. */
-  partners: Partner[];
-  read_more_label: string;
-  read_more_href: string;
+  partners: Partner[]
+  read_more_label: string
+  read_more_href: string
 }
 
 /* ---------- cta ---------- */
 
 export interface CTABlock {
-  label: string;
-  ix: string;
-  headline: MixedText;
-  lead: string;
-  primary: { label: string; href: string };
-  ribbon: string;
+  label: string
+  ix: string
+  headline: MixedText
+  lead: string
+  primary: { label: string; href: string }
+  ribbon: string
 }
 
 /* ---------- wire / global ticker ---------- */
@@ -319,9 +319,9 @@ export interface CTABlock {
 export interface WireCity {
   /** Display name — `'Berlin'`, `'São Paulo'`. Title-case is fine; the
    * stylesheet uppercases it visually. */
-  name: string;
+  name: string
   /** Latitude only, prettified — `'52.52°N'`. */
-  coord: string;
+  coord: string
 }
 
 /**
@@ -331,11 +331,11 @@ export interface WireCity {
  */
 export interface WireContributor {
   /** GitHub-style handle without the leading `@` — `'tw93'`, `'OpenCoworkAI'`. */
-  handle: string;
+  handle: string
   /** Short role tag — `'kami'`, `'core'`, `'be next'`. Rendered in coral. */
-  role: string;
+  role: string
   /** Click target for the handle pill. */
-  href: string;
+  href: string
 }
 
 /**
@@ -347,55 +347,55 @@ export interface WireContributor {
  */
 export interface WireBlock {
   /** Bold uppercase headline on the left rail — `'From the field'`. */
-  title: string;
+  title: string
   /** Sub-label — `'Open · 23 cities · 6 contributors'`. Optional; computed
    * from the lists when omitted. */
-  subtitle?: string;
-  cities: WireCity[];
-  contributors: WireContributor[];
+  subtitle?: string
+  cities: WireCity[]
+  contributors: WireContributor[]
 }
 
 /* ---------- footer ---------- */
 
 export interface FooterColumn {
-  title: string;
-  links: { label: string; href: string }[];
+  title: string
+  links: { label: string; href: string }[]
 }
 
 export interface FooterBlock {
-  brand_description: string;
+  brand_description: string
   /**
    * Optional CTA rendered under the brand description in the footer
    * (e.g. `{ label: 'Download desktop', href: 'https://.../releases',
    * meta: 'macOS · v0.3.0' }`). When `brand.download_url` is set this is
    * filled in automatically; explicit values take precedence.
    */
-  brand_cta?: { label: string; href: string; meta?: string };
+  brand_cta?: { label: string; href: string; meta?: string }
   /** Up to five columns; the design fits five at the widest breakpoint. */
-  columns: FooterColumn[];
+  columns: FooterColumn[]
   /** Footer mega kicker — encoded as MixedText so the brand can italicize part of it. */
-  mega: MixedText;
+  mega: MixedText
 }
 
 /* ---------- section rules (the I., II., III. dividers) ---------- */
 
 export interface SectionRule {
   /** Roman numeral string — `'I.'`, `'II.'`, etc. */
-  roman: string;
+  roman: string
   /** Three middle text spans separated by a coral dot. */
-  meta: [string, string, string];
+  meta: [string, string, string]
   /** Pagination — `'002 / 008'`. */
-  pagination: string;
+  pagination: string
 }
 
 export interface SectionRules {
-  about: SectionRule;
-  capabilities: SectionRule;
-  labs: SectionRule;
-  method: SectionRule;
-  work: SectionRule;
-  testimonial: SectionRule;
-  cta: SectionRule;
+  about: SectionRule
+  capabilities: SectionRule
+  labs: SectionRule
+  method: SectionRule
+  work: SectionRule
+  testimonial: SectionRule
+  cta: SectionRule
 }
 
 /* ---------- image strategy ---------- */
@@ -410,38 +410,38 @@ export interface SectionRules {
  * `'bring-your-own'` — assume the 16 PNGs are already at the configured
  *    `assets_path`; do nothing.
  */
-export type ImageStrategy = 'generate' | 'placeholder' | 'bring-your-own';
+export type ImageStrategy = 'generate' | 'placeholder' | 'bring-your-own'
 
 export interface ImageryConfig {
-  strategy: ImageStrategy;
+  strategy: ImageStrategy
   /** Relative path (from the output) to the asset folder. Default: `./assets/`. */
-  assets_path: string;
+  assets_path: string
   /** Per-slot prompt overrides for `'generate'` strategy. */
-  prompts?: Record<string, string>;
+  prompts?: Record<string, string>
   /** When `strategy: 'generate'`, which provider to call. */
-  provider?: 'fal' | 'azure';
+  provider?: 'fal' | 'azure'
 }
 
 /* ---------- top-level ---------- */
 
 export interface EditorialCollageInputs {
-  $schema?: string;
-  brand: BrandBlock;
-  nav: NavLink[];
-  rules: SectionRules;
-  hero: HeroBlock;
-  about: AboutBlock;
-  capabilities: CapabilitiesBlock;
-  labs: LabsBlock;
-  method: MethodBlock;
-  work: WorkBlock;
-  testimonial: TestimonialBlock;
-  cta: CTABlock;
-  footer: FooterBlock;
+  $schema?: string
+  brand: BrandBlock
+  nav: NavLink[]
+  rules: SectionRules
+  hero: HeroBlock
+  about: AboutBlock
+  capabilities: CapabilitiesBlock
+  labs: LabsBlock
+  method: MethodBlock
+  work: WorkBlock
+  testimonial: TestimonialBlock
+  cta: CTABlock
+  footer: FooterBlock
   /**
    * Optional editorial wire/ticker between hero and about. Omit to hide
    * the strip entirely.
    */
-  wire?: WireBlock;
-  imagery: ImageryConfig;
+  wire?: WireBlock
+  imagery: ImageryConfig
 }

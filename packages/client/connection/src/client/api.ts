@@ -11,6 +11,7 @@ export type {
   DirectoryEntry, DirectoryListing,
   ResponseValue, WorkspaceApi, WorkspaceId, WorkspaceView,
   SkillsApi, SkillEntry,
+  DesignApi, DesignSystemSummary, DesignSystemDetail, DesignTemplateSummary, DesignTemplateDetail, CraftGuideline,
   ModelCatalogFailure, ModelCatalogModel, ModelProviderGroup, ModelReasoning,
   ModelReasoningEffort, ModelSelection, QueueAction, QueuedInboxItem, SessionModels,
   GoalsApi, GoalRef,

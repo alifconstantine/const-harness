@@ -332,6 +332,23 @@ function fakeApi(overrides: Partial<{ muxFrames: MuxFrame[]; hostFrames: HostFra
         return { rpcId: request.rpcId, result: { ok: true, value: { deleted: true } } }
       },
     },
+    design: {
+      async systems(request) {
+        return { rpcId: request.rpcId, result: { ok: true, value: { systems: [], categories: [] } } }
+      },
+      async systemDetail(request) {
+        return { rpcId: request.rpcId, result: { ok: false, error: { code: 'design-system-not-found', message: 'stub', details: { id: request.payload.id } } } }
+      },
+      async templates(request) {
+        return { rpcId: request.rpcId, result: { ok: true, value: { templates: [], categories: [] } } }
+      },
+      async templateDetail(request) {
+        return { rpcId: request.rpcId, result: { ok: false, error: { code: 'design-template-not-found', message: 'stub', details: { id: request.payload.id } } } }
+      },
+      async craftGuideline(request) {
+        return { rpcId: request.rpcId, result: { ok: false, error: { code: 'craft-guideline-not-found', message: 'stub', details: { id: request.payload.id } } } }
+      },
+    },
     events: {
       mux: (_request, signal) => stream(muxFrames, signal),
       host: (_request, signal) => stream(hostFrames, signal),

@@ -58,6 +58,7 @@ import {
   truncateUnicodeCodePoints,
 } from './api/session-search.ts'
 import { AutomationsManager } from './automations-service.ts'
+import { DesignService } from './design-service.ts'
 // Type-only: resolves `ctx.get('sessionProjections')` to the projection registry.
 import type {} from '@const-ai/session-projection'
 // Type-only: resolves `ctx.get('tasks')` to the background job registry.
@@ -1133,6 +1134,7 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
   const muxQueues = new Set<FrameQueue<RpcRequest<MuxFrame>>>()
   const hostQueues = new Set<FrameQueue<RpcRequest<HostFrame>>>()
   const sessionAgentHandles = new Map<SessionId, { dispose: () => Promise<void> }>()
+  const designService = new DesignService()
   const automationsManager = new AutomationsManager(ctx, {
     ensureSession: (sessionId, cwd) => ensureSession(sessionId, cwd, false),
     defaultCwd: defaults.cwd,
@@ -3863,6 +3865,8 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
         })
       },
     },
+
+    design: designService,
 
     downloads: {
       async sessionLog(request, signal) {

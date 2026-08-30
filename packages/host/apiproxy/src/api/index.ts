@@ -17,6 +17,7 @@ import type { CredentialsApi } from './credentials.ts'
 import type { LlmApi } from './llm.ts'
 import type { DownloadsApi } from './downloads.ts'
 import type { AutomationsApi } from './automations.ts'
+import type { DesignApi } from './design.ts'
 import type { ClientResponse, RpcReceipt } from './rpc.ts'
 
 /** Root interface of the unified API. New client-request domain = one new file pair + one field here + one map row. */
@@ -33,6 +34,7 @@ export interface ApiProxy {
   credentials: CredentialsApi
   llm: LlmApi
   automations: AutomationsApi
+  design: DesignApi
   /** Host-only download surfaces (GET, no wire envelope); absent from IApiClient. */
   downloads: DownloadsApi
   /**
@@ -68,6 +70,10 @@ export type { ApprovalResponsePayload } from './approvals.ts'
 export type {
   AutomationItem, AutomationRunHistory, AutomationSchedule, AutomationScheduleKind, AutomationsApi,
 } from './automations.ts'
+export type {
+  CraftGuideline, DesignApi, DesignSystemDetail, DesignSystemSummary,
+  DesignTemplateDetail, DesignTemplateSummary,
+} from './design.ts'
 
 export type { QuestionResponsePayload } from './questions.ts'
 
