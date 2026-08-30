@@ -24,6 +24,8 @@
     "website/.generated/**",
     "vendor/**", // Vendored source keeps upstream style and idioms.
     "native/**", // The imported landlock-run subtree has its own gates; see native/README.md.
+    "packages/host/apiproxy/assets/**", // Design assets and templates.
+    ".agents/skills/**", // Curated skills and references.
     "**/*.js",
     "**/*.mjs",
     "**/*.config.ts", // Tool and app configs are outside the repository TypeScript programs.
