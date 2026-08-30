@@ -90,7 +90,10 @@ export interface RpcMethodMap {
   'design.systemDetail': DesignApi['systemDetail']
   'design.templates': DesignApi['templates']
   'design.templateDetail': DesignApi['templateDetail']
+  'design.craftGuidelines': DesignApi['craftGuidelines']
   'design.craftGuideline': DesignApi['craftGuideline']
+  'design.promptTemplates': DesignApi['promptTemplates']
+  'design.promptTemplateDetail': DesignApi['promptTemplateDetail']
 }
 
 /** Business request payload of method K (reaches through the RpcRequest narrow form to payload). */

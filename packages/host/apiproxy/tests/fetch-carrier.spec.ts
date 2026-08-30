@@ -345,8 +345,17 @@ function fakeApi(overrides: Partial<{ muxFrames: MuxFrame[]; hostFrames: HostFra
       async templateDetail(request) {
         return { rpcId: request.rpcId, result: { ok: false, error: { code: 'design-template-not-found', message: 'stub', details: { id: request.payload.id } } } }
       },
+      async craftGuidelines(request) {
+        return { rpcId: request.rpcId, result: { ok: true, value: { guidelines: [] } } }
+      },
       async craftGuideline(request) {
         return { rpcId: request.rpcId, result: { ok: false, error: { code: 'craft-guideline-not-found', message: 'stub', details: { id: request.payload.id } } } }
+      },
+      async promptTemplates(request) {
+        return { rpcId: request.rpcId, result: { ok: true, value: { templates: [], categories: [], surfaces: [] } } }
+      },
+      async promptTemplateDetail(request) {
+        return { rpcId: request.rpcId, result: { ok: false, error: { code: 'prompt-template-not-found', message: 'stub', details: { id: request.payload.id } } } }
       },
     },
     events: {

@@ -3050,7 +3050,10 @@ function createFixtureWorld(options: FixtureOptions): FixtureWorld {
       systemDetail: request => err(request, { code: 'design-system-not-found', message: `Fixture design system not found: ${request.payload.id}`, details: { id: request.payload.id } }),
       templates: request => ok(request, { templates: [], categories: [] }),
       templateDetail: request => err(request, { code: 'design-template-not-found', message: `Fixture design template not found: ${request.payload.id}`, details: { id: request.payload.id } }),
+      craftGuidelines: request => ok(request, { guidelines: [] }),
       craftGuideline: request => err(request, { code: 'craft-guideline-not-found', message: `Fixture craft guideline not found: ${request.payload.id}`, details: { id: request.payload.id } }),
+      promptTemplates: request => ok(request, { templates: [], categories: [], surfaces: [] }),
+      promptTemplateDetail: request => err(request, { code: 'prompt-template-not-found', message: `Fixture prompt template not found: ${request.payload.id}`, details: { id: request.payload.id } }),
     },
     // Satisfies the ApiProxy contract type only: the browser export button
     // hands GET /api/session.export to the native download manager, so this
@@ -3208,7 +3211,10 @@ export class FixtureApiClient extends AbstractApiClient {
       case 'design.systemDetail': return this.api.design.systemDetail(request)
       case 'design.templates': return this.api.design.templates(request)
       case 'design.templateDetail': return this.api.design.templateDetail(request)
+      case 'design.craftGuidelines': return this.api.design.craftGuidelines(request)
       case 'design.craftGuideline': return this.api.design.craftGuideline(request)
+      case 'design.promptTemplates': return this.api.design.promptTemplates(request)
+      case 'design.promptTemplateDetail': return this.api.design.promptTemplateDetail(request)
     }
   }
 

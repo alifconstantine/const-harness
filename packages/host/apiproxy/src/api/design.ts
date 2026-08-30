@@ -1,6 +1,6 @@
 /**
- * design domain contract: design systems, templates, and craft guidelines
- * for native OpenDesign generation within Const-Harness.
+ * design domain contract: design systems, templates, craft guidelines,
+ * and prompt templates for native OpenDesign generation within Const-Harness.
  */
 
 import type { RpcRequest, RpcResponse } from './rpc.ts'
@@ -25,7 +25,7 @@ export interface DesignSystemSummary {
   readonly hasTailwind: boolean
 }
 
-/** Complete design system bundle with design markdown, tokens, and components. */
+/** Complete design system bundle with design markdown, tokens, components, and preview pages. */
 export interface DesignSystemDetail {
   /** Unique identifier matching the summary id. */
   readonly id: string
@@ -49,6 +49,8 @@ export interface DesignSystemDetail {
   readonly tailwindCss?: string
   /** Optional usage documentation from USAGE.md. */
   readonly usageMarkdown?: string
+  /** Optional preview HTML documents (e.g. { 'colors.html': '...', 'typography.html': '...' }). */
+  readonly previewPages?: Record<string, string>
 }
 
 /** Summary metadata for one design template catalog entry. */
@@ -87,7 +89,19 @@ export interface DesignTemplateDetail {
   readonly config?: Record<string, unknown>
 }
 
-/** Design craft standard guideline entry. */
+/** Summary metadata for one design craft standard guideline. */
+export interface CraftGuidelineSummary {
+  /** Identifier (e.g. 'anti-ai-slop', 'typography', 'color'). */
+  readonly id: string
+  /** Human-readable title of the guideline. */
+  readonly title: string
+  /** First paragraph or summary description. */
+  readonly summary: string
+  /** Category if present. */
+  readonly category?: string
+}
+
+/** Design craft standard guideline entry with full markdown content. */
 export interface CraftGuideline {
   /** Identifier (e.g. 'anti-ai-slop', 'typography', 'color'). */
   readonly id: string
@@ -95,6 +109,52 @@ export interface CraftGuideline {
   readonly title: string
   /** Full markdown content with actionable design standards. */
   readonly content: string
+  /** Category if present. */
+  readonly category?: string
+}
+
+/** Source attribution metadata for a prompt template. */
+export interface PromptTemplateSource {
+  /** Source repository (e.g. 'YouMind-OpenLab/awesome-gpt-image-2', 'heygen-com/hyperframes'). */
+  readonly repo: string
+  /** License (e.g. 'CC-BY-4.0', 'Apache-2.0'). */
+  readonly license?: string
+  /** Curator or author name. */
+  readonly author?: string
+  /** Upstream URL reference. */
+  readonly url?: string
+}
+
+/** Summary metadata for one image or video prompt template. */
+export interface PromptTemplateSummary {
+  /** Unique kebab-case identifier. */
+  readonly id: string
+  /** Generation surface: 'image' or 'video'. */
+  readonly surface: 'image' | 'video'
+  /** Human-readable title. */
+  readonly title: string
+  /** Short summary of visual composition and theme. */
+  readonly summary: string
+  /** Category grouping (e.g. 'Infographic', 'Marketing', 'Avatar', 'Gaming'). */
+  readonly category: string
+  /** Tags for filtering. */
+  readonly tags: readonly string[]
+  /** Target model identifier (e.g. 'gpt-image-2', 'hyperframes-html', 'seedance-2-0'). */
+  readonly model: string
+  /** Aspect ratio (e.g. '1:1', '16:9', '9:16'). */
+  readonly aspect: string
+  /** Preview image thumbnail URL. */
+  readonly previewImageUrl?: string
+  /** Optional preview video MP4 URL. */
+  readonly previewVideoUrl?: string
+  /** Source attribution metadata. */
+  readonly source?: PromptTemplateSource
+}
+
+/** Complete prompt template with structured prompt body. */
+export interface PromptTemplateDetail extends PromptTemplateSummary {
+  /** Full prompt blueprint / JSON structure. */
+  readonly prompt: string
 }
 
 /** Design domain unary methods (the map key design.* of RpcMethodMap). */
@@ -115,7 +175,19 @@ export interface DesignApi {
   templateDetail(request: RpcRequest<{ id: string }>):
   Promise<RpcResponse<{ template: DesignTemplateDetail }>>
 
+  /** Lists all available craft standard guidelines with optional search. */
+  craftGuidelines(request: RpcRequest<{ search?: string }>):
+  Promise<RpcResponse<{ guidelines: readonly CraftGuidelineSummary[] }>>
+
   /** Reads the markdown content for one design craft standard guideline. */
   craftGuideline(request: RpcRequest<{ id: string }>):
   Promise<RpcResponse<{ guideline: CraftGuideline }>>
+
+  /** Lists all available image and video prompt templates with filtering. */
+  promptTemplates(request: RpcRequest<{ surface?: 'image' | 'video'; category?: string; search?: string }>):
+  Promise<RpcResponse<{ templates: readonly PromptTemplateSummary[]; categories: readonly string[]; surfaces: readonly string[] }>>
+
+  /** Reads the full prompt and parameters for one prompt template. */
+  promptTemplateDetail(request: RpcRequest<{ id: string }>):
+  Promise<RpcResponse<{ template: PromptTemplateDetail }>>
 }

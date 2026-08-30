@@ -57,7 +57,7 @@ describe('DesignService', () => {
       expect(systems.some(s => s.id === 'stripe')).toBe(true)
     })
 
-    it('loads full detail for an existing design system', async () => {
+    it('loads full detail for an existing design system with preview pages', async () => {
       const response = await service.systemDetail({
         rpcId: RpcId('req-4'),
         payload: { id: 'linear-app' },
@@ -74,6 +74,8 @@ describe('DesignService', () => {
       expect(system.designTokensJson).toBeDefined()
       expect(system.componentsHtml).toBeDefined()
       expect(system.tailwindCss).toBeDefined()
+      expect(system.previewPages).toBeDefined()
+      expect(Object.keys(system.previewPages ?? {}).length).toBeGreaterThan(0)
     })
 
     it('returns design-system-not-found error for non-existent system', async () => {
@@ -152,9 +154,42 @@ describe('DesignService', () => {
   })
 
   describe('Craft Guidelines', () => {
+    it('indexes and lists all craft standard guidelines', async () => {
+      const response = await service.craftGuidelines({
+        rpcId: RpcId('req-10'),
+        payload: {},
+      })
+
+      expect(response.result.ok).toBe(true)
+      if (!response.result.ok) return
+
+      const { guidelines } = response.result.value
+      expect(guidelines.length).toBeGreaterThanOrEqual(10)
+      const antiSlop = guidelines.find(g => g.id === 'anti-ai-slop')
+      expect(antiSlop).toBeDefined()
+      expect(antiSlop?.title).toBeDefined()
+      expect(antiSlop?.summary.length).toBeGreaterThan(0)
+    })
+
+    it('filters craft guidelines by search term', async () => {
+      const response = await service.craftGuidelines({
+        rpcId: RpcId('req-11'),
+        payload: { search: 'typography' },
+      })
+
+      expect(response.result.ok).toBe(true)
+      if (!response.result.ok) return
+
+      const { guidelines } = response.result.value
+      expect(guidelines.length).toBeGreaterThan(0)
+      for (const g of guidelines) {
+        expect(g.id.includes('typography') || g.title.toLowerCase().includes('typography') || g.summary.toLowerCase().includes('typography')).toBe(true)
+      }
+    })
+
     it('loads craft standard guideline by ID', async () => {
       const response = await service.craftGuideline({
-        rpcId: RpcId('req-10'),
+        rpcId: RpcId('req-12'),
         payload: { id: 'anti-ai-slop' },
       })
 
@@ -169,7 +204,7 @@ describe('DesignService', () => {
 
     it('normalizes .md extension in craft guideline ID', async () => {
       const response = await service.craftGuideline({
-        rpcId: RpcId('req-11'),
+        rpcId: RpcId('req-13'),
         payload: { id: 'anti-ai-slop.md' },
       })
 
@@ -182,7 +217,7 @@ describe('DesignService', () => {
 
     it('returns craft-guideline-not-found error for missing guideline', async () => {
       const response = await service.craftGuideline({
-        rpcId: RpcId('req-12'),
+        rpcId: RpcId('req-14'),
         payload: { id: 'missing-craft-guideline' },
       })
 
@@ -191,6 +226,120 @@ describe('DesignService', () => {
 
       expect(response.result.error.code).toBe('craft-guideline-not-found')
       expect(response.result.error.details).toEqual({ id: 'missing-craft-guideline' })
+    })
+  })
+
+  describe('Prompt Templates', () => {
+    it('indexes and lists all image and video prompt templates', async () => {
+      const response = await service.promptTemplates({
+        rpcId: RpcId('req-15'),
+        payload: {},
+      })
+
+      expect(response.result.ok).toBe(true)
+      if (!response.result.ok) return
+
+      const { templates, categories, surfaces } = response.result.value
+      expect(templates.length).toBeGreaterThanOrEqual(100)
+      expect(categories.length).toBeGreaterThan(0)
+      expect(surfaces).toContain('image')
+      expect(surfaces).toContain('video')
+    })
+
+    it('filters prompt templates by surface', async () => {
+      const imgResponse = await service.promptTemplates({
+        rpcId: RpcId('req-16'),
+        payload: { surface: 'image' },
+      })
+
+      expect(imgResponse.result.ok).toBe(true)
+      if (!imgResponse.result.ok) return
+
+      const { templates: imgTemplates } = imgResponse.result.value
+      expect(imgTemplates.length).toBeGreaterThan(0)
+      for (const t of imgTemplates) {
+        expect(t.surface).toBe('image')
+      }
+
+      const vidResponse = await service.promptTemplates({
+        rpcId: RpcId('req-17'),
+        payload: { surface: 'video' },
+      })
+
+      expect(vidResponse.result.ok).toBe(true)
+      if (!vidResponse.result.ok) return
+
+      const { templates: vidTemplates } = vidResponse.result.value
+      expect(vidTemplates.length).toBeGreaterThan(0)
+      for (const t of vidTemplates) {
+        expect(t.surface).toBe('video')
+      }
+    })
+
+    it('filters prompt templates by search term', async () => {
+      const response = await service.promptTemplates({
+        rpcId: RpcId('req-18'),
+        payload: { search: 'hyperframes' },
+      })
+
+      expect(response.result.ok).toBe(true)
+      if (!response.result.ok) return
+
+      const { templates } = response.result.value
+      expect(templates.length).toBeGreaterThan(0)
+      for (const t of templates) {
+        expect(
+          t.id.toLowerCase().includes('hyperframes')
+          || t.title.toLowerCase().includes('hyperframes')
+          || t.summary.toLowerCase().includes('hyperframes')
+          || t.tags.some(tag => tag.toLowerCase().includes('hyperframes')),
+        ).toBe(true)
+      }
+    })
+
+    it('loads image prompt template detail with structured prompt', async () => {
+      const response = await service.promptTemplateDetail({
+        rpcId: RpcId('req-19'),
+        payload: { id: '3d-stone-staircase-evolution-infographic' },
+      })
+
+      expect(response.result.ok).toBe(true)
+      if (!response.result.ok) return
+
+      const { template } = response.result.value
+      expect(template.id).toBe('3d-stone-staircase-evolution-infographic')
+      expect(template.surface).toBe('image')
+      expect(template.prompt.length).toBeGreaterThan(50)
+      expect(template.previewImageUrl).toBeDefined()
+    })
+
+    it('loads video prompt template detail with prompt blueprint', async () => {
+      const response = await service.promptTemplateDetail({
+        rpcId: RpcId('req-20'),
+        payload: { id: 'hyperframes-saas-product-promo-30s' },
+      })
+
+      expect(response.result.ok).toBe(true)
+      if (!response.result.ok) return
+
+      const { template } = response.result.value
+      expect(template.id).toBe('hyperframes-saas-product-promo-30s')
+      expect(template.surface).toBe('video')
+      expect(template.prompt).toContain('HyperFrames')
+      expect(template.aspect).toBe('16:9')
+    })
+
+    it('returns prompt-template-not-found error for non-existent template', async () => {
+      const response = await service.promptTemplateDetail({
+        rpcId: RpcId('req-21'),
+        payload: { id: 'missing-prompt-template-xyz' },
+      })
+
+      expect(response.result.ok).toBe(false)
+      if (response.result.ok) return
+
+      expect(response.result.error.code).toBe('prompt-template-not-found')
+      expect(response.result.error.details).toEqual({ id: 'missing-prompt-template-xyz' })
     })
   })
 })

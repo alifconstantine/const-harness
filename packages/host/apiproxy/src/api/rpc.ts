@@ -101,6 +101,7 @@ export interface RpcErrorDetailsMap {
   'design-system-not-found': { id: string }
   'design-template-not-found': { id: string }
   'craft-guideline-not-found': { id: string }
+  'prompt-template-not-found': { id: string }
   'internal': {}
 }
 

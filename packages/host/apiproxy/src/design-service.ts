@@ -8,11 +8,15 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type {
   CraftGuideline,
+  CraftGuidelineSummary,
   DesignApi,
   DesignSystemDetail,
   DesignSystemSummary,
   DesignTemplateDetail,
   DesignTemplateSummary,
+  PromptTemplateDetail,
+  PromptTemplateSource,
+  PromptTemplateSummary,
 } from './api/design.ts'
 import type { RpcRequest, RpcResponse } from './api/rpc.ts'
 
@@ -25,7 +29,7 @@ export interface DesignServiceOptions {
 /** Error thrown when an entity is not found in the catalog. */
 export class DesignNotFoundError extends Error {
   constructor(
-    readonly kind: 'system' | 'template' | 'craft',
+    readonly kind: 'system' | 'template' | 'craft' | 'prompt-template',
     readonly id: string,
   ) {
     super(`Design ${kind} not found: ${id}`)
@@ -34,23 +38,27 @@ export class DesignNotFoundError extends Error {
 }
 
 /**
- * Service managing bundled design systems, templates, and craft rules.
+ * Service managing bundled design systems, templates, craft rules, and prompt templates.
  */
 export class DesignService implements DesignApi {
   private readonly assetsDir: string
   private readonly designSystemsDir: string
   private readonly designTemplatesDir: string
   private readonly craftDir: string
+  private readonly promptTemplatesDir: string
 
   private systemsCache: DesignSystemSummary[] | undefined
   private templatesCache: DesignTemplateSummary[] | undefined
+  private craftIndexCache: CraftGuidelineSummary[] | undefined
   private craftCache: Map<string, string> | undefined
+  private promptTemplatesCache: PromptTemplateSummary[] | undefined
 
   constructor(options: DesignServiceOptions = {}) {
     this.assetsDir = options.assetsDir ?? fileURLToPath(new URL('../assets', import.meta.url))
     this.designSystemsDir = join(this.assetsDir, 'design-systems')
     this.designTemplatesDir = join(this.assetsDir, 'design-templates')
     this.craftDir = join(this.assetsDir, 'craft')
+    this.promptTemplatesDir = join(this.assetsDir, 'prompt-templates')
   }
 
   /** Lists all available brand design systems with optional search and category filters. */
@@ -128,6 +136,23 @@ export class DesignService implements DesignApi {
       const tailwindCss = await safeReadText(join(dir, 'tailwind-v4.css'))
       const usageMarkdown = await safeReadText(join(dir, 'USAGE.md'))
 
+      const previewDir = join(dir, 'preview')
+      let previewPages: Record<string, string> | undefined
+      try {
+        const pEntries = await readdir(previewDir, { withFileTypes: true })
+        for (const pe of pEntries) {
+          if (pe.isFile() && pe.name.endsWith('.html')) {
+            const pageContent = await safeReadText(join(previewDir, pe.name))
+            if (pageContent !== undefined) {
+              previewPages ??= {}
+              previewPages[pe.name] = pageContent
+            }
+          }
+        }
+      } catch {
+        // No preview dir
+      }
+
       return {
         rpcId: request.rpcId,
         result: {
@@ -145,6 +170,7 @@ export class DesignService implements DesignApi {
               ...componentsHtml !== undefined ? { componentsHtml } : {},
               ...tailwindCss !== undefined ? { tailwindCss } : {},
               ...usageMarkdown !== undefined ? { usageMarkdown } : {},
+              ...previewPages !== undefined ? { previewPages } : {},
             },
           },
         },
@@ -272,6 +298,34 @@ export class DesignService implements DesignApi {
     }
   }
 
+  /** Lists all available craft standard guidelines with optional search filter. */
+  async craftGuidelines(
+    request: RpcRequest<{ search?: string }>,
+  ): Promise<RpcResponse<{ guidelines: readonly CraftGuidelineSummary[] }>> {
+    const all = await this.loadCraftIndex()
+    const { search } = request.payload
+
+    let filtered = all
+    if (search !== undefined && search.trim() !== '') {
+      const q = search.toLowerCase().trim()
+      filtered = filtered.filter(g =>
+        g.id.toLowerCase().includes(q)
+        || g.title.toLowerCase().includes(q)
+        || g.summary.toLowerCase().includes(q),
+      )
+    }
+
+    return {
+      rpcId: request.rpcId,
+      result: {
+        ok: true,
+        value: {
+          guidelines: filtered,
+        },
+      },
+    }
+  }
+
   /** Reads one design craft standard guideline. */
   async craftGuideline(
     request: RpcRequest<{ id: string }>,
@@ -312,10 +366,216 @@ export class DesignService implements DesignApi {
             id: normalizedId,
             title,
             content,
+            category: 'Craft Rules',
           },
         },
       },
     }
+  }
+
+  /** Lists all available image and video prompt templates with filtering. */
+  async promptTemplates(
+    request: RpcRequest<{ surface?: 'image' | 'video'; category?: string; search?: string }>,
+  ): Promise<RpcResponse<{ templates: readonly PromptTemplateSummary[]; categories: readonly string[]; surfaces: readonly string[] }>> {
+    const all = await this.loadPromptTemplatesIndex()
+    const { surface, category, search } = request.payload
+
+    let filtered = all
+    if (surface !== undefined) {
+      filtered = filtered.filter(t => t.surface === surface)
+    }
+
+    if (category !== undefined && category.trim() !== '' && category.toLowerCase() !== 'all') {
+      const catLower = category.toLowerCase()
+      filtered = filtered.filter(t => t.category.toLowerCase() === catLower)
+    }
+
+    if (search !== undefined && search.trim() !== '') {
+      const q = search.toLowerCase().trim()
+      filtered = filtered.filter(t =>
+        t.id.toLowerCase().includes(q)
+        || t.title.toLowerCase().includes(q)
+        || t.summary.toLowerCase().includes(q)
+        || t.tags.some(tag => tag.toLowerCase().includes(q)),
+      )
+    }
+
+    const categories = Array.from(new Set(all.map(t => t.category))).sort((a, b) => a.localeCompare(b))
+    const surfaces = Array.from(new Set(all.map(t => t.surface))).sort((a, b) => a.localeCompare(b))
+
+    return {
+      rpcId: request.rpcId,
+      result: {
+        ok: true,
+        value: {
+          templates: filtered,
+          categories,
+          surfaces,
+        },
+      },
+    }
+  }
+
+  /** Reads the full prompt and parameters for one prompt template. */
+  async promptTemplateDetail(
+    request: RpcRequest<{ id: string }>,
+  ): Promise<RpcResponse<{ template: PromptTemplateDetail }>> {
+    const { id } = request.payload
+
+    // Check image and video directories
+    for (const surface of ['image', 'video'] as const) {
+      const filePath = join(this.promptTemplatesDir, surface, `${id}.json`)
+      const raw = await safeReadText(filePath)
+      if (raw !== undefined) {
+        try {
+          const data = JSON.parse(raw) as {
+            id?: string
+            surface?: 'image' | 'video'
+            title?: string
+            summary?: string
+            category?: string
+            tags?: string[]
+            model?: string
+            aspect?: string
+            prompt?: string
+            previewImageUrl?: string
+            previewVideoUrl?: string
+            source?: PromptTemplateSource
+          }
+          return {
+            rpcId: request.rpcId,
+            result: {
+              ok: true,
+              value: {
+                template: {
+                  id: data.id ?? id,
+                  surface: data.surface ?? surface,
+                  title: data.title ?? id,
+                  summary: data.summary ?? '',
+                  category: data.category ?? 'General',
+                  tags: Array.isArray(data.tags) ? data.tags : [],
+                  model: data.model ?? 'default',
+                  aspect: data.aspect ?? '1:1',
+                  prompt: data.prompt ?? '',
+                  ...data.previewImageUrl !== undefined ? { previewImageUrl: data.previewImageUrl } : {},
+                  ...data.previewVideoUrl !== undefined ? { previewVideoUrl: data.previewVideoUrl } : {},
+                  ...data.source !== undefined ? { source: data.source } : {},
+                },
+              },
+            },
+          }
+        } catch {
+          // JSON parse failed
+        }
+      }
+    }
+
+    return {
+      rpcId: request.rpcId,
+      result: {
+        ok: false,
+        error: {
+          code: 'prompt-template-not-found',
+          message: `Prompt template not found: ${id}`,
+          details: { id },
+        },
+      },
+    }
+  }
+
+  private async loadCraftIndex(): Promise<CraftGuidelineSummary[]> {
+    if (this.craftIndexCache !== undefined) return this.craftIndexCache
+
+    const summaries: CraftGuidelineSummary[] = []
+    try {
+      const entries = await readdir(this.craftDir, { withFileTypes: true })
+      for (const entry of entries) {
+        if (!entry.isFile() || !entry.name.endsWith('.md') || entry.name.startsWith('.')) continue
+        if (entry.name === 'README.md' || entry.name === 'FUTURE_SECTIONS.md') continue
+
+        const id = entry.name.replace(/\.md$/, '')
+        const content = await safeReadText(join(this.craftDir, entry.name))
+        if (content === undefined) continue
+
+        const lines = content.split('\n')
+        const firstHeading = lines.find(line => line.startsWith('# '))
+        const title = firstHeading !== undefined ? firstHeading.replace(/^#\s+/, '').trim() : id
+
+        // Find first non-empty paragraph after heading
+        let summary = ''
+        for (const line of lines) {
+          const trimmed = line.trim()
+          if (trimmed !== '' && !trimmed.startsWith('#') && !trimmed.startsWith('>') && !trimmed.startsWith('```')) {
+            summary = trimmed
+            break
+          }
+        }
+
+        summaries.push({
+          id,
+          title,
+          summary,
+          category: 'Craft Rules',
+        })
+      }
+    } catch {
+      // Directory missing
+    }
+
+    this.craftIndexCache = summaries.sort((a, b) => a.title.localeCompare(b.title))
+    return this.craftIndexCache
+  }
+
+  private async loadPromptTemplatesIndex(): Promise<PromptTemplateSummary[]> {
+    if (this.promptTemplatesCache !== undefined) return this.promptTemplatesCache
+
+    const summaries: PromptTemplateSummary[] = []
+    for (const surface of ['image', 'video'] as const) {
+      const surfaceDir = join(this.promptTemplatesDir, surface)
+      try {
+        const entries = await readdir(surfaceDir, { withFileTypes: true })
+        for (const entry of entries) {
+          if (!entry.isFile() || !entry.name.endsWith('.json') || entry.name.startsWith('.')) continue
+          const raw = await safeReadText(join(surfaceDir, entry.name))
+          if (raw === undefined) continue
+          try {
+            const data = JSON.parse(raw) as {
+              id?: string
+              surface?: 'image' | 'video'
+              title?: string
+              summary?: string
+              category?: string
+              tags?: string[]
+              model?: string
+              aspect?: string
+              previewImageUrl?: string
+              previewVideoUrl?: string
+              source?: PromptTemplateSource
+            }
+            summaries.push({
+              id: data.id ?? entry.name.replace(/\.json$/, ''),
+              surface: data.surface ?? surface,
+              title: data.title ?? entry.name,
+              summary: data.summary ?? '',
+              category: data.category ?? 'General',
+              tags: Array.isArray(data.tags) ? data.tags : [],
+              model: data.model ?? 'default',
+              aspect: data.aspect ?? '1:1',
+              ...data.previewImageUrl !== undefined ? { previewImageUrl: data.previewImageUrl } : {},
+              ...data.previewVideoUrl !== undefined ? { previewVideoUrl: data.previewVideoUrl } : {},
+              ...data.source !== undefined ? { source: data.source } : {},
+            })
+          } catch {
+            // Ignore invalid JSON
+          }
+        }
+      } catch {
+        // Directory missing
+      }
+    }
+
+    this.promptTemplatesCache = summaries.sort((a, b) => a.title.localeCompare(b.title))
+    return this.promptTemplatesCache
   }
 
   private async loadSystemsIndex(): Promise<DesignSystemSummary[]> {

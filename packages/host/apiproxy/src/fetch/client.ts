@@ -78,6 +78,9 @@ import {
 } from '../api/automations.schema.ts'
 import {
   designCraftGuidelineValueSchema,
+  designCraftGuidelinesValueSchema,
+  designPromptTemplateDetailValueSchema,
+  designPromptTemplatesValueSchema,
   designSystemDetailValueSchema,
   designSystemsValueSchema,
   designTemplateDetailValueSchema,
@@ -194,7 +197,10 @@ export interface IApiClient {
     systemDetail(payload: RequestPayload<'design.systemDetail'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'design.systemDetail'>>>
     templates(payload: RequestPayload<'design.templates'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'design.templates'>>>
     templateDetail(payload: RequestPayload<'design.templateDetail'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'design.templateDetail'>>>
+    craftGuidelines(payload: RequestPayload<'design.craftGuidelines'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'design.craftGuidelines'>>>
     craftGuideline(payload: RequestPayload<'design.craftGuideline'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'design.craftGuideline'>>>
+    promptTemplates(payload: RequestPayload<'design.promptTemplates'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'design.promptTemplates'>>>
+    promptTemplateDetail(payload: RequestPayload<'design.promptTemplateDetail'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'design.promptTemplateDetail'>>>
   }
   /** client-response passthrough (rpcId is a backfill of the server-request's id — never minted here). */
   respond(message: ClientResponse, signal?: AbortSignal): Promise<RpcReceipt>
@@ -271,7 +277,10 @@ const UNARY_VALUE_SCHEMAS: { [K in keyof RpcMethodMap]: z.ZodType<Wire<ResponseV
   'design.systemDetail': designSystemDetailValueSchema,
   'design.templates': designTemplatesValueSchema,
   'design.templateDetail': designTemplateDetailValueSchema,
+  'design.craftGuidelines': designCraftGuidelinesValueSchema,
   'design.craftGuideline': designCraftGuidelineValueSchema,
+  'design.promptTemplates': designPromptTemplatesValueSchema,
+  'design.promptTemplateDetail': designPromptTemplateDetailValueSchema,
 }
 
 /** Default timeout for bounded unary calls (rpc-compare 2026-07-19: a hung host must not leave callers pending forever). */
@@ -568,7 +577,10 @@ export abstract class AbstractApiClient implements IApiClient {
     systemDetail: (payload, signal) => this.callUnary('design.systemDetail', payload, signal),
     templates: (payload, signal) => this.callUnary('design.templates', payload, signal),
     templateDetail: (payload, signal) => this.callUnary('design.templateDetail', payload, signal),
+    craftGuidelines: (payload, signal) => this.callUnary('design.craftGuidelines', payload, signal),
     craftGuideline: (payload, signal) => this.callUnary('design.craftGuideline', payload, signal),
+    promptTemplates: (payload, signal) => this.callUnary('design.promptTemplates', payload, signal),
+    promptTemplateDetail: (payload, signal) => this.callUnary('design.promptTemplateDetail', payload, signal),
   }
 
   readonly events: IApiClient['events'] = {
