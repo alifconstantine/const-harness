@@ -228,7 +228,7 @@ function groupByWorkspace(
     .filter((s): s is SessionSummary =>
       s !== undefined && !accounted.has(s.id) && sessionVisible(s, list.current, archived)
       && (mode !== 'design' || isDesignSession(s, list.current))
-      && (mode !== 'conversation' || !isDesignSession(s, list.current))
+      && (mode !== 'conversation' || !isDesignSession(s, list.current)),
     )
   if (stray.length > 0) {
     const ungroupedLabel = mode === 'design' ? 'Recent' : UNGROUPED_LABEL

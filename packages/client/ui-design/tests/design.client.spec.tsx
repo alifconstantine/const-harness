@@ -34,10 +34,10 @@ describe('ui-design client plugin', () => {
     const fiber = ctx.plugin({ inject: ['slots'], apply: apply as never })
     await fiber.await()
 
-    expect(slots.entries('shell.overlay').some((e) => e.options.id === 'design')).toBe(true)
+    expect(slots.entries('shell.overlay').some(e => e.options.id === 'design')).toBe(true)
 
     await fiber.dispose()
-    expect(slots.entries('shell.overlay').some((e) => e.options.id === 'design')).toBe(false)
+    expect(slots.entries('shell.overlay').some(e => e.options.id === 'design')).toBe(false)
   })
 })
 

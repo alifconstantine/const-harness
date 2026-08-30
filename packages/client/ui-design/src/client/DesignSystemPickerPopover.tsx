@@ -34,7 +34,7 @@ export function DesignSystemPickerPopover({
       s.name.toLowerCase().includes(q) ||
       s.id.toLowerCase().includes(q) ||
       s.category.toLowerCase().includes(q) ||
-      s.tags.some((t) => t.toLowerCase().includes(q))
+      s.tags.some(t => t.toLowerCase().includes(q))
     )
   })
 
@@ -46,10 +46,10 @@ export function DesignSystemPickerPopover({
 
   if (!isOpen) return null
 
-  const current = hoveredId ? systems.find((s) => s.id === hoveredId) : null
+  const current = hoveredId ? systems.find(s => s.id === hoveredId) : null
 
   return (
-    <div className={styles.popoverContainer} onClick={(e) => e.stopPropagation()}>
+    <div className={styles.popoverContainer} onClick={e => e.stopPropagation()}>
       <div className={styles.leftCol}>
         <div className={styles.searchHeader}>
           <IconSearchOutline16 size={14} />
@@ -58,7 +58,7 @@ export function DesignSystemPickerPopover({
             className={styles.searchInput}
             placeholder={t('ds.search_placeholder')}
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={e => setSearch(e.target.value)}
             autoFocus
           />
           <div className={styles.searchActions}>
@@ -94,7 +94,7 @@ export function DesignSystemPickerPopover({
 
           <div className={styles.sectionHeader}>{t('ds.official_presets')}</div>
 
-          {filtered.map((s) => (
+          {filtered.map(s => (
             <button
               key={s.id}
               type="button"

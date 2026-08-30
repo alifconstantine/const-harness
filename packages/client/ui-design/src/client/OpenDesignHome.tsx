@@ -451,7 +451,7 @@ export function OpenDesignHome({
   }
 
   const handleSelectPlugin = (plugin: PromptTemplateSummary) => {
-    setPrompt((prev) => `${prev ? `${prev} ` : ''}@${plugin.id} `)
+    setPrompt(prev => `${prev ? `${prev} ` : ''}@${plugin.id} `)
     if (textareaRef.current) {
       textareaRef.current.focus()
     }
@@ -583,7 +583,7 @@ export function OpenDesignHome({
 
   return (
     <div className={styles.container} onClick={closeAllMenus}>
-      <div className={styles.contentWrapper} onClick={(e) => e.stopPropagation()}>
+      <div className={styles.contentWrapper} onClick={e => e.stopPropagation()}>
         {/* Compact Hero Section */}
         <div className={styles.heroSection}>
           {/* Centered Brand Header */}
@@ -594,7 +594,7 @@ export function OpenDesignHome({
 
           {/* Mode Chips Row with clean SVG icons */}
           <div className={styles.modeChipsRow}>
-            {modesList.map((m) => (
+            {modesList.map(m => (
               <button
                 key={m.id}
                 type="button"
@@ -627,7 +627,7 @@ export function OpenDesignHome({
               className={styles.textarea}
               placeholder={getPlaceholder()}
               value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
+              onChange={e => setPrompt(e.target.value)}
               onKeyDown={handleKeyDown}
               rows={2}
             />
@@ -729,14 +729,14 @@ export function OpenDesignHome({
                       setIsModeDropdownOpen(!isModeDropdownOpen)
                     }}
                   >
-                    <span>{modesList.find((m) => m.id === surfaceMode)?.icon}</span>
-                    <span>{modesList.find((m) => m.id === surfaceMode)?.label || surfaceMode}</span>
+                    <span>{modesList.find(m => m.id === surfaceMode)?.icon}</span>
+                    <span>{modesList.find(m => m.id === surfaceMode)?.label || surfaceMode}</span>
                     <IconChevronDownOutline14 size={10} />
                   </button>
 
                   {isModeDropdownOpen && (
                     <div className={`${styles.dropdownMenu} ${styles.dropdownMenuDown}`} style={{ minWidth: 170, left: 0, top: 'calc(100% + 6px)' }}>
-                      {modesList.map((m) => (
+                      {modesList.map(m => (
                         <button
                           key={m.id}
                           type="button"
@@ -888,7 +888,7 @@ export function OpenDesignHome({
 
                   {isModelDropdownOpen && (
                     <div className={`${styles.dropdownMenu} ${styles.dropdownMenuDown}`} style={{ minWidth: 170, right: 0, top: 'calc(100% + 6px)' }}>
-                      {availableModels.map((m) => (
+                      {availableModels.map(m => (
                         <button
                           key={m}
                           type="button"
@@ -919,7 +919,7 @@ export function OpenDesignHome({
             </div>
 
             {/* Bottom Sub Row (Design System + Working Directory pickers) */}
-            <div className={styles.composerBottomSubRow} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.composerBottomSubRow} onClick={e => e.stopPropagation()}>
               <div style={{ position: 'relative' }}>
                 <button
                   type="button"
@@ -978,7 +978,7 @@ export function OpenDesignHome({
                         <span>{t('folder.outside_project')}</span>
                       </div>
                     </button>
-                    {workspaces.map((w) => (
+                    {workspaces.map(w => (
                       <button
                         key={w.id}
                         type="button"
@@ -1013,7 +1013,7 @@ export function OpenDesignHome({
                 { id: 'mobile', label: t('examples.cat_mobile'), icon: <IconFilterMobileSvg size={11} /> },
                 { id: 'wireframe', label: t('examples.cat_wireframe'), icon: <IconFilterWireframeSvg size={11} /> },
                 { id: 'apps', label: t('examples.cat_apps'), icon: <IconFilterAppSvg size={11} /> },
-              ].map((c) => (
+              ].map(c => (
                 <button
                   key={c.id}
                   type="button"
@@ -1160,8 +1160,8 @@ export function OpenDesignHome({
         isOpen={isFigmaModalOpen}
         onClose={() => setIsFigmaModalOpen(false)}
         onImportMock={(notes) => {
-          const importText = notes ? `[Imported from Figma: ${notes}]` : `[Imported from Figma]`
-          setPrompt((prev) => (prev ? `${prev}\n${importText}` : importText))
+          const importText = notes ? `[Imported from Figma: ${notes}]` : '[Imported from Figma]'
+          setPrompt(prev => (prev ? `${prev}\n${importText}` : importText))
         }}
         t={t}
       />

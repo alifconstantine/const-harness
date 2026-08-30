@@ -80,17 +80,17 @@ export function PluginPickerPopover({
 
   useEffect(() => {
     const first = filtered[0]
-    if (first && (!selectedId || !filtered.some((f) => f.id === selectedId))) {
+    if (first && (!selectedId || !filtered.some(f => f.id === selectedId))) {
       setSelectedId(first.id)
     }
   }, [filtered, selectedId])
 
   if (!isOpen) return null
 
-  const current = templates.find((item) => item.id === selectedId) ?? filtered[0]
+  const current = templates.find(item => item.id === selectedId) ?? filtered[0]
 
   return (
-    <div className={styles.popoverContainer} onClick={(e) => e.stopPropagation()}>
+    <div className={styles.popoverContainer} onClick={e => e.stopPropagation()}>
       {/* Left Column: Search & Filtered List */}
       <div className={styles.leftCol}>
         <div className={styles.searchHeader}>
@@ -101,7 +101,7 @@ export function PluginPickerPopover({
               className={styles.searchInput}
               placeholder={t('plugins.search_placeholder')}
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={e => setSearch(e.target.value)}
               autoFocus
             />
             {search && (
@@ -126,7 +126,7 @@ export function PluginPickerPopover({
               { id: 'video', label: 'Video' },
               { id: 'animation', label: 'Animation' },
               { id: 'atoms', label: 'Atoms' },
-            ].map((tab) => (
+            ].map(tab => (
               <button
                 key={tab.id}
                 type="button"
@@ -143,7 +143,7 @@ export function PluginPickerPopover({
           {filtered.length === 0 ? (
             <div className={styles.emptyResults}>No plugins match your search</div>
           ) : (
-            filtered.map((item) => (
+            filtered.map(item => (
               <button
                 key={item.id}
                 type="button"
@@ -247,7 +247,7 @@ export function PluginPickerPopover({
 
             {current.tags && current.tags.length > 0 && (
               <div className={styles.tagsRow}>
-                {current.tags.map((tag) => (
+                {current.tags.map(tag => (
                   <span key={tag} className={styles.tagChip}>
                     #{tag}
                   </span>
