@@ -2,7 +2,7 @@
 
 English | [中文](README.zh.md)
 
-OpenDesign Studio UI for Const Harness: visual landing home, prompt template carousel, brand design system picker popover, craft guidelines, and template preview drawer.
+Const Design Studio UI for Const Harness: visual landing home, prompt template carousel, brand design system picker popover, craft guidelines, and template preview drawer.
 
 ## Model Experience
 

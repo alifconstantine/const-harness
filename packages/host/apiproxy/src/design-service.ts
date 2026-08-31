@@ -1,5 +1,5 @@
 /**
- * Host Design Service: loads and indexes OpenDesign brand design systems,
+ * Host Design Service: loads and indexes brand design systems,
  * templates, and craft guidelines from bundled assets.
  */
 
@@ -615,7 +615,7 @@ export class DesignService implements DesignApi {
     }
   }
 
-  /** Compiles a complete OpenDesign system prompt using active design assets. */
+  /** Compiles a complete Design system prompt using active design assets. */
   async composePrompt(
     request: RpcRequest<DesignPromptOptions>,
   ): Promise<RpcResponse<DesignPromptResult>> {

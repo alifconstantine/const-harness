@@ -7,7 +7,7 @@ import { SlotRegistry } from '@const-ai/client-runtime/client'
 afterEach(cleanup)
 import { apply, inject } from '../src/client/index.ts'
 import { apply as nodeApply } from '../src/index.ts'
-import { OpenDesignHome } from '../src/client/OpenDesignHome.tsx'
+import { DesignHome } from '../src/client/DesignHome.tsx'
 import { FigmaImportModal } from '../src/client/FigmaImportModal.tsx'
 import { PluginPickerPopover } from '../src/client/PluginPickerPopover.tsx'
 import { DesignSystemPickerPopover } from '../src/client/DesignSystemPickerPopover.tsx'
@@ -138,10 +138,10 @@ describe('DesignSystemPickerPopover component', () => {
   })
 })
 
-describe('OpenDesignHome component', () => {
+describe('DesignHome component', () => {
   it('renders brand title, mode chips, and handles prompt input and template clicks', () => {
     const onStartSession = vi.fn()
-    render(<OpenDesignHome onStartSession={onStartSession} />)
+    render(<DesignHome onStartSession={onStartSession} />)
 
     // Check Const Design title & logo
     expect(screen.getByText('Const Design')).toBeDefined()

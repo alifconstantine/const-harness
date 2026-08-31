@@ -17,7 +17,7 @@ describe('DesignPromptInjector & Prompt Engine', () => {
     it('compiles a default general system prompt when no options are supplied', () => {
       const result = DesignPromptInjector.inject({})
 
-      expect(result.systemPrompt).toContain('OpenDesign Senior Designer Charter')
+      expect(result.systemPrompt).toContain('Const Senior Designer Charter')
       expect(result.systemPrompt).toContain('Instruction Priority')
       expect(result.systemPrompt).toContain(ANTI_AI_SLOP_RULES)
       expect(result.systemPrompt).toContain('Visual Direction Selection (Zero-Brand Default)')
@@ -32,7 +32,7 @@ describe('DesignPromptInjector & Prompt Engine', () => {
     it('supports Chinese locale override', () => {
       const result = DesignPromptInjector.inject({ locale: 'zh-CN' })
 
-      expect(result.systemPrompt).toContain('OpenDesign 专家设计宪章')
+      expect(result.systemPrompt).toContain('Const 专家设计宪章')
       expect(result.systemPrompt).toContain('UI & Content Language Override')
       expect(result.systemPrompt).toContain('Simplified Chinese')
       expect(result.metadata.locale).toBe('zh-CN')
@@ -41,7 +41,7 @@ describe('DesignPromptInjector & Prompt Engine', () => {
     it('supports Indonesian locale override', () => {
       const result = DesignPromptInjector.inject({ locale: 'id' })
 
-      expect(result.systemPrompt).toContain('Piagam Desain Utama OpenDesign')
+      expect(result.systemPrompt).toContain('Piagam Desain Utama Const Design')
       expect(result.systemPrompt).toContain('UI & Content Language Override')
       expect(result.systemPrompt).toContain('Indonesian')
       expect(result.metadata.locale).toBe('id')

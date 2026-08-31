@@ -332,7 +332,7 @@ export function deriveFlat(
 /* jscpd:ignore-start */
 /**
  * Derive the flat design-only session list ("Design" mode): sessions related to UI/UX,
- * design artifacts, or OpenDesign workflows.
+ * design artifacts, or Const Design workflows.
  *
  * @param list - Session list state.
  * @param archivedSessionIds - IDs of archived sessions.

@@ -8,7 +8,7 @@ import { DesignRoot } from './DesignRoot.tsx'
 import { en, NS, zh } from './locales.ts'
 
 export { DesignRoot } from './DesignRoot.tsx'
-export { OpenDesignHome } from './OpenDesignHome.tsx'
+export { DesignHome } from './DesignHome.tsx'
 export { FigmaImportModal } from './FigmaImportModal.tsx'
 export { PluginPickerPopover } from './PluginPickerPopover.tsx'
 export { DesignSystemPickerPopover } from './DesignSystemPickerPopover.tsx'

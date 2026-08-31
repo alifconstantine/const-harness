@@ -57,7 +57,7 @@ Menggabungkan keunggulan terbaik dari **Antigravity (Google)**, **ZCode (Z.ai)**
 ├── profiles/                                  <-- [Diadopsi dari DeepSeek Harness]
 │   ├── default/                               <-- Profile Cordis utama (cordis.patch.yml)
 │   ├── headless/                              <-- Profile CLI otomatis
-│   └── studio/                                <-- Profile OpenDesign Canvas Studio
+│   └── studio/                                <-- Profile Const Design Canvas Studio
 │
 └── runtime/                                   <-- [Environment Eksekusi]
     ├── venv/                                  <-- Isolated Python `uv` virtualenv (auto-pip dependencies)
@@ -86,7 +86,7 @@ Menggabungkan keunggulan terbaik dari **Antigravity (Google)**, **ZCode (Z.ai)**
 ├────────────────────────────┼───────────────────────────────────────────────────────────┤
 │ C. Design Studio & Media   │ #10 File & Media Attachments,                             │
 │                            │ #12 Voice Input STT & Supertonic 3 TTS,                   │
-│                            │ #14 OpenDesign Studio (Tab "Design", Canvas, 160+ Skills),│
+│                            │ #14 Const Design Studio (Tab "Design", Canvas, 160+ Skills),│
 │                            │ #20 Standalone HTML Session Export & Share Report         │
 ├────────────────────────────┼───────────────────────────────────────────────────────────┤
 │ D. Tooling, AI Hub,        │ #2 Ask Before Changes & Pierre Diff Approval Modal,       │
@@ -202,13 +202,13 @@ Menggabungkan keunggulan terbaik dari **Antigravity (Google)**, **ZCode (Z.ai)**
   * **STT:** Perekaman audio Web Audio API -> transkripsi via Local Whisper (ONNX) dengan fallback API (Groq/OpenAI Whisper).
   * **TTS:** Integrasi engine **Supertonic 3** lokal (ONNX / Python runner) dengan fallback ke Web Speech API / Edge-TTS.
 
-#### 14. OpenDesign Studio & Interactive Canvas (Tab "Design" di Sidebar)
-* **Tujuan:** Mengadopsi arsitektur `nexu-io/open-design` untuk mentransformasi Const Harness menjadi AI Design Studio & UI Prototype Engine terpadu dengan 2 tampilan utama (Home Design Hub & Studio Workspace).
-* **Referensi Arsitektur:** Diadopsi secara menyeluruh dari **OpenDesign** ([`d:/Code/Clone/open-design`](file:///d:/Code/Clone/open-design)):
+#### 14. Const Design Studio & Interactive Canvas (Tab "Design" di Sidebar)
+* **Tujuan:** Mentransformasi Const Harness menjadi AI Design Studio & UI Prototype Engine terpadu dengan 2 tampilan utama (Home Design Hub & Studio Workspace).
+* **Referensi Arsitektur:** Diadopsi secara menyeluruh dari aset desain (`packages/host/apiproxy/assets/`):
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                   ARSITEKTUR LENGKAP OPEN DESIGN STUDIO DI CONST                       │
+│                   ARSITEKTUR LENGKAP CONST DESIGN STUDIO DI CONST                      │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                        │
 │ 1. SCREENSHOT 1: DESIGN HUB / HOME VIEW (Menu Utama Tab "Design" di Sidebar)           │

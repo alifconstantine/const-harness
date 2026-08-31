@@ -23,10 +23,10 @@ import {
 import { FigmaImportModal } from './FigmaImportModal.tsx'
 import { PluginPickerPopover } from './PluginPickerPopover.tsx'
 import { DesignSystemPickerPopover } from './DesignSystemPickerPopover.tsx'
-import styles from './OpenDesignHome.module.css'
+import styles from './DesignHome.module.css'
 import { en } from './locales.ts'
 
-import imgOpenDesignLanding from './assets/community-templates/open-design-landing.webp'
+import imgDesignLanding from './assets/community-templates/design-landing.webp'
 import imgSocialCarousel from './assets/community-templates/social-carousel.jpg'
 import imgBlogPost from './assets/community-templates/blog-post.webp'
 import imgDashboard from './assets/community-templates/dashboard.webp'
@@ -61,8 +61,8 @@ function getTemplateThumbnail(t: { id: string; title: string; category?: string 
   const idLower = t.id.toLowerCase()
   const titleLower = t.title.toLowerCase()
 
-  if (idLower.includes('landing') || titleLower.includes('opendesign landing') || titleLower.includes('landing')) {
-    return imgOpenDesignLanding
+  if (idLower.includes('landing') || titleLower.includes('design landing') || titleLower.includes('landing')) {
+    return imgDesignLanding
   }
   if (idLower.includes('carousel') || titleLower.includes('social carousel') || titleLower.includes('carousel')) {
     return imgSocialCarousel
@@ -107,10 +107,10 @@ function getTemplateThumbnail(t: { id: string; title: string; category?: string 
     return imgWorkspaceCover
   }
 
-  return mockCovers[index % mockCovers.length] ?? imgOpenDesignLanding
+  return mockCovers[index % mockCovers.length] ?? imgDesignLanding
 }
 
-export interface OpenDesignHomeProps {
+export interface DesignHomeProps {
   api?: IApiClient | undefined
   ctx?: ClientContext | undefined
   onStartSession: (options: {
@@ -370,11 +370,11 @@ const DEFAULT_DESIGN_TEMPLATES: readonly DesignTemplateSummary[] = [
   },
 ]
 
-export function OpenDesignHome({
+export function DesignHome({
   api,
   onStartSession,
   t = (k: keyof typeof en) => en[k] || k,
-}: OpenDesignHomeProps): React.JSX.Element {
+}: DesignHomeProps): React.JSX.Element {
   const [prompt, setPrompt] = useState('')
   const [surfaceMode, setSurfaceMode] = useState<string>('prototype')
   const [interactionMode, setInteractionMode] = useState<'design' | 'plan' | 'ask'>('design')

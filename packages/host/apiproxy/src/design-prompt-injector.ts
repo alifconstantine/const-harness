@@ -1,7 +1,7 @@
 /**
  * Design Prompt Injector for Const-Harness.
  *
- * Implements the Agent Design Brain prompt engine adapted from OpenDesign:
+ * Implements the Agent Design Brain prompt engine for Const-Harness:
  *   1. Core design charter & senior designer role doctrine.
  *   2. Active brand design system injection (:root CSS tokens & DESIGN.md rules).
  *   3. Craft standards & anti-AI-slop rules (the 7 cardinal sins, typography, color, a11y).
@@ -19,7 +19,7 @@ import type {
   DesignTemplateDetail,
 } from './api/design.ts'
 
-/** Supported prompt modes for OpenDesign deliverables. */
+/** Supported prompt modes for Design deliverables. */
 export type DesignPromptMode =
   | 'deck'
   | 'prototype'
@@ -28,7 +28,7 @@ export type DesignPromptMode =
   | 'hyperframes'
   | 'general'
 
-/** Configuration options for generating an OpenDesign system prompt. */
+/** Configuration options for generating a Design system prompt. */
 export interface DesignPromptOptions {
   /** Target deliverable mode. Defaults to 'general'. */
   mode?: DesignPromptMode
@@ -546,10 +546,10 @@ For dashboards, prototypes, or artifacts with customizable parameters, embed a m
 </script>
 \`\`\`
 
-This schema enables real-time visual adjustment directly inside the OpenDesign preview studio without re-prompting.`
+This schema enables real-time visual adjustment directly inside the Const Design preview studio without re-prompting.`
 
 /**
- * Compiles an expert system prompt tailored for OpenDesign artifact creation.
+ * Compiles an expert system prompt tailored for Const Design artifact creation.
  *
  * @param options - Prompt configuration parameters.
  * @returns Complete assembled system prompt and metadata.
@@ -667,7 +667,7 @@ function renderCoreCharter(locale: string): string {
   const isId = locale.startsWith('id')
 
   if (isZh) {
-    return `# OpenDesign 专家设计宪章
+    return `# Const 专家设计宪章
 
 ## 角色定位
 你是一名顶级数字产品与视觉设计工程师。你的目标是产出符合专业设计系统标准、具备极高审美水准、完全消除 AI 模板感的独立运行 HTML 文件。
@@ -680,7 +680,7 @@ function renderCoreCharter(locale: string): string {
   }
 
   if (isId) {
-    return `# Piagam Desain Utama OpenDesign
+    return `# Piagam Desain Utama Const Design
 
 ## Peran & Tanggung Jawab
 Anda adalah seorang Senior Digital Product Designer & Frontend Craft Engineer. Misi Anda adalah memproduksi artefak desain HTML yang indah, presisi, berstandar industri tinggi, dan bebas dari AI slop.
@@ -692,7 +692,7 @@ Anda adalah seorang Senior Digital Product Designer & Frontend Craft Engineer. M
 4. Aturan bawaan umum.`
   }
 
-  return `# OpenDesign Senior Designer Charter
+  return `# Const Senior Designer Charter
 
 ## Role & Mission
 You are an elite Digital Product Designer and Creative Frontend Engineer. Your goal is to produce stunning, production-ready, standalone HTML design artifacts (slide decks, web prototypes, live dashboards, documents, or motion graphics) that adhere strictly to design system tokens and eliminate generic AI slop.

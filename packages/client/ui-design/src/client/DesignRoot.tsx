@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import type { ClientContext, WorkspaceId } from '@const-ai/client-runtime/client'
 import type { ConnectionHandle } from '@const-ai/client-connection/client'
-import { OpenDesignHome } from './OpenDesignHome.tsx'
+import { DesignHome } from './DesignHome.tsx'
 import styles from './DesignRoot.module.css'
 
 export interface DesignRootProps {
@@ -152,7 +152,7 @@ export function DesignRoot({ ctx }: DesignRootProps): React.JSX.Element | null {
       role="region"
       aria-label="Const Design Studio"
     >
-      <OpenDesignHome
+      <DesignHome
         api={api}
         ctx={ctx}
         onStartSession={(opts) => { void handleStartSession(opts) }}

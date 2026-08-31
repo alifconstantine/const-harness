@@ -2,7 +2,7 @@
 
 [English](README.md) | 中文
 
-用于 Const Harness 的 OpenDesign Studio 界面：可视化设计首页、提示词模板轮播卡片、品牌设计系统选择器浮层、工艺规范指南以及模板预览抽屉。
+用于 Const Harness 的 Const Design Studio 界面：可视化设计首页、提示词模板轮播卡片、品牌设计系统选择器浮层、工艺规范指南以及模板预览抽屉。
 
 ## Model Experience
 

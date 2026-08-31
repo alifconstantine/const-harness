@@ -279,7 +279,7 @@ export function CommandPaletteModal({
     },
     {
       id: 'act-design-studio',
-      title: 'OpenDesign Studio',
+      title: t('nav.design') || 'Design Studio',
       subtitle: 'Switch to visual component & UI canvas mode',
       icon: <Palette size={16} />,
       category: 'tools',

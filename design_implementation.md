@@ -1,14 +1,14 @@
-# OpenDesign Native Master Implementation Plan for Const-Harness
+# Const Design Native Master Implementation Plan for Const-Harness
 
-Dokumen ini adalah cetak biru teknis (*technical blueprint*) dan panduan eksekusi bertahap (*modular & granular*) untuk mengintegrasikan **OpenDesign** secara **native** ke dalam ekosistem **Const-Harness**, menggantikan arsitektur lama berbasis wrapping CLI eksternal.
+Dokumen ini adalah cetak biru teknis (*technical blueprint*) dan panduan eksekusi bertahap (*modular & granular*) untuk mengintegrasikan **Const Design Studio** secara **native** ke dalam ekosistem **Const-Harness**, menggantikan arsitektur lama berbasis wrapping CLI eksternal.
 
 Dokumen ini disimpan di root repositori untuk menjaga kontinuitas pengerjaan across sessions/chats tanpa kehilangan detail arsitektur, inventaris data, maupun panduan implementasi.
 
 ---
 
-## 1. Inventaris Lengkap Aset OpenDesign (`D:\Code\Clone\open-design`)
+## 1. Inventaris Lengkap Aset Desain
 
-Seluruh dataset dan aset telah diaudit dan disinkronisasi secara lengkap dari repositori sumber `D:\Code\Clone\open-design`:
+Seluruh dataset dan aset telah diaudit dan disinkronisasi secara lengkap:
 
 | Dataset / Direktori Sumber | Jumlah & Ukuran | Kandungan Teknis & Peran | Lokasi Penempatan di Const-Harness |
 | :--- | :--- | :--- | :--- |
@@ -39,8 +39,8 @@ graph TD
     end
 
     subgraph Client_Frontend ["Client Frontend Plugin (@const-ai/client-ui-design)"]
-        UI_Home["OpenDesignHome.tsx<br/>• Hero Composer (Prompt, Mode Chips)<br/>• 153 Brand Selector Dropdown<br/>• Template Gallery Grid<br/>• 107 Prompt Template Gallery (Image/Video)"]
-        UI_Studio["OpenDesignStudio.tsx<br/>• 2-Pane Responsive View<br/>• Panel Kiri: Chat History, Thinking, Deliverables<br/>• Panel Kanan: Preview Stage & Multi-Surface Viewer"]
+        UI_Home["DesignHome.tsx<br/>• Hero Composer (Prompt, Mode Chips)<br/>• 153 Brand Selector Dropdown<br/>• Template Gallery Grid<br/>• 107 Prompt Template Gallery (Image/Video)"]
+        UI_Studio["DesignStudio.tsx<br/>• 2-Pane Responsive View<br/>• Panel Kiri: Chat History, Thinking, Deliverables<br/>• Panel Kanan: Preview Stage & Multi-Surface Viewer"]
         UI_Canvas["DesignStudioCanvas.tsx & DeckThumbnailRail.tsx<br/>• 6 Surface Modes: Desktop, Mobile Frame, 16:9 Deck, Live Dashboard, Doc, HyperFrames<br/>• Shadow-DOM Slide Parser & Speaker Notes Drawer<br/>• Live Tweaks Parameter Side-Panel"]
         UI_Tools["PreviewDrawOverlay.tsx & DesignExportModal.tsx<br/>• Visual Canvas Drawing Annotation -> Agent Attachment<br/>• Multi-Target Export (Offline HTML Inliner, PDF, PPTX, MP4, ZIP)"]
     end
@@ -105,7 +105,7 @@ graph TD
 
 #### **Sub-Fase 2A: Design Prompt Engine (`design-prompt-injector.ts`)** [✅ COMPLETED]
 1. `packages/host/apiproxy/src/design-prompt-injector.ts`:
-   - Helper yang menyusun system prompt desain saat sesi OpenDesign dibuat:
+   - Helper yang menyusun system prompt desain saat sesi Design dibuat:
      - **CSS Tokens & Design System Injection**: Injeksi `:root { ... }` dari design system yang dipilih langsung ke `<style>`.
      - **Craft Rules Injection**: Injeksi pedoman `DESIGN.md` dan aturan craft kunci (`anti-ai-slop`, `typography`, `color`, `accessibility-baseline`).
      - **Slide Deck 16:9 Skeleton**: Kontrak canvas 1920×1080, `<section class="slide" data-slide-id="...">`, scale-to-fit transform JS, 1 visual weight per slide, drawer speaker notes, dan `@media print` rules.
@@ -119,17 +119,17 @@ graph TD
 
 ---
 
-### 🎨 FASE 3: Frontend Plugin Shell & Home View (Dipandu User Bertahap) — [⏳ PENDING]
+### 🎨 FASE 3: Frontend Plugin Shell & Home View (Dipandu User Bertahap) — [✅ COMPLETED]
 *Fokus: Membangun antarmuka landing page saat user mengklik menu "Design" di sidebar.*
 
-#### **Sub-Fase 3A: Paket Client Plugin `@const-ai/client-ui-design`**
+#### **Sub-Fase 3A: Paket Client Plugin `@const-ai/client-ui-design`** [✅ COMPLETED]
 1. Inisialisasi paket di `packages/client/ui-design/`:
    - `package.json`, `tsconfig.json`, `tsdown.config.ts`.
    - Entry point Node (`src/index.ts`) dan Browser (`src/client/index.ts`).
    - Pendaftaran slot navigasi sidebar (`sidebar.footer.action` / `shell.overlay` dengan action `const:open-design`).
    - Router view `DesignRoot.tsx` (`Home` $\leftrightarrow$ `Studio`).
 
-#### **Sub-Fase 3B: Komponen `OpenDesignHome.tsx`**
+#### **Sub-Fase 3B: Komponen `DesignHome.tsx`** [✅ COMPLETED]
 1. **Hero Composer**:
    - Input prompt multiline dengan chips mode (`# Prototype`, `Slide deck`, `Document`, `HyperFrames`, `Live Dashboard`, `Website clone`).
    - Dropdown Brand Design System (memanggil RPC `design.systems`, menampilkan 153 brand dengan swatch warna aksen & preview).
@@ -147,7 +147,7 @@ graph TD
 ### 🖥️ FASE 4: Studio 2-Pane View & Multi-Surface Interactive Canvas — [⏳ PENDING]
 *Fokus: Membangun antarmuka dua kolom interaktif saat proses pembuatan/editing desain berlangsung.*
 
-#### **Sub-Fase 4A: Komponen `OpenDesignStudio.tsx` (2-Kolom)**
+#### **Sub-Fase 4A: Komponen `DesignStudio.tsx` (2-Kolom)**
 1. **Kolom Kiri (Turn History & Tools)**:
    - Menampilkan riwayat percakapan agen, status berpikir (*thinking*), accordion tool call `Search/Read/Write`, daftar badge file `.html` deliverables, dan checklist todos.
    - Chat composer di bagian bawah untuk prompt revisi lanjutan.
@@ -223,10 +223,10 @@ packages/
         └── client/
             ├── index.ts             # [3A] Cordis slots registration (sidebar.footer.action / shell.overlay)
             ├── DesignRoot.tsx       # [3A] Router view (Home <-> Studio)
-            ├── OpenDesignHome.tsx   # [3B] Home view (Hero Composer, Gallery, Prompt Gallery)
-            ├── OpenDesignHome.module.css
-            ├── OpenDesignStudio.tsx # [4A] Studio 2-pane view
-            ├── OpenDesignStudio.module.css
+            ├── DesignHome.tsx       # [3B] Home view (Hero Composer, Gallery, Prompt Gallery)
+            ├── DesignHome.module.css
+            ├── DesignStudio.tsx     # [4A] Studio 2-pane view
+            ├── DesignStudio.module.css
             ├── DesignStudioCanvas.tsx # [4B] Multi-surface stage & toolbar (6 viewports)
             ├── DeckThumbnailRail.tsx  # [4B] Slide deck thumbnail rail
             ├── deck-parser.ts       # [4B] Shadow-DOM slide parser

@@ -1,6 +1,6 @@
 /**
  * design domain contract: design systems, templates, craft guidelines,
- * and prompt templates for native OpenDesign generation within Const-Harness.
+ * and prompt templates for native Design Studio generation within Const-Harness.
  */
 
 import type { RpcRequest, RpcResponse } from './rpc.ts'
@@ -173,7 +173,7 @@ export interface PromptTemplateDetail extends PromptTemplateSummary {
   readonly prompt: string
 }
 
-/** Supported prompt modes for OpenDesign deliverables. */
+/** Supported prompt modes for Design deliverables. */
 export type DesignPromptMode =
   | 'deck'
   | 'prototype'
@@ -182,7 +182,7 @@ export type DesignPromptMode =
   | 'hyperframes'
   | 'general'
 
-/** Configuration options for generating an OpenDesign system prompt. */
+/** Configuration options for generating a Design system prompt. */
 export interface DesignPromptOptions {
   /** Target deliverable mode. Defaults to 'general'. */
   readonly mode?: DesignPromptMode
@@ -261,7 +261,7 @@ export interface DesignApi {
   promptTemplateDetail(request: RpcRequest<{ id: string }>):
   Promise<RpcResponse<{ template: PromptTemplateDetail }>>
 
-  /** Compiles a complete OpenDesign system prompt using active design assets. */
+  /** Compiles a complete Design system prompt using active design assets. */
   composePrompt(request: RpcRequest<DesignPromptOptions>):
   Promise<RpcResponse<DesignPromptResult>>
 }

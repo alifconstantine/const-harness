@@ -917,7 +917,7 @@ export const IconArchiveOutline20 = ({ size = 20, className }: IconProps) => (
   </svg>
 )
 
-/** ic_ds_design_outline_16: Lucide Palette icon for OpenDesign */
+/** ic_ds_design_outline_16: Lucide Palette icon for Design Studio */
 export const IconDesignOutline16 = ({ size = 16, className }: IconProps) => (
   <Palette size={size} className={className} />
 )
