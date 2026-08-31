@@ -795,21 +795,6 @@ export function DesignHome({
             <h1 className={styles.brandTitle}>{t('title')}</h1>
           </div>
 
-          {/* Mode Chips Row with clean SVG icons */}
-          <div className={styles.modeChipsRow}>
-            {modesList.map(m => (
-              <button
-                key={m.id}
-                type="button"
-                className={`${styles.modeChip} ${surfaceMode === m.id ? styles.active : ''}`}
-                onClick={() => { setSurfaceMode(m.id) }}
-              >
-                <span className={styles.modeChipIcon}>{m.icon}</span>
-                <span>{m.label}</span>
-              </button>
-            ))}
-          </div>
-
           {/* Workspace and Design System Chips Row (Matching standard chat Workspace row above input card) */}
           <div className={styles.workspaceRow} onClick={(e) => { e.stopPropagation() }}>
             {/* Folder / Workspace Picker */}

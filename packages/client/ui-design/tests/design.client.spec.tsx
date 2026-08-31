@@ -146,9 +146,8 @@ describe('DesignHome component', () => {
     // Check Const Design title & logo
     expect(screen.getByText('Const Design')).toBeDefined()
 
-    // Check surface mode buttons
+    // Check surface mode button in composer
     expect(screen.getAllByText('Prototype').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Slide deck').length).toBeGreaterThan(0)
 
     // Check interaction mode toggle
     expect(screen.getAllByText('Design').length).toBeGreaterThan(0)

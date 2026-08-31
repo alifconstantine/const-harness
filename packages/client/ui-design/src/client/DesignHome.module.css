@@ -73,42 +73,6 @@
   margin: 0;
 }
 
-/* Surface Mode Chips Row */
-.modeChipsRow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.modeChip {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  border-radius: 9999px;
-  font-size: 13px;
-  font-weight: 500;
-  background: var(--dsw-alias-bg-layer-1);
-  color: var(--dsw-alias-label-secondary);
-  border: 1px solid var(--dsw-alias-border-l2);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.modeChip:hover {
-  background: var(--dsw-alias-interactive-bg-hover);
-  color: var(--dsw-alias-label-primary);
-}
-
-.modeChip.active {
-  background: rgba(34, 197, 94, 0.12);
-  color: #16a34a;
-  border-color: rgba(34, 197, 94, 0.35);
-  font-weight: 600;
-}
-
 /* Workspace and Design System Chips Row (Matching standard chat Workspace row above input card) */
 .workspaceRow {
   width: 100%;
