@@ -15,7 +15,7 @@ import type { DesignSystemSummary, PromptTemplateSummary } from '@const-ai/host-
 
 describe('ui-design client plugin', () => {
   it('declares expected inject services', () => {
-    expect(inject).toEqual(['slots', 'connection', 'sessions'])
+    expect(inject).toEqual(['slots', 'connection', 'sessions', 'workspaces'])
   })
 
   it('node-half apply is a safe no-op', () => {
@@ -153,6 +153,10 @@ describe('DesignHome component', () => {
     // Check interaction mode toggle
     expect(screen.getAllByText('Design').length).toBeGreaterThan(0)
 
+    // Check bottom dock shows workspace & design system controls
+    expect(screen.getByText('Outside project')).toBeDefined()
+    expect(screen.getByText('No design system')).toBeDefined()
+
     // Check template card click fills prompt
     const kanbanCards = screen.getAllByText('Kanban Board')
     expect(kanbanCards.length).toBeGreaterThan(0)
@@ -173,5 +177,36 @@ describe('DesignHome component', () => {
         interaction: 'design',
       }),
     )
+  })
+
+  it('supports workspace picker dropdown with add project and outside project options', async () => {
+    const pickDirectory = vi.fn().mockResolvedValue('/home/user/my-project')
+    const create = vi.fn().mockResolvedValue({ workspaceId: 'ws-new', title: 'My Project', path: '/home/user/my-project' })
+    const mockCtx = {
+      workspaces: {
+        list: {
+          getSnapshot: () => ({ items: [{ workspaceId: 'ws-1', title: 'Existing Project', path: '/path/1' }] }),
+          subscribe: vi.fn().mockReturnValue(() => {}),
+        },
+        pickDirectory,
+        create,
+      },
+    } as never
+
+    render(<DesignHome onStartSession={() => {}} ctx={mockCtx} />)
+
+    // Initially selected from mockCtx
+    expect(screen.getByText('Existing Project')).toBeDefined()
+
+    // Open project dropdown
+    fireEvent.click(screen.getByText('Existing Project'))
+
+    // Check options exist in dropdown
+    expect(screen.getByText('+ Add project')).toBeDefined()
+    expect(screen.getByText('Outside project')).toBeDefined()
+
+    // Click + Add project
+    fireEvent.click(screen.getByText('+ Add project'))
+    expect(pickDirectory).toHaveBeenCalled()
   })
 })

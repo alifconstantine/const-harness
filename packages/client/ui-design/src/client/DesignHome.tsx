@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react'
+import React, { useEffect, useRef, useState, useCallback, useId } from 'react'
 import type {
   DesignSystemSummary,
   DesignTemplateSummary,
@@ -7,6 +7,32 @@ import type {
 } from '@const-ai/host-apiproxy/api'
 import type { IApiClient } from '@const-ai/host-apiproxy/client'
 import type { ClientContext } from '@const-ai/client-runtime/client'
+
+function HeroGlow({ className }: { className?: string | undefined }): React.JSX.Element {
+  const glowFilterId = `design-glow-${useId().replace(/:/g, '')}`
+  return (
+    <svg className={className} viewBox="0 0 1051 468" fill="none" aria-hidden="true">
+      <defs>
+        <filter
+          id={glowFilterId}
+          x="0"
+          y="0"
+          width="1051"
+          height="468"
+          filterUnits="userSpaceOnUse"
+          colorInterpolationFilters="sRGB"
+        >
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
+          <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
+          <feGaussianBlur stdDeviation="50" result="effect1_foregroundBlur" />
+        </filter>
+      </defs>
+      <g filter={`url(#${glowFilterId})`}>
+        <ellipse cx="525.5" cy="234" rx="425.5" ry="134" fill="#6187D8" fillOpacity="0.10" />
+      </g>
+    </svg>
+  )
+}
 import {
   ConstLogo,
   IconPlusOutline16,
@@ -19,6 +45,8 @@ import {
   IconGlobeOutline14,
   IconFolderClose16,
   IconFolderOpen16,
+  IconNewChatOutline16,
+  Menu,
 } from '@const-ai/client-ui-primitives'
 import { FigmaImportModal } from './FigmaImportModal.tsx'
 import { PluginPickerPopover } from './PluginPickerPopover.tsx'
@@ -372,6 +400,7 @@ const DEFAULT_DESIGN_TEMPLATES: readonly DesignTemplateSummary[] = [
 
 export function DesignHome({
   api,
+  ctx,
   onStartSession,
   t = (k: keyof typeof en) => en[k] || k,
 }: DesignHomeProps): React.JSX.Element {
@@ -411,6 +440,11 @@ export function DesignHome({
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const cardsContainerRef = useRef<HTMLDivElement>(null)
   const scrollAnimRef = useRef<number | null>(null)
+  const projectAnchorRef = useRef<HTMLButtonElement>(null)
+  const getProjectAnchorRect = useCallback(
+    () => projectAnchorRef.current?.getBoundingClientRect() ?? null,
+    [],
+  )
 
   const [isMoreCatOpen, setIsMoreCatOpen] = useState(false)
 
@@ -525,6 +559,51 @@ export function DesignHome({
       } catch {}
     })()
   }, [api])
+
+  // Subscribe to live ctx.workspaces list if available
+  useEffect(() => {
+    if (!ctx?.workspaces) return
+    const syncFromState = (items: readonly { workspaceId: string; title: string; path: string }[]) => {
+      const mapped = items.map(w => ({
+        id: w.workspaceId,
+        name: w.title || w.path.split(/[/\\]/).pop() || w.workspaceId,
+      }))
+      setWorkspaces(mapped)
+      setSelectedFolder((prev) => {
+        if (!prev && mapped.length > 0) return mapped[0] ?? null
+        if (prev && !mapped.some(m => m.id === prev.id)) return mapped[0] ?? null
+        return prev
+      })
+    }
+
+    if (ctx.workspaces.list) {
+      const sync = () => {
+        const snapshot = ctx.workspaces.list.getSnapshot()
+        if (snapshot?.items) {
+          syncFromState(snapshot.items)
+        }
+      }
+      sync()
+      const dispose = ctx.workspaces.list.subscribe(sync)
+      return () => { dispose() }
+    }
+  }, [ctx])
+
+  const handleAddWorkspace = async () => {
+    closeAllMenus()
+    if (ctx?.workspaces?.pickDirectory) {
+      try {
+        const path = await ctx.workspaces.pickDirectory()
+        if (path) {
+          const ws = await ctx.workspaces.create({ path })
+          const item = { id: ws.workspaceId, name: ws.title || path.split(/[/\\]/).pop() || ws.workspaceId }
+          setSelectedFolder(item)
+        }
+      } catch (err) {
+        console.error('Failed to pick/create workspace:', err)
+      }
+    }
+  }
 
   useEffect(() => {
     const el = textareaRef.current
@@ -709,6 +788,7 @@ export function DesignHome({
       <div className={styles.contentWrapper} onClick={(e) => { e.stopPropagation() }}>
         {/* Compact Hero Section */}
         <div className={styles.heroSection}>
+          <HeroGlow className={styles.heroGlow} />
           {/* Centered Brand Header */}
           <div className={styles.heroHeader}>
             <ConstLogo size={34} className={styles.logoIcon} />
@@ -730,69 +810,72 @@ export function DesignHome({
             ))}
           </div>
 
-          {/* Top Header Row for Workspace & Design System Pickers (matching standard chat) */}
-          <div className={styles.composerHeaderRow}>
+          {/* Workspace and Design System Chips Row (Matching standard chat Workspace row above input card) */}
+          <div className={styles.workspaceRow} onClick={(e) => { e.stopPropagation() }}>
             {/* Folder / Workspace Picker */}
-            <div className={styles.toolbarChipWrapper} onClick={(e) => { e.stopPropagation() }}>
+            <div className={styles.dockItemWrapper}>
               <button
+                ref={projectAnchorRef}
                 type="button"
-                className={styles.toolbarChip}
+                className={`${styles.workspaceChip} ${isProjectDropdownOpen ? styles.active : ''}`}
                 onClick={() => {
+                  const next = !isProjectDropdownOpen
                   closeAllMenus()
-                  setIsProjectDropdownOpen(!isProjectDropdownOpen)
+                  setIsProjectDropdownOpen(next)
                 }}
               >
-                {selectedFolder ? <IconFolderOpen16 size={14} /> : <IconFolderClose16 size={14} />}
+                {selectedFolder ? <IconFolderOpen16 size={15} /> : <IconFolderClose16 size={15} />}
                 <span>{selectedFolder ? selectedFolder.name : t('folder.outside_project')}</span>
                 <IconChevronDownOutline14 size={10} />
               </button>
 
-              {isProjectDropdownOpen && (
-                <div className={`${styles.dropdownMenu} ${styles.dropdownMenuDown}`} style={{ minWidth: 220, left: 0, top: 'calc(100% + 6px)' }}>
-                  <button
-                    type="button"
-                    className={`${styles.dropdownItem} ${!selectedFolder ? styles.active : ''}`}
-                    onClick={() => {
-                      setSelectedFolder(null)
-                      setIsProjectDropdownOpen(false)
-                    }}
-                  >
-                    <div className={styles.dropdownItemLeft}>
-                      <IconFolderClose16 size={14} />
-                      <span>{t('folder.outside_project')}</span>
-                    </div>
-                  </button>
-                  {workspaces.map(w => (
-                    <button
-                      key={w.id}
-                      type="button"
-                      className={`${styles.dropdownItem} ${selectedFolder?.id === w.id ? styles.active : ''}`}
-                      onClick={() => {
-                        setSelectedFolder(w)
-                        setIsProjectDropdownOpen(false)
-                      }}
-                    >
-                      <div className={styles.dropdownItemLeft}>
-                        <IconFolderOpen16 size={14} />
-                        <span>{w.name}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
+              <Menu
+                open={isProjectDropdownOpen}
+                anchor={null}
+                items={workspaces.map(w => ({
+                  id: w.id,
+                  label: w.name,
+                  icon: <IconFolderClose16 size={16} />,
+                }))}
+                footer={[
+                  { id: '::add-workspace', label: t('menu.addWorkspace'), icon: <IconPlusOutline16 size={16} /> },
+                  { id: '::outside-project', label: t('menu.outsideProject'), icon: <IconNewChatOutline16 size={16} /> },
+                ]}
+                selectedId={selectedFolder?.id ?? (selectedFolder === null ? '::outside-project' : undefined)}
+                onSelect={(id) => {
+                  setIsProjectDropdownOpen(false)
+                  if (id === '::add-workspace') {
+                    void handleAddWorkspace()
+                    return
+                  }
+                  if (id === '::outside-project') {
+                    setSelectedFolder(null)
+                    return
+                  }
+                  const found = workspaces.find(w => w.id === id)
+                  if (found) {
+                    setSelectedFolder(found)
+                  }
+                }}
+                onClose={() => { setIsProjectDropdownOpen(false) }}
+                side="bottom"
+                portal
+                getAnchorRect={getProjectAnchorRect}
+              />
             </div>
 
             {/* Design System Picker */}
-            <div className={styles.toolbarChipWrapper} onClick={(e) => { e.stopPropagation() }}>
+            <div className={styles.dockItemWrapper}>
               <button
                 type="button"
-                className={styles.toolbarChip}
+                className={`${styles.workspaceChip} ${isDsPickerOpen ? styles.active : ''}`}
                 onClick={() => {
+                  const next = !isDsPickerOpen
                   closeAllMenus()
-                  setIsDsPickerOpen(!isDsPickerOpen)
+                  setIsDsPickerOpen(next)
                 }}
               >
-                <IconGlobeOutline14 size={14} />
+                <IconGlobeOutline14 size={15} />
                 <span>{selectedDesignSystem.name}</span>
                 <IconChevronDownOutline14 size={10} />
               </button>

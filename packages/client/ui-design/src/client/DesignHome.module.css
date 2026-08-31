@@ -2,7 +2,7 @@
   width: 100%;
   height: 100%;
   overflow-y: auto;
-  padding: 32px 24px 60px;
+  padding: clamp(120px, calc(50vh - 200px), 240px) 24px 80px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -21,22 +21,38 @@
   flex-direction: column;
   align-items: center;
   box-sizing: border-box;
+  position: relative;
 }
 
-/* Compact Hero Section (Balanced focal point) */
+/* Compact Hero Section */
 .heroSection {
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   padding: 0;
-  margin-bottom: 18px;
+  margin-bottom: 24px;
   box-sizing: border-box;
+  position: relative;
+}
+
+/* Blue backdrop ellipse (like standard chat figma 313:14109) centered behind the input card */
+.heroGlow {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  z-index: 0;
+  width: min(calc(100% * 1051 / 776), 1150px);
+  aspect-ratio: 1051 / 468;
+  transform: translate(-50%, 40%);
+  pointer-events: none;
 }
 
 /* Header Area */
 .heroHeader {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -46,13 +62,15 @@
 
 .logoIcon {
   color: var(--dsw-alias-label-primary);
+  flex-shrink: 0;
 }
 
 .brandTitle {
   font-size: 24px;
   font-weight: 700;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   color: var(--dsw-alias-label-primary);
+  margin: 0;
 }
 
 /* Surface Mode Chips Row */
@@ -91,41 +109,47 @@
   font-weight: 600;
 }
 
-/* Composer Header Row (Workspace + Design System Pickers placed above the card) */
-.composerHeaderRow {
+/* Workspace and Design System Chips Row (Matching standard chat Workspace row above input card) */
+.workspaceRow {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: flex-start;
   gap: 8px;
-  margin-bottom: 8px;
-  padding: 0 4px;
+  padding-left: 6px;
+  box-sizing: border-box;
 }
 
-.toolbarChipWrapper {
+.dockItemWrapper {
   position: relative;
 }
 
-.toolbarChip {
-  display: flex;
+.workspaceChip {
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 10px;
+  padding: 4px 8px;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 500;
   color: var(--dsw-alias-label-secondary);
-  background: var(--dsw-alias-interactive-bg-hover, rgba(255, 255, 255, 0.05));
-  border: 1px solid var(--dsw-alias-border-l2, rgba(255, 255, 255, 0.08));
+  background: transparent;
+  border: none;
   cursor: pointer;
   transition: all 0.15s ease;
   user-select: none;
 }
 
-.toolbarChip:hover {
-  background: var(--dsw-alias-interactive-bg-active, rgba(255, 255, 255, 0.1));
+.workspaceChip:hover,
+.workspaceChip.active {
+  background: var(--dsw-alias-interactive-bg-hover);
   color: var(--dsw-alias-label-primary);
-  border-color: var(--dsw-alias-border-l3, rgba(255, 255, 255, 0.14));
+}
+
+.dropdownDivider {
+  height: 1px;
+  background: var(--dsw-alias-border-l2);
+  margin: 4px 0;
 }
 
 /* Examples Gallery Section (Matching Image 2) */
@@ -134,7 +158,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding-top: 14px;
+  padding-top: 12px;
   margin-bottom: 40px;
 }
 

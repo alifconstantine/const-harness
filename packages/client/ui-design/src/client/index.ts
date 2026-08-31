@@ -13,7 +13,7 @@ export { FigmaImportModal } from './FigmaImportModal.tsx'
 export { PluginPickerPopover } from './PluginPickerPopover.tsx'
 export { DesignSystemPickerPopover } from './DesignSystemPickerPopover.tsx'
 
-export const inject = ['slots', 'connection', 'sessions']
+export const inject = ['slots', 'connection', 'sessions', 'workspaces']
 
 export function apply(ctx: ClientContext): void {
   ctx.inject(['locale'], (scope) => {
