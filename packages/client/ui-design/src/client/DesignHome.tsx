@@ -42,7 +42,7 @@ import {
   IconCloseOutline16,
   IconChevronDownOutline14,
   IconChevronRightOutline14,
-  IconGlobeOutline14,
+  IconPaletteOutline14,
   IconFolderClose16,
   IconFolderOpen16,
   IconNewChatOutline16,
@@ -860,7 +860,7 @@ export function DesignHome({
                   setIsDsPickerOpen(next)
                 }}
               >
-                <IconGlobeOutline14 size={15} />
+                <IconPaletteOutline14 size={15} />
                 <span>{selectedDesignSystem.name}</span>
                 <IconChevronDownOutline14 size={10} />
               </button>
@@ -875,6 +875,10 @@ export function DesignHome({
                     setIsDsPickerOpen(false)
                   }}
                   systems={systems}
+                  onCreateSystem={(newSys) => {
+                    setSystems(prev => [newSys, ...prev.filter(s => s.id !== newSys.id)])
+                    setSelectedDesignSystem({ id: newSys.id, name: newSys.name })
+                  }}
                   t={t}
                 />
               )}

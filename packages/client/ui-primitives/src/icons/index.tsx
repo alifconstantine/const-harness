@@ -1,9 +1,4 @@
-/**
- * ic_ds_* icon set for the dsh web UI. All glyphs render fill="currentColor"
- * and take {size, className}. Batch A mirrors the deepsuite icon library
- * (same figma source); batch B glyphs are harness-only figma extracts.
- */
-import { Palette } from 'lucide-react'
+import { Palette, Sparkles, Type, Layers, SwatchBook, Compass, Quote, Fingerprint } from 'lucide-react'
 import { MdTerminal } from 'react-icons/md'
 import { BsBrowserChrome } from 'react-icons/bs'
 import type { IconProps } from './props.ts'
@@ -12,6 +7,50 @@ export { MdTerminal } from 'react-icons/md'
 export { BsBrowserChrome } from 'react-icons/bs'
 
 export type { IconProps } from './props.ts'
+
+/** ic_ds_compass_outline_16 */
+export const IconCompassOutline16 = ({ size = 16, className }: IconProps) => (
+  <Compass size={size} className={className} />
+)
+export const IconCompassOutline14 = ({ size = 14, className }: IconProps) => (
+  <Compass size={size} className={className} />
+)
+
+/** ic_ds_quote_outline_16 */
+export const IconQuoteOutline16 = ({ size = 16, className }: IconProps) => (
+  <Quote size={size} className={className} />
+)
+
+/** ic_ds_fingerprint_outline_16 */
+export const IconFingerprintOutline16 = ({ size = 16, className }: IconProps) => (
+  <Fingerprint size={size} className={className} />
+)
+
+/** ic_ds_sparkles_outline_16 */
+export const IconSparklesOutline16 = ({ size = 16, className }: IconProps) => (
+  <Sparkles size={size} className={className} />
+)
+export const IconSparklesOutline14 = ({ size = 14, className }: IconProps) => (
+  <Sparkles size={size} className={className} />
+)
+
+/** ic_ds_type_outline_16 */
+export const IconTypeOutline16 = ({ size = 16, className }: IconProps) => (
+  <Type size={size} className={className} />
+)
+export const IconTypeOutline14 = ({ size = 14, className }: IconProps) => (
+  <Type size={size} className={className} />
+)
+
+/** ic_ds_layers_outline_16 */
+export const IconLayersOutline16 = ({ size = 16, className }: IconProps) => (
+  <Layers size={size} className={className} />
+)
+
+/** ic_ds_swatchbook_outline_16 */
+export const IconSwatchBookOutline16 = ({ size = 16, className }: IconProps) => (
+  <SwatchBook size={size} className={className} />
+)
 
 /** ic_ds_new_chat_outline_16 */
 export const IconNewChatOutline16 = ({ size = 16, className }: IconProps) => (
@@ -923,6 +962,7 @@ export const IconDesignOutline16 = ({ size = 16, className }: IconProps) => (
 )
 
 export const IconPaletteOutline16 = IconDesignOutline16
+export const IconPaletteOutline14 = IconDesignOutline16
 
 /** ic_ds_automations_outline_16: calendar with clock/schedule timer */
 export const IconAutomationsOutline16 = ({ size = 16, className }: IconProps) => (

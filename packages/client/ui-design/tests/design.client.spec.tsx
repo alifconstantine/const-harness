@@ -11,6 +11,7 @@ import { DesignHome } from '../src/client/DesignHome.tsx'
 import { FigmaImportModal } from '../src/client/FigmaImportModal.tsx'
 import { PluginPickerPopover } from '../src/client/PluginPickerPopover.tsx'
 import { DesignSystemPickerPopover } from '../src/client/DesignSystemPickerPopover.tsx'
+import { CreateDesignSystemModal } from '../src/client/CreateDesignSystemModal.tsx'
 import type { DesignSystemSummary, PromptTemplateSummary } from '@const-ai/host-apiproxy/api'
 
 describe('ui-design client plugin', () => {
@@ -130,11 +131,53 @@ describe('DesignSystemPickerPopover component', () => {
     expect(screen.getAllByText('No design system').length).toBeGreaterThan(0)
     expect(screen.getByText('Neutral Modern')).toBeDefined()
 
-    // Select Neutral Modern
-    fireEvent.click(screen.getByText('Neutral Modern'))
-    fireEvent.click(screen.getByText('Use Neutral Modern'))
-    expect(onSelect).toHaveBeenCalledWith('neutral-modern', 'Neutral Modern')
-    expect(onClose).toHaveBeenCalled()
+    // Click Create button to open create modal
+    fireEvent.click(screen.getByText('Create'))
+    expect(screen.getByText('Create Design System')).toBeDefined()
+  })
+
+  it('supports creating custom design systems from form and markdown', () => {
+    const onCreate = vi.fn()
+    const onClose = vi.fn()
+
+    const { rerender } = render(
+      <CreateDesignSystemModal
+        isOpen={true}
+        onClose={onClose}
+        onCreate={onCreate}
+      />,
+    )
+
+    expect(screen.getByText('Create Design System')).toBeDefined()
+
+    // Form tab submit
+    const nameInput = screen.getByPlaceholderText('e.g. Acme Studio')
+    fireEvent.change(nameInput, { target: { value: 'Acme Pro' } })
+
+    fireEvent.click(screen.getByText('Create & Apply'))
+    expect(onCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Acme Pro',
+        id: 'acme-pro',
+      }),
+    )
+
+    // Markdown tab
+    rerender(
+      <CreateDesignSystemModal
+        isOpen={true}
+        onClose={onClose}
+        onCreate={onCreate}
+      />,
+    )
+    fireEvent.click(screen.getByText('Upload / Paste DESIGN.md'))
+    const mdTextarea = screen.getByPlaceholderText(/Paste DESIGN.md content here/i)
+    fireEvent.change(mdTextarea, {
+      target: {
+        value: '# Acme Design\n> Category: SaaS\n\n## Colors\n- Brand (#2563eb)\n- Accent (#38bdf8)',
+      },
+    })
+    expect(screen.getByText('Detected Palette (2 colors)')).toBeDefined()
   })
 })
 

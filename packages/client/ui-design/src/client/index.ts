@@ -12,6 +12,7 @@ export { DesignHome } from './DesignHome.tsx'
 export { FigmaImportModal } from './FigmaImportModal.tsx'
 export { PluginPickerPopover } from './PluginPickerPopover.tsx'
 export { DesignSystemPickerPopover } from './DesignSystemPickerPopover.tsx'
+export { CreateDesignSystemModal } from './CreateDesignSystemModal.tsx'
 
 export const inject = ['slots', 'connection', 'sessions', 'workspaces']
 
